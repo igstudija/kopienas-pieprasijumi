@@ -1,11 +1,14 @@
 "use client";
 
-import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Brand } from "./brand";
 import { LanguageSwitcher, useLanguage } from "./language-provider";
 import { legalCopy } from "@/lib/legal-copy";
 
 export function LegalPageNav() {
   const { locale } = useLanguage();
-  return <nav className="legal-page-nav"><Brand /><div><Link href="/">{legalCopy[locale].back}</Link><LanguageSwitcher /></div></nav>;
+  const pathname = usePathname();
+  const copy = legalCopy[locale];
+  const title = pathname.startsWith("/privacy") ? copy.privacy.eyebrow : copy.impressum.title.replace(/\.$/, "");
+  return <nav className="legal-page-nav"><Brand href="/app" markText="SP" label={title} /><div><LanguageSwitcher /></div></nav>;
 }

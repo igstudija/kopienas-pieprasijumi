@@ -17,7 +17,7 @@ export default async function ImpressumPage() {
   return (
     <main className="legal-page">
       <LegalPageNav />
-      <header className="legal-hero"><span className="auth-step">{copy.impressum.eyebrow}</span><h1>{copy.impressum.title}</h1><p>{copy.impressum.intro}</p><small>{copy.updated}</small></header>
+      <header className="legal-hero"><p>{copy.impressum.intro}</p><small>{copy.updated}</small></header>
       <div className="legal-content">
         <section className="legal-card"><h2>{copy.impressum.operator}</h2><dl className="legal-facts"><div><dt>{copy.impressum.entity}</dt><dd>{value(settings.legalEntityName)}</dd></div><div><dt>{copy.impressum.registration}</dt><dd>{value(settings.legalRegistrationNumber)}</dd></div><div><dt>{copy.impressum.address}</dt><dd>{value(settings.legalAddress)}</dd></div><div><dt>{copy.impressum.country}</dt><dd>{value(settings.legalCountry)}</dd></div><div><dt>{copy.impressum.email}</dt><dd>{settings.legalEmail ? <a href={`mailto:${settings.legalEmail}`}>{settings.legalEmail}</a> : copy.notProvided}</dd></div><div><dt>{copy.impressum.phone}</dt><dd>{value(settings.legalPhone)}</dd></div></dl></section>
         <section><h2>{copy.impressum.solution}</h2><p>{copy.impressum.solutionText}</p></section>

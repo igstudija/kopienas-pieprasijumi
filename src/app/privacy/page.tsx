@@ -16,7 +16,7 @@ export default async function PrivacyPage() {
   return (
     <main className="legal-page">
       <LegalPageNav />
-      <header className="legal-hero"><span className="auth-step">{copy.privacy.eyebrow}</span><h1>{copy.privacy.title}</h1><p>{copy.privacy.intro}</p><small>{copy.updated}</small></header>
+      <header className="legal-hero"><p>{copy.privacy.intro}</p><small>{copy.updated}</small></header>
       <article className="legal-content privacy-content">
         <section className="legal-card"><h2>{copy.privacy.controller}</h2><p>{copy.privacy.controllerText}</p><dl className="legal-facts compact"><div><dt>{copy.impressum.entity}</dt><dd>{settings.legalEntityName || copy.notProvided}</dd></div><div><dt>{copy.impressum.address}</dt><dd>{settings.legalAddress || copy.notProvided}</dd></div><div><dt>{copy.privacy.privacyContact}</dt><dd>{privacyEmail ? <a href={`mailto:${privacyEmail}`}>{privacyEmail}</a> : copy.notProvided}</dd></div></dl></section>
         <LegalSection title={copy.privacy.dataText ? copy.privacy.data : ""} text={copy.privacy.dataText} />
