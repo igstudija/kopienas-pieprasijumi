@@ -349,6 +349,7 @@ textarea.field { min-height: 150px; resize: vertical; }
 .pairing-output .button { justify-self: start; }
 .users-list-card { width: 100%; }
 .list-card-header, .settings-card-header { border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.list-card-header { padding-block: 14px; }
 .list-card-header > div { flex: 0 0 auto; display: flex; align-items: baseline; gap: 10px; }
 .list-card-header h2, .settings-card-header h2 { border-bottom: 0; }
 .list-card-header span { color: var(--muted); font-size: 13px; }
@@ -616,7 +617,9 @@ textarea.field { min-height: 150px; resize: vertical; }
   .user-row, .peer-row { grid-template-columns: 1fr auto; }
   .user-row > :nth-child(2), .peer-row > :nth-child(2) { display: none; }
   .user-actions, .user-phone-form { grid-column: 1 / -1; }
-  .list-card-header, .settings-card-header { align-items: stretch; flex-direction: column; padding: 0 16px 16px; }
+  .list-card-header, .settings-card-header { align-items: stretch; flex-direction: column; }
+  .list-card-header { padding: 16px; }
+  .settings-card-header { padding: 0 16px 16px; }
   .list-card-header > div, .settings-card-header > div { margin-inline: -16px; }
   .list-card-header .search-input { width: 100%; margin: 0; flex-basis: auto; }
   .settings-card-header .button { width: 100%; }
