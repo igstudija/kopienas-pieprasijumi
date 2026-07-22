@@ -228,7 +228,11 @@ svg { width: 1.15em; height: 1.15em; }
 .app-page-intro { max-width: 58ch; margin: 0 0 24px; color: var(--muted); font-size: 15px; line-height: 1.6; }
 .dashboard-toolbar { display: flex; gap: 10px; margin-bottom: 28px; }
 .search-input { flex: 1; min-height: 48px; border: 1px solid var(--line); background: rgba(255,255,255,.72); border-radius: 14px; padding: 0 16px; font-size: 16px; }
-.dashboard-filters { margin-bottom: 22px; padding: 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--cream); display: grid; grid-template-columns: 1fr auto; gap: 14px 24px; }
+.request-dashboard { flex: 1 0 auto; min-width: 0; }
+.dashboard-filter-bar { position: sticky; z-index: 7; top: 76px; width: 100%; padding: 14px 0; border-bottom: 1px solid var(--line); background: rgba(244,241,232,.94); backdrop-filter: blur(14px); }
+.dashboard-filter-bar .dashboard-filters { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+.request-dashboard-content { padding-top: 24px; }
+.dashboard-filters { display: grid; grid-template-columns: 1fr auto; gap: 14px 24px; }
 .dashboard-filters .search-input { grid-column: 1 / -1; }
 .filter-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .filter-row > b { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
@@ -589,7 +593,10 @@ textarea.field { min-height: 150px; resize: vertical; }
   .request-item { grid-template-columns: 1fr; padding: 20px; }
   .request-side { display: none; }
   .request-summary { margin-left: 2px; }
-  .dashboard-filters { grid-template-columns: 1fr; padding: 12px; }
+  .dashboard-filter-bar { padding: 10px 0; }
+  .dashboard-filter-bar .dashboard-filters { width: min(100% - 24px, 1050px); }
+  .request-dashboard-content { padding-top: 22px; }
+  .dashboard-filters { grid-template-columns: 1fr; }
   .dashboard-filters .search-input { grid-column: 1; }
   .filter-row { align-items: flex-start; flex-direction: column; }
   .filter-row > div { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 3px; }
@@ -669,6 +676,7 @@ textarea.field { min-height: 150px; resize: vertical; }
 
 @media (max-width: 1024px) {
   .app-nav { height: 66px; padding-inline: 18px; }
+  .dashboard-filter-bar { top: 66px; }
   .app-nav .brand > span:last-child { display: inline; }
   .app-nav-links { display: none; }
   .mobile-nav-toggle { width: 44px; height: 44px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--cream); display: grid; place-content: center; gap: 4px; cursor: pointer; }

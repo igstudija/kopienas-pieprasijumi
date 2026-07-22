@@ -103,16 +103,20 @@ export function DashboardClient() {
   }
 
   return (
-    <main className="app-main request-dashboard">
-      <div className="dashboard-filters">
-        <input className="search-input" type="search" placeholder={messages.searchRequests} value={query} onChange={(event) => { setQuery(event.target.value); setVisibleGroups(8); }} aria-label={messages.searchRequests} />
-        <FilterRow label={messages.filterGroup}><FilterButton active={source === "all"} onClick={() => { setSource("all"); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton>{sources.map((item) => <FilterButton key={item.id} active={source === item.id} onClick={() => { setSource(item.id); setVisibleGroups(8); }}>{item.name}</FilterButton>)}</FilterRow>
-        <FilterRow label={messages.filterPeriod}><FilterButton active={period === "all"} onClick={() => { setPeriod("all"); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton><FilterButton active={period === "week"} onClick={() => { setPeriod("week"); setVisibleGroups(8); }}>{messages.filterWeek}</FilterButton><FilterButton active={period === "month"} onClick={() => { setPeriod("month"); setVisibleGroups(8); }}>{messages.filterMonth}</FilterButton></FilterRow>
+    <main className="request-dashboard">
+      <div className="dashboard-filter-bar">
+        <div className="dashboard-filters">
+          <input className="search-input" type="search" placeholder={messages.searchRequests} value={query} onChange={(event) => { setQuery(event.target.value); setVisibleGroups(8); }} aria-label={messages.searchRequests} />
+          <FilterRow label={messages.filterGroup}><FilterButton active={source === "all"} onClick={() => { setSource("all"); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton>{sources.map((item) => <FilterButton key={item.id} active={source === item.id} onClick={() => { setSource(item.id); setVisibleGroups(8); }}>{item.name}</FilterButton>)}</FilterRow>
+          <FilterRow label={messages.filterPeriod}><FilterButton active={period === "all"} onClick={() => { setPeriod("all"); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton><FilterButton active={period === "week"} onClick={() => { setPeriod("week"); setVisibleGroups(8); }}>{messages.filterWeek}</FilterButton><FilterButton active={period === "month"} onClick={() => { setPeriod("month"); setVisibleGroups(8); }}>{messages.filterMonth}</FilterButton></FilterRow>
+        </div>
       </div>
-      {error && <div className="form-error">{error}</div>}
-      {loading ? <div className="loading-state"><div className="skeleton"/><div className="skeleton"/></div> : filtered.length ? (
-        <><p className="request-summary">{filtered.length} {filtered.length === 1 ? messages.memberOne : messages.memberMany} · {requestCount} {requestCount === 1 ? messages.requestOne : messages.requestMany}</p><div className="member-groups">{visible.map((group) => <MemberGroup key={group.authorId} group={group} currentUserId={currentUserId} deletingId={deletingId} onDelete={deleteRequest} onEdit={setEditingRequest} locale={locale} />)}</div>{visibleGroups < filtered.length && <div className="load-more-row"><button className="button button-ghost" type="button" onClick={() => setVisibleGroups((count) => count + 8)}>{messages.loadMore}</button></div>}</>
-      ) : <div className="empty-state"><h2>{messages.noResults}</h2><p>{messages.noResultsText}</p><button type="button" className="button button-accent" onClick={() => setShowCreate(true)}><PlusIcon /> {messages.createRequest}</button></div>}
+      <div className="app-main request-dashboard-content">
+        {error && <div className="form-error">{error}</div>}
+        {loading ? <div className="loading-state"><div className="skeleton"/><div className="skeleton"/></div> : filtered.length ? (
+          <><p className="request-summary">{filtered.length} {filtered.length === 1 ? messages.memberOne : messages.memberMany} · {requestCount} {requestCount === 1 ? messages.requestOne : messages.requestMany}</p><div className="member-groups">{visible.map((group) => <MemberGroup key={group.authorId} group={group} currentUserId={currentUserId} deletingId={deletingId} onDelete={deleteRequest} onEdit={setEditingRequest} locale={locale} />)}</div>{visibleGroups < filtered.length && <div className="load-more-row"><button className="button button-ghost" type="button" onClick={() => setVisibleGroups((count) => count + 8)}>{messages.loadMore}</button></div>}</>
+        ) : <div className="empty-state"><h2>{messages.noResults}</h2><p>{messages.noResultsText}</p><button type="button" className="button button-accent" onClick={() => setShowCreate(true)}><PlusIcon /> {messages.createRequest}</button></div>}
+      </div>
       <button type="button" className="floating-add-button" aria-label={messages.newRequest} title={messages.newRequest} onClick={() => setShowCreate(true)}><PlusIcon /></button>
       {showCreate && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCreate(false); }}>
         <section className="modal-card request-create-modal" role="dialog" aria-modal="true" aria-labelledby="create-request-title">
