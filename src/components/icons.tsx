@@ -25,3 +25,7 @@ export function PlayIcon() {
 export function TrashIcon() {
   return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 6.5h9l-.6 9H6.1l-.6-9ZM8 4h4l.7 2.5H7.3L8 4ZM4 6.5h12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 }
+
+export function LogoutIcon() {
+  return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H9M12 6l4 4-4 4M7 10h9" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+}

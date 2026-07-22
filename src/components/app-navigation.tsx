@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { adminCopy } from "@/lib/admin-i18n";
 import { Brand } from "./brand";
+import { EditIcon } from "./icons";
 import { LanguageSwitcher, useLanguage } from "./language-provider";
 import { LogoutButton } from "./logout-button";
 
@@ -60,7 +61,6 @@ export function AppNavigation({ user, showAdmin, logoutRedirect = "/" }: {
         <header><span>{messages.menu}</span><button type="button" onClick={close} aria-label={messages.closeMenu}>×</button></header>
         <div className="mobile-nav-links">
           <Link href="/app" onClick={close}>{messages.navRequests}</Link>
-          <Link href="/app/profile" onClick={close}>{messages.navProfile}</Link>
           {showAdmin && <div className="mobile-nav-admin-section">
             <span>{messages.navAdmin}</span>
             {adminLinks.map((link) => <Link key={link.href} href={link.href} onClick={close} className={link.active ? "active" : ""} aria-current={link.active ? "page" : undefined}>{link.label}</Link>)}
@@ -69,7 +69,10 @@ export function AppNavigation({ user, showAdmin, logoutRedirect = "/" }: {
         </div>
         <div className="mobile-nav-footer">
           <div className="mobile-nav-person"><span className="avatar">{user.initials}</span><span><b>{user.displayName}</b><small>{user.company}</small></span></div>
-          <LogoutButton redirectTo={logoutRedirect} />
+          <div className="mobile-nav-profile-actions">
+            <Link href="/app/profile" className="row-action icon-action" aria-label={messages.navProfile} title={messages.navProfile} onClick={close}><EditIcon /></Link>
+            <LogoutButton redirectTo={logoutRedirect} iconOnly />
+          </div>
         </div>
       </aside>
     </>
