@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import { Brand } from "@/components/brand";
 import { AppNavigation } from "@/components/app-navigation";
 import { AdminPasswordLogin } from "@/components/admin-password-login";
-import { AdminSectionNav } from "@/components/admin-section-nav";
 import { currentUserFromPage } from "@/lib/services/auth";
 import { parseLocale } from "@/lib/i18n";
 import { adminCopy } from "@/lib/admin-i18n";
@@ -18,5 +17,5 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
   if (user.role === "member") redirect("/app");
   const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`;
-  return <div className="app-shell"><AppNavigation user={{ displayName: user.displayName, company: user.company, initials }} showAdmin logoutRedirect="/admin" /><AdminSectionNav />{children}</div>;
+  return <div className="app-shell"><AppNavigation user={{ displayName: user.displayName, company: user.company, initials }} showAdmin logoutRedirect="/admin" />{children}</div>;
 }

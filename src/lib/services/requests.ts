@@ -63,6 +63,7 @@ export async function listGroupedRequests() {
       peerName: null,
       sourceId: "local",
       sourceName: runtime.name,
+      visibility: request.visibility,
     })),
     ...remoteRows.map(({ request, peer }) => ({
       id: request.id,
@@ -82,6 +83,7 @@ export async function listGroupedRequests() {
       peerName: peer.name,
       sourceId: `peer:${peer.id}`,
       sourceName: peer.name,
+      visibility: "local" as const,
     })),
   ]);
 }

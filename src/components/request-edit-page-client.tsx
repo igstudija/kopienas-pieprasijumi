@@ -16,5 +16,5 @@ export function RequestEditPageClient({ request }: {
   };
 }) {
   const { messages } = useLanguage();
-  return <main className="app-main"><header className="app-heading"><div><span className="auth-step">{messages.editEntry}</span><h1>{messages.editTitleFirst}<br />{messages.editTitleSecond}</h1></div><p>{messages.editIntro}</p></header><RequestForm request={request} /></main>;
+  return <main className="app-main"><p className="app-page-intro">{messages.editIntro}</p><RequestForm request={request} /></main>;
 }

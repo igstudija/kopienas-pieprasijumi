@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { pairingCodePreview, type PairingCodePreview } from "@/lib/federation-code";
 import { useLanguage } from "@/components/language-provider";
+import { EditIcon, PauseIcon, PlayIcon, TrashIcon } from "@/components/icons";
 import { adminCopy } from "@/lib/admin-i18n";
 
 type CodeState = "missing" | "created" | "accepted";
@@ -242,16 +243,10 @@ export function FederationClient() {
 
   return (
     <main className="app-main">
-      <header className="app-heading">
-        <div><span className="auth-step">{copy.peersEyebrow}</span><h1>{copy.peersTitle}</h1></div>
-        <div className="app-heading-actions">
-          <button className="button button-accent" type="button" onClick={openAdd}>{copy.peersAdd}</button>
-        </div>
-      </header>
+      <div className="app-page-actions"><button className="button button-accent" type="button" onClick={openAdd}>{copy.peersAdd}</button></div>
       {error && !modalMode && <div className="form-error">{error}</div>}
       {notice && <div className="form-success">{notice}</div>}
       <section className="data-card portals-list-card">
-        <h2>{copy.peersList}</h2>
         {peers.length ? peers.map((peer) => (
           <div className="peer-row portal-row" key={peer.id}>
             <div><strong>{peer.name}</strong><small>{peer.baseUrl ? domainFromUrl(peer.baseUrl) : copy.peersNoDomain}</small></div>
@@ -259,11 +254,11 @@ export function FederationClient() {
               <CodeMarker label={copy.peersTheirCode} state={peer.remoteCodeState} copy={copy} />
               <CodeMarker label={copy.peersOurCode} state={peer.localCodeState} local copy={copy} />
             </div>
-            <span className={`status-pill ${peer.status}`}>{portalStatusLabel(peer, copy)}</span>
+            {peer.status === "pending" ? <span aria-hidden="true" /> : <span className={`status-pill ${peer.status}`}>{portalStatusLabel(peer, copy)}</span>}
             <div className="user-actions portal-actions">
-              <button className="row-action" type="button" onClick={() => openEdit(peer)} disabled={busyPeerId === peer.id}>{copy.peersEdit}</button>
-              <button className="row-action" type="button" onClick={() => toggleStatus(peer)} disabled={busyPeerId === peer.id}>{peer.status === "paused" ? copy.activate : copy.deactivate}</button>
-              <button className="row-action row-action-danger" type="button" onClick={() => remove(peer)} disabled={busyPeerId === peer.id}>{copy.delete}</button>
+              <button className="row-action icon-action" type="button" onClick={() => openEdit(peer)} disabled={busyPeerId === peer.id} aria-label={copy.peersEdit} title={copy.peersEdit}><EditIcon /></button>
+              <button className="row-action icon-action" type="button" onClick={() => toggleStatus(peer)} disabled={busyPeerId === peer.id} aria-label={peer.status === "paused" ? copy.activate : copy.deactivate} title={peer.status === "paused" ? copy.activate : copy.deactivate}>{peer.status === "paused" ? <PlayIcon /> : <PauseIcon />}</button>
+              <button className="row-action row-action-danger icon-action" type="button" onClick={() => remove(peer)} disabled={busyPeerId === peer.id} aria-label={copy.delete} title={copy.delete}><TrashIcon /></button>
             </div>
           </div>
         )) : <div className="empty-card-state">{copy.peersEmpty}</div>}

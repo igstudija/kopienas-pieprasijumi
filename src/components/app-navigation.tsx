@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { adminCopy } from "@/lib/admin-i18n";
 import { Brand } from "./brand";
 import { LanguageSwitcher, useLanguage } from "./language-provider";
 import { LogoutButton } from "./logout-button";
@@ -11,14 +13,35 @@ export function AppNavigation({ user, showAdmin, logoutRedirect = "/" }: {
   showAdmin: boolean;
   logoutRedirect?: string;
 }) {
-  const { messages } = useLanguage();
+  const { locale, messages } = useLanguage();
+  const pathname = usePathname();
+  const adminMessages = adminCopy[locale];
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+  const adminLinks = [
+    { href: "/admin", label: adminMessages.usersRegistered, active: pathname === "/admin" },
+    { href: "/admin/federation", label: adminMessages.usersPeers, active: pathname.startsWith("/admin/federation") },
+    { href: "/admin/whatsapp", label: adminMessages.usersWhatsapp, active: pathname.startsWith("/admin/whatsapp") },
+    { href: "/admin/legal", label: adminMessages.legalTitle, active: pathname.startsWith("/admin/legal") },
+  ];
+  const dashboardTitle = `${messages.dashboardTitleFirst} ${messages.dashboardTitleSecond}`.replace(/\.$/, "");
+  const profileTitle = `${messages.profileTitleFirst} ${messages.profileTitleSecond}`.replace(/\.$/, "");
+  const newRequestTitle = `${messages.newTitleFirst} ${messages.newTitleSecond}`.replace(/\.$/, "");
+  const editRequestTitle = `${messages.editTitleFirst} ${messages.editTitleSecond}`.replace(/\.$/, "");
+  const sectionTitle = pathname === "/app" ? dashboardTitle
+    : pathname === "/app/profile" ? profileTitle
+      : pathname === "/app/new" ? newRequestTitle
+        : pathname.startsWith("/app/requests/") ? editRequestTitle
+          : pathname === "/admin" ? adminMessages.usersRegistered
+            : pathname.startsWith("/admin/federation") ? adminMessages.usersPeers
+              : pathname.startsWith("/admin/whatsapp") ? adminMessages.usersWhatsapp
+                : pathname.startsWith("/admin/legal") ? adminMessages.legalTitle
+                  : messages.navRequests;
 
   return (
     <>
       <nav className="app-nav">
-        <Brand />
+        <Brand href="/app" markText="SP" label={sectionTitle} />
         <div className="app-nav-links">
           <Link href="/app">{messages.navRequests}</Link>
           {showAdmin && <Link href="/admin">{messages.navAdmin}</Link>}
@@ -39,7 +62,10 @@ export function AppNavigation({ user, showAdmin, logoutRedirect = "/" }: {
         <div className="mobile-nav-links">
           <Link href="/app" onClick={close}>{messages.navRequests}</Link>
           <Link href="/app/profile" onClick={close}>{messages.navProfile}</Link>
-          {showAdmin && <Link href="/admin" onClick={close}>{messages.navAdmin}</Link>}
+          {showAdmin && <div className="mobile-nav-admin-section">
+            <span>{messages.navAdmin}</span>
+            {adminLinks.map((link) => <Link key={link.href} href={link.href} onClick={close} className={link.active ? "active" : ""} aria-current={link.active ? "page" : undefined}>{link.label}</Link>)}
+          </div>}
         </div>
         <div className="mobile-nav-footer"><LanguageSwitcher compact /><LogoutButton redirectTo={logoutRedirect} /></div>
       </aside>

@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ExcelUserImport } from "@/components/excel-user-import";
-import { LegalSettingsClient } from "@/components/legal-settings-client";
 import { useLanguage } from "@/components/language-provider";
 import { adminCopy } from "@/lib/admin-i18n";
 
@@ -177,16 +176,11 @@ export function AdminUsersClient() {
 
   return (
     <main className="app-main">
-      <header className="app-heading">
-        <div><span className="auth-step">{copy.usersEyebrow}</span><h1>{copy.usersTitle}</h1></div>
-        <div className="app-heading-actions">
-          <button className="button button-accent" type="button" onClick={openCreate}>{copy.usersAdd}</button>
-        </div>
-      </header>
+      <div className="app-page-actions"><button className="button button-accent" type="button" onClick={openCreate}>{copy.usersAdd}</button></div>
       {error && !showCreate && !editingUser && <div className="form-error">{error}</div>}
       {notice && <div className="form-success">{notice}</div>}
       <section className="data-card users-list-card">
-        <header className="list-card-header"><div><h2>{copy.usersRegistered}</h2><span>{filteredUsers.length} / {users.length}</span></div><input className="search-input" type="search" placeholder={copy.usersSearch} value={query} onChange={(event) => setQuery(event.target.value)} aria-label={copy.usersSearchAria} /></header>
+        <header className="list-card-header"><span className="list-card-count">{filteredUsers.length} / {users.length}</span><input className="search-input" type="search" placeholder={copy.usersSearch} value={query} onChange={(event) => setQuery(event.target.value)} aria-label={copy.usersSearchAria} /></header>
         {filteredUsers.length ? filteredUsers.map((user) => {
           const protectedUser = user.role === "owner" || user.id === actorUserId;
           const busy = busyUserId === user.id;
@@ -204,8 +198,6 @@ export function AdminUsersClient() {
           );
         }) : <div className="empty-card-state">{copy.usersEmpty}</div>}
       </section>
-      <LegalSettingsClient />
-
       {showCreate && (
         <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCreate(); }}>
           <section className={`modal-card ${createMode === "excel" ? "excel-modal" : ""}`} role="dialog" aria-modal="true" aria-labelledby="create-user-title">

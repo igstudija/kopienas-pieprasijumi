@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { GlobeIcon, PlusIcon } from "./icons";
 import { useLanguage } from "./language-provider";
@@ -10,7 +9,7 @@ type RequestItem = {
   id: string; authorId: string; authorName: string; authorCompany: string; authorCategory?: string | null;
   title: string; details: string; target?: string | null; industry?: string | null; region?: string | null;
   tags: string[]; updatedAt: string; createdAt: string; origin: "local" | "remote"; peerName: string | null;
-  sourceId: string; sourceName: string;
+  sourceId: string; sourceName: string; visibility: "local" | "selected_peers" | "all_peers";
 };
 type RequestGroup = { authorId: string; authorName: string; authorCompany: string; authorCategory?: string | null; lastActivityAt: string; requests: RequestItem[] };
 type Period = "all" | "week" | "month";
@@ -27,6 +26,7 @@ export function DashboardClient() {
   const [deletingId, setDeletingId] = useState("");
   const [visibleGroups, setVisibleGroups] = useState(8);
   const [showCreate, setShowCreate] = useState(false);
+  const [editingRequest, setEditingRequest] = useState<RequestItem | null>(null);
 
   async function loadRequests() {
     const response = await fetch("/api/v1/requests");
@@ -50,18 +50,18 @@ export function DashboardClient() {
   }, []);
 
   useEffect(() => {
-    if (!showCreate) return;
+    if (!showCreate && !editingRequest) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setShowCreate(false);
+      if (event.key === "Escape") { setShowCreate(false); setEditingRequest(null); }
     }
     window.addEventListener("keydown", closeOnEscape);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", closeOnEscape);
     };
-  }, [showCreate]);
+  }, [editingRequest, showCreate]);
 
   const sources = useMemo(() => {
     const values = new Map<string, string>();
@@ -104,9 +104,6 @@ export function DashboardClient() {
 
   return (
     <main className="app-main request-dashboard">
-      <header className="app-heading">
-        <div><span className="auth-step">{messages.dashboardEyebrow}</span><h1>{messages.dashboardTitleFirst}<br />{messages.dashboardTitleSecond}</h1></div>
-      </header>
       <div className="dashboard-filters">
         <input className="search-input" type="search" placeholder={messages.searchRequests} value={query} onChange={(event) => { setQuery(event.target.value); setVisibleGroups(8); }} aria-label={messages.searchRequests} />
         <FilterRow label={messages.filterGroup}><FilterButton active={source === "all"} onClick={() => { setSource("all"); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton>{sources.map((item) => <FilterButton key={item.id} active={source === item.id} onClick={() => { setSource(item.id); setVisibleGroups(8); }}>{item.name}</FilterButton>)}</FilterRow>
@@ -114,7 +111,7 @@ export function DashboardClient() {
       </div>
       {error && <div className="form-error">{error}</div>}
       {loading ? <div className="loading-state"><div className="skeleton"/><div className="skeleton"/></div> : filtered.length ? (
-        <><p className="request-summary">{filtered.length} {filtered.length === 1 ? messages.memberOne : messages.memberMany} · {requestCount} {requestCount === 1 ? messages.requestOne : messages.requestMany}</p><div className="member-groups">{visible.map((group) => <MemberGroup key={group.authorId} group={group} currentUserId={currentUserId} deletingId={deletingId} onDelete={deleteRequest} locale={locale} />)}</div>{visibleGroups < filtered.length && <div className="load-more-row"><button className="button button-ghost" type="button" onClick={() => setVisibleGroups((count) => count + 8)}>{messages.loadMore}</button></div>}</>
+        <><p className="request-summary">{filtered.length} {filtered.length === 1 ? messages.memberOne : messages.memberMany} · {requestCount} {requestCount === 1 ? messages.requestOne : messages.requestMany}</p><div className="member-groups">{visible.map((group) => <MemberGroup key={group.authorId} group={group} currentUserId={currentUserId} deletingId={deletingId} onDelete={deleteRequest} onEdit={setEditingRequest} locale={locale} />)}</div>{visibleGroups < filtered.length && <div className="load-more-row"><button className="button button-ghost" type="button" onClick={() => setVisibleGroups((count) => count + 8)}>{messages.loadMore}</button></div>}</>
       ) : <div className="empty-state"><h2>{messages.noResults}</h2><p>{messages.noResultsText}</p><button type="button" className="button button-accent" onClick={() => setShowCreate(true)}><PlusIcon /> {messages.createRequest}</button></div>}
       <button type="button" className="floating-add-button" aria-label={messages.newRequest} title={messages.newRequest} onClick={() => setShowCreate(true)}><PlusIcon /></button>
       {showCreate && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCreate(false); }}>
@@ -122,6 +119,13 @@ export function DashboardClient() {
           <header className="modal-header"><div><span className="auth-step">{messages.newEntry}</span><h2 id="create-request-title">{messages.newRequest}</h2></div><button className="modal-close" type="button" aria-label={messages.cancel} onClick={() => setShowCreate(false)}>×</button></header>
           <p className="modal-intro">{messages.newIntro}</p>
           <RequestForm onCancel={() => setShowCreate(false)} onSaved={async () => { await loadRequests(); setShowCreate(false); }} />
+        </section>
+      </div>}
+      {editingRequest && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setEditingRequest(null); }}>
+        <section className="modal-card request-create-modal" role="dialog" aria-modal="true" aria-labelledby="edit-request-title">
+          <header className="modal-header"><div><span className="auth-step">{messages.editEntry}</span><h2 id="edit-request-title">{messages.editRequest}</h2></div><button className="modal-close" type="button" aria-label={messages.cancel} onClick={() => setEditingRequest(null)}>×</button></header>
+          <p className="modal-intro">{messages.editIntro}</p>
+          <RequestForm key={editingRequest.id} request={editingRequest} onCancel={() => setEditingRequest(null)} onSaved={async () => { await loadRequests(); setEditingRequest(null); }} />
         </section>
       </div>}
     </main>
@@ -136,7 +140,7 @@ function FilterButton({ active, onClick, children }: { active: boolean; onClick:
   return <button type="button" className={active ? "active" : ""} aria-pressed={active} onClick={onClick}>{children}</button>;
 }
 
-function MemberGroup({ group, currentUserId, deletingId, onDelete, locale }: { group: RequestGroup; currentUserId: string; deletingId: string; onDelete: (item: RequestItem) => void; locale: "lv" | "en" | "lt" | "et" }) {
+function MemberGroup({ group, currentUserId, deletingId, onDelete, onEdit, locale }: { group: RequestGroup; currentUserId: string; deletingId: string; onDelete: (item: RequestItem) => void; onEdit: (item: RequestItem) => void; locale: "lv" | "en" | "lt" | "et" }) {
   const { messages } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const latest = group.requests[0];
@@ -147,24 +151,24 @@ function MemberGroup({ group, currentUserId, deletingId, onDelete, locale }: { g
       <div className="member-summary-row">
         <div className="member-identity"><span className="avatar">{initials}</span><div className="member-meta"><strong>{group.authorName}</strong><span>{group.authorCompany}</span>{group.authorCategory && <small>{group.authorCategory}</small>}</div></div>
         <article className="latest-request-preview">
-          <RequestTop item={latest} canManage={latest.origin === "local" && latest.authorId === currentUserId} deleting={deletingId === latest.id} onDelete={onDelete} />
+          <RequestTop item={latest} canManage={latest.origin === "local" && latest.authorId === currentUserId} deleting={deletingId === latest.id} onDelete={onDelete} onEdit={onEdit} />
           <h2>{latest.title}</h2><p>{latest.details}</p><small>{messages.added} {formatDateTime(latest.createdAt, locale)}{latest.updatedAt !== latest.createdAt ? ` · ${messages.updated} ${formatDateTime(latest.updatedAt, locale)}` : ""}</small>
         </article>
         {canExpand ? <button className="request-count-panel" type="button" aria-expanded={expanded} onClick={() => setExpanded((current) => !current)}><b>{group.requests.length}</b><span>{messages.requestMany}</span><i aria-hidden="true">{expanded ? "⌃" : "⌄"}</i></button> : <div className="request-count-panel single"><b>1</b><span>{messages.requestOne}</span></div>}
       </div>
-      {expanded && canExpand && <div className="member-expanded-requests"><h3>{messages.allMemberRequests}</h3><div className="expanded-request-list">{group.requests.map((item) => <ExpandedRequest item={item} key={item.id} canManage={item.origin === "local" && item.authorId === currentUserId} deleting={deletingId === item.id} onDelete={onDelete} locale={locale} />)}</div></div>}
+      {expanded && canExpand && <div className="member-expanded-requests"><h3>{messages.allMemberRequests}</h3><div className="expanded-request-list">{group.requests.map((item) => <ExpandedRequest item={item} key={item.id} canManage={item.origin === "local" && item.authorId === currentUserId} deleting={deletingId === item.id} onDelete={onDelete} onEdit={onEdit} locale={locale} />)}</div></div>}
     </section>
   );
 }
 
-function RequestTop({ item, canManage, deleting, onDelete }: { item: RequestItem; canManage: boolean; deleting: boolean; onDelete: (item: RequestItem) => void }) {
+function RequestTop({ item, canManage, deleting, onDelete, onEdit }: { item: RequestItem; canManage: boolean; deleting: boolean; onDelete: (item: RequestItem) => void; onEdit: (item: RequestItem) => void }) {
   const { messages } = useLanguage();
-  return <div className="request-card-top"><span className="origin-badge">{item.origin === "remote" && <GlobeIcon />}{item.sourceName}</span>{canManage && <details className="request-actions-menu"><summary aria-label={`${messages.editRequest}, ${messages.deleteRequest}`}>•••</summary><div><Link href={`/app/requests/${item.id}/edit`}>{messages.editRequest}</Link><button type="button" disabled={deleting} onClick={() => onDelete(item)}>{deleting ? messages.deletingRequest : messages.deleteRequest}</button></div></details>}</div>;
+  return <div className="request-card-top"><span className="origin-badge">{item.origin === "remote" && <GlobeIcon />}{item.sourceName}</span>{canManage && <details className="request-actions-menu"><summary aria-label={`${messages.editRequest}, ${messages.deleteRequest}`}>•••</summary><div><button type="button" onClick={() => onEdit(item)}>{messages.editRequest}</button><button type="button" disabled={deleting} onClick={() => onDelete(item)}>{deleting ? messages.deletingRequest : messages.deleteRequest}</button></div></details>}</div>;
 }
 
-function ExpandedRequest({ item, canManage, deleting, onDelete, locale }: { item: RequestItem; canManage: boolean; deleting: boolean; onDelete: (item: RequestItem) => void; locale: "lv" | "en" | "lt" | "et" }) {
+function ExpandedRequest({ item, canManage, deleting, onDelete, onEdit, locale }: { item: RequestItem; canManage: boolean; deleting: boolean; onDelete: (item: RequestItem) => void; onEdit: (item: RequestItem) => void; locale: "lv" | "en" | "lt" | "et" }) {
   const tags = [item.target, item.industry, item.region, ...item.tags].filter((tag): tag is string => Boolean(tag));
-  return <article className="expanded-request-item"><div className="expanded-request-heading"><RequestTop item={item} canManage={canManage} deleting={deleting} onDelete={onDelete} /><small>{formatDateTime(item.updatedAt, locale)}</small></div><h2>{item.title}</h2><p>{item.details}</p>{tags.length > 0 && <div className="tag-row">{tags.map((tag, index) => <span key={`${tag}-${index}`}>{tag}</span>)}</div>}</article>;
+  return <article className="expanded-request-item"><div className="expanded-request-heading"><RequestTop item={item} canManage={canManage} deleting={deleting} onDelete={onDelete} onEdit={onEdit} /><small>{formatDateTime(item.updatedAt, locale)}</small></div><h2>{item.title}</h2><p>{item.details}</p>{tags.length > 0 && <div className="tag-row">{tags.map((tag, index) => <span key={`${tag}-${index}`}>{tag}</span>)}</div>}</article>;
 }
 
 function periodBoundary(period: Period) {
