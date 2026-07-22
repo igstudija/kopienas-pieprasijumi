@@ -262,13 +262,9 @@ svg { width: 1.15em; height: 1.15em; }
 .member-meta small { color: var(--meta); font-size: 12px; line-height: 1.4; }
 .latest-request-preview { padding: 15px 18px; border-left: 1px solid var(--line); min-width: 0; }
 .request-card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.request-actions-menu { position: relative; }
-.request-actions-menu summary { width: 40px; height: 36px; border: 1px solid var(--line); border-radius: 999px; background: white; display: grid; place-items: center; color: var(--ink); font-size: 15px; font-weight: 850; letter-spacing: .08em; cursor: pointer; list-style: none; }
-.request-actions-menu summary::-webkit-details-marker { display: none; }
-.request-actions-menu > div { position: absolute; z-index: 5; top: calc(100% + 6px); right: 0; min-width: 160px; padding: 6px; border: 1px solid var(--line); border-radius: 12px; background: white; box-shadow: 0 14px 36px rgba(13,42,33,.16); display: grid; }
-.request-actions-menu a, .request-actions-menu button { min-height: 40px; padding: 0 11px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); display: flex; align-items: center; font-size: 13px; font-weight: 750; text-align: left; cursor: pointer; }
-.request-actions-menu a:hover, .request-actions-menu button:hover { background: var(--paper); }
-.request-actions-menu button { color: #8b2f20; }
+.request-inline-actions { flex: 0 0 auto; margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.request-inline-actions .icon-action { width: 36px; min-height: 36px; }
+.request-inline-actions .icon-action svg { width: 16px; height: 16px; }
 .latest-request-preview h2 { margin: 5px 0 4px; font-family: var(--font-serif), system-ui, sans-serif; font-size: 18px; line-height: 1.15; letter-spacing: -.02em; }
 .latest-request-preview p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
 .latest-request-preview > small { display: block; margin-top: 7px; color: var(--meta); font-size: 12px; }

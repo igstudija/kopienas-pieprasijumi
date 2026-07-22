@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { GlobeIcon, PlusIcon } from "./icons";
+import { EditIcon, GlobeIcon, PlusIcon, TrashIcon } from "./icons";
 import { useLanguage } from "./language-provider";
 import { RequestForm } from "./request-form";
 
@@ -65,7 +65,7 @@ export function DashboardClient() {
 
   const sources = useMemo(() => {
     const values = new Map<string, string>();
-    for (const group of groups) for (const item of group.requests) values.set(item.sourceId, item.sourceName);
+    for (const group of groups) for (const item of group.requests) if (item.origin === "remote") values.set(item.sourceId, item.sourceName);
     return [...values.entries()].map(([id, name]) => ({ id, name }));
   }, [groups]);
 
@@ -163,7 +163,7 @@ function MemberGroup({ group, currentUserId, deletingId, onDelete, onEdit, local
 
 function RequestTop({ item, canManage, deleting, onDelete, onEdit }: { item: RequestItem; canManage: boolean; deleting: boolean; onDelete: (item: RequestItem) => void; onEdit: (item: RequestItem) => void }) {
   const { messages } = useLanguage();
-  return <div className="request-card-top"><span className="origin-badge">{item.origin === "remote" && <GlobeIcon />}{item.sourceName}</span>{canManage && <details className="request-actions-menu"><summary aria-label={`${messages.editRequest}, ${messages.deleteRequest}`}>•••</summary><div><button type="button" onClick={() => onEdit(item)}>{messages.editRequest}</button><button type="button" disabled={deleting} onClick={() => onDelete(item)}>{deleting ? messages.deletingRequest : messages.deleteRequest}</button></div></details>}</div>;
+  return <div className="request-card-top">{item.origin === "remote" && <span className="origin-badge"><GlobeIcon />{item.sourceName}</span>}{canManage && <div className="request-inline-actions"><button className="row-action icon-action" type="button" onClick={() => onEdit(item)} aria-label={messages.editRequest} title={messages.editRequest}><EditIcon /></button><button className="row-action row-action-danger icon-action" type="button" disabled={deleting} onClick={() => onDelete(item)} aria-label={deleting ? messages.deletingRequest : messages.deleteRequest} title={deleting ? messages.deletingRequest : messages.deleteRequest}><TrashIcon /></button></div>}</div>;
 }
 
 function ExpandedRequest({ item, canManage, deleting, onDelete, onEdit, locale }: { item: RequestItem; canManage: boolean; deleting: boolean; onDelete: (item: RequestItem) => void; onEdit: (item: RequestItem) => void; locale: "lv" | "en" | "lt" | "et" }) {
