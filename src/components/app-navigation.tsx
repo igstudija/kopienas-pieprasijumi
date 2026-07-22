@@ -33,7 +33,7 @@ export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/" }:
   const profileTitle = `${messages.profileTitleFirst} ${messages.profileTitleSecond}`.replace(/\.$/, "");
   const newRequestTitle = `${messages.newTitleFirst} ${messages.newTitleSecond}`.replace(/\.$/, "");
   const editRequestTitle = `${messages.editTitleFirst} ${messages.editTitleSecond}`.replace(/\.$/, "");
-  const sectionTitle = pathname === "/" ? `${messages.brandFirst} ${messages.brandSecond}`
+  const sectionTitle = !user && (pathname === "/" || pathname.startsWith("/admin")) ? `${messages.brandFirst} ${messages.brandSecond}`
     : pathname.startsWith("/privacy") ? legalCopy[locale].privacy.eyebrow
     : pathname.startsWith("/par-risinajumu") || pathname.startsWith("/impressum") ? legalCopy[locale].impressum.title.replace(/\.$/, "")
       : pathname === "/app" ? dashboardTitle

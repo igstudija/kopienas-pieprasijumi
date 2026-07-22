@@ -139,6 +139,9 @@ svg { width: 1.15em; height: 1.15em; }
 .auth-shell-home { min-height: calc(100vh - 76px); grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr); align-items: center; gap: clamp(24px, 4vw, 64px); padding: clamp(24px, 3vw, 48px); }
 .auth-shell-home .auth-card { margin: 48px auto; }
 .auth-shell-home .auth-aside { width: min(100%, 620px); min-height: 0; aspect-ratio: 1; align-self: center; justify-self: end; border-radius: clamp(24px, 3vw, 42px); padding: clamp(36px, 5vw, 72px); }
+.auth-shell-admin { min-height: calc(100vh - 76px); grid-template-columns: 1fr; place-items: center; padding: clamp(32px, 6vw, 80px) 20px; }
+.admin-login-card { width: min(100%, 460px); }
+.admin-login-card .auth-form { margin-top: 0; }
 .auth-brand { position: absolute; left: 42px; top: 32px; z-index: 2; }
 .auth-card { align-self: center; width: min(470px, calc(100% - 64px)); margin: 110px auto 70px; }
 .auth-card h1 { font-family: var(--font-serif), system-ui, sans-serif; font-weight: 520; font-size: clamp(52px, 6vw, 78px); line-height: .88; letter-spacing: -.055em; margin: 24px 0; }
@@ -566,6 +569,7 @@ textarea.field { min-height: 150px; resize: vertical; }
   .app-nav { height: 66px; padding-inline: 15px; }
   .auth-shell-home { min-height: calc(100vh - 66px); padding: 0; }
   .auth-shell-home .auth-card { margin: 54px auto 70px; }
+  .auth-shell-admin { min-height: calc(100vh - 66px); padding: 42px 18px 64px; }
   .app-nav .brand > span:last-child { display: none; }
   .app-nav-links { display: none; }
   .mobile-nav-toggle { width: 42px; height: 42px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--cream); display: grid; place-content: center; gap: 4px; cursor: pointer; }
