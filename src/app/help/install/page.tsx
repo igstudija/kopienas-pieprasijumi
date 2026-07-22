@@ -12,64 +12,64 @@ export default function InstallationHelpPage() {
 
   return (
     <main className="help-page">
-      <nav className="help-nav"><Brand /><Link href="/setup">Atgriezties vednī</Link></nav>
+      <nav className="help-nav"><Brand /><Link href="/setup">Return to setup</Link></nav>
       <header className="help-hero">
         <span className="auth-step">Vercel + Supabase</span>
-        <h1>Neatkarīga instalācija<br />bez servera administrēšanas.</h1>
-        <p>Katrai grupai ir sava koda kopija, savs Vercel projekts un sava Supabase datubāze. Neviena instalācija nav atkarīga no centrāla aplikācijas servera.</p>
-        {deployUrl ? <a className="button button-accent" href={deployUrl}>Sākt ieteikto instalāciju</a> : <div className="setup-warning">Izplatītājam vēl jākonfigurē publiskā GitHub šablona adrese <code>NEXT_PUBLIC_TEMPLATE_REPOSITORY_URL</code>.</div>}
+        <h1>An independent installation<br />without server administration.</h1>
+        <p>Every community has its own code copy, Vercel project and Supabase database. No installation depends on a central application server.</p>
+        {deployUrl ? <a className="button button-accent" href={deployUrl}>Start the recommended installation</a> : <div className="setup-warning">The template distributor must configure the public GitHub template URL in <code>NEXT_PUBLIC_TEMPLATE_REPOSITORY_URL</code>.</div>}
       </header>
 
       <section className="help-options">
         <article className="help-option recommended">
-          <span>Ieteicamais variants</span><h2>Viena Vercel instalācijas poga</h2>
+          <span>Recommended</span><h2>One Vercel deployment button</h2>
           <ol>
-            <li>Pieslēdzies Vercel un izvēlies, kurā GitHub kontā izveidot savu projekta kopiju.</li>
-            <li>Izvēlies instalācijas paroli laukam <code>SETUP_SECRET</code>.</li>
-            <li>Apstiprini Supabase produktu, plānu un datubāzes reģionu.</li>
-            <li>Vercel pieslēdz Supabase credentials un publicē aplikāciju.</li>
-            <li>Atver aplikāciju un izpildi pirmās palaišanas vedni.</li>
+            <li>Sign in to Vercel and choose the GitHub account that will own your project copy.</li>
+            <li>Choose a unique installation secret for <code>SETUP_SECRET</code>.</li>
+            <li>Confirm the Supabase product, plan and database region.</li>
+            <li>Vercel connects the Supabase credentials and deploys the application.</li>
+            <li>Open the application and complete the first-run wizard.</li>
           </ol>
         </article>
         <article className="help-option">
-          <span>Ja Supabase solis neparādās</span><h2>Pieslēgšana Vercel panelī</h2>
+          <span>If the Supabase step is missing</span><h2>Connect it in the Vercel dashboard</h2>
           <ol>
-            <li>Vispirms publicē GitHub kopiju Vercel.</li>
-            <li>Vercel projektā atver <b>Storage → Create Database → Supabase</b>.</li>
-            <li>Izveido Supabase projektu un savieno to ar šo Vercel projektu.</li>
-            <li>Project Settings → Environment Variables pievieno <code>SETUP_SECRET</code>.</li>
-            <li>Veic <b>Redeploy</b> un atver <code>/setup</code>.</li>
+            <li>Deploy the GitHub copy to Vercel first.</li>
+            <li>In the Vercel project, open <b>Storage → Create Database → Supabase</b>.</li>
+            <li>Create a Supabase project and connect it to this Vercel project.</li>
+            <li>Add <code>SETUP_SECRET</code> under Project Settings → Environment Variables.</li>
+            <li><b>Redeploy</b>, then open <code>/setup</code>.</li>
           </ol>
         </article>
         <article className="help-option">
-          <span>Esošs Supabase projekts</span><h2>Manuāla pieslēgšana</h2>
+          <span>Existing Supabase project</span><h2>Manual connection</h2>
           <ol>
-            <li>Importē savu GitHub kopiju Vercel.</li>
-            <li>Pievieno <code>DATABASE_URL</code> vai <code>POSTGRES_URL</code> ar Supabase pooled connection string.</li>
-            <li>Pievieno <code>SUPABASE_SECRET_KEY</code> un savu <code>SETUP_SECRET</code>.</li>
-            <li>Publicē atkārtoti. Build laikā automātiski izpildīsies datubāzes migrācijas.</li>
-            <li>Pabeidz konfigurāciju aplikācijas vednī.</li>
+            <li>Import your GitHub copy into Vercel.</li>
+            <li>Add <code>DATABASE_URL</code> or <code>POSTGRES_URL</code> with the pooled Supabase connection string.</li>
+            <li>Add <code>SUPABASE_SECRET_KEY</code> and your <code>SETUP_SECRET</code>.</li>
+            <li>Redeploy. Database migrations run automatically during the build.</li>
+            <li>Complete the configuration in the application wizard.</li>
           </ol>
         </article>
       </section>
 
       <section className="help-detail">
-        <div><span className="section-number">Drošība</span><h2>Kur paliek credentials?</h2></div>
+        <div><span className="section-number">Security</span><h2>Where are credentials stored?</h2></div>
         <div className="help-facts">
-          <p><b>Datubāzes credentials</b><span>Vercel Environment Variables. Tie nenonāk GitHub vai pārlūkā.</span></p>
-          <p><b>Meta App Secret</b><span>Vednis to šifrē pirms saglabāšanas konkrētās instances Supabase datubāzē.</span></p>
-          <p><b>Federācijas privātā atslēga</b><span>Tiek ģenerēta vednī un šifrēta konkrētās instances datubāzē.</span></p>
-          <p><b>Instalācijas parole</b><span>Glabājas tikai Vercel; vednis to pārbauda un nekad neieraksta datubāzē.</span></p>
+          <p><b>Database credentials</b><span>Vercel Environment Variables. They are never stored in GitHub or exposed to the browser.</span></p>
+          <p><b>Meta App Secret</b><span>The wizard encrypts it before storing it in this instance’s Supabase database.</span></p>
+          <p><b>Federation private key</b><span>Generated by the wizard and encrypted in this instance’s database.</span></p>
+          <p><b>Installation secret</b><span>Stored only in Vercel; the wizard verifies it and never writes it to the database.</span></p>
         </div>
       </section>
 
       <section className="help-detail whatsapp-help">
-        <div><span className="section-number">WhatsApp</span><h2>Kas jāsagatavo Meta pusē?</h2></div>
+        <div><span className="section-number">WhatsApp</span><h2>What must be prepared in Meta?</h2></div>
         <div className="help-facts">
-          <p><b>1. Meta aplikācija</b><span>Izveido Business tipa aplikāciju un pievieno WhatsApp produktu.</span></p>
-          <p><b>2. Grupas numurs</b><span>Pieslēdz WhatsApp Business numuru, uz kuru biedri sūtīs autorizācijas ziņu.</span></p>
-          <p><b>3. App Secret</b><span>Nokopē to vedņa WhatsApp solī. Pārlūkā tas netiks rādīts atkārtoti.</span></p>
-          <p><b>4. Webhook</b><span>Pēc instalācijas nokopē Callback URL un Verify token, pēc tam abonē <code>messages</code>.</span></p>
+          <p><b>1. Meta app</b><span>Create a Business app and add the WhatsApp product.</span></p>
+          <p><b>2. Community number</b><span>Connect the WhatsApp Business number to which members send the authentication message.</span></p>
+          <p><b>3. App Secret</b><span>Paste it into the WhatsApp step of the wizard. It will not be shown again in the browser.</span></p>
+          <p><b>4. Webhook</b><span>After installation, copy the Callback URL and Verify token, then subscribe to <code>messages</code>.</span></p>
         </div>
       </section>
     </main>

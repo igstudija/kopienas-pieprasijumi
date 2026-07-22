@@ -1,14 +1,12 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Brand } from "@/components/brand";
-import { LogoutButton } from "@/components/logout-button";
+import { AppNavigation } from "@/components/app-navigation";
 import { currentUserFromPage } from "@/lib/services/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUserFromPage();
-  if (!user) redirect("/login");
+  if (!user) redirect("/");
   const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`;
-  return <div className="app-shell"><nav className="app-nav"><Brand /><div className="app-nav-links"><Link href="/app">Pieprasījumi</Link>{user.role !== "member" && <Link href="/admin">Administrācija</Link>}<div className="user-chip"><span className="avatar">{initials}</span><span><b>{user.displayName}</b><small>{user.company}</small></span></div><LogoutButton /></div></nav>{children}</div>;
+  return <div className="app-shell"><AppNavigation user={{ displayName: user.displayName, company: user.company, initials }} showAdmin={user.role !== "member"} />{children}</div>;
 }

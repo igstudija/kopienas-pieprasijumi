@@ -2,7 +2,7 @@ import { after, NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { assertSameOrigin, jsonError, requestMeta } from "@/lib/http";
 import { currentUserFromRequest } from "@/lib/services/auth";
-import { updateRequest } from "@/lib/services/requests";
+import { deleteOwnRequest, updateRequest } from "@/lib/services/requests";
 import { dispatchFederationOutbox } from "@/lib/services/federation-dispatch";
 
 const updateSchema = z.object({
@@ -29,5 +29,19 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     return NextResponse.json({ ok: true });
   } catch (error) {
     return jsonError(error, "Pieprasījumu neizdevās atjaunot.");
+  }
+}
+
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    assertSameOrigin(request);
+    const user = await currentUserFromRequest(request);
+    if (!user) return NextResponse.json({ error: "Nepieciešama autorizācija." }, { status: 401 });
+    const { id } = await context.params;
+    await deleteOwnRequest(user, z.uuid().parse(id), requestMeta(request));
+    after(() => dispatchFederationOutbox().catch((error) => console.error("Federācijas piegāde neizdevās", error)));
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return jsonError(error, "Pieprasījumu neizdevās dzēst.");
   }
 }

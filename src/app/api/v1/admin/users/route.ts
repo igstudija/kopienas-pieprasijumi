@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   try {
     const actor = await currentUserFromRequest(request);
     if (!actor || actor.role === "member") return NextResponse.json({ error: "Nepietiekamas tiesības." }, { status: 403 });
-    return NextResponse.json({ users: await listUsers(), actorUserId: actor.id });
+    return NextResponse.json({ users: await listUsers(), actorUserId: actor.id, actorRole: actor.role });
   } catch (error) {
     return jsonError(error, "Lietotājus neizdevās ielādēt.");
   }

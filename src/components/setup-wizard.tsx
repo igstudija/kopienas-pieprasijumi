@@ -17,7 +17,7 @@ type SetupResult = {
   webhookVerifyToken: string;
 };
 
-const steps = ["Pārbaude", "Grupa", "WhatsApp", "Administrators", "Pabeigts"];
+const steps = ["System check", "Community", "WhatsApp", "Administrator", "Complete"];
 
 export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
   const [step, setStep] = useState(0);
@@ -80,11 +80,11 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Instalāciju neizdevās pabeigt.");
+      if (!response.ok) throw new Error(data.error ?? "The installation could not be completed.");
       setResult(data);
       setStep(4);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Instalāciju neizdevās pabeigt.");
+      setError(caught instanceof Error ? caught.message : "The installation could not be completed.");
     } finally {
       setBusy(false);
     }
@@ -97,75 +97,75 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
   return (
     <div className="setup-layout">
       <aside className="setup-progress">
-        <span className="auth-step">Pirmā palaišana</span>
-        <h1>Uzstādi savu<br />kopienas sistēmu.</h1>
-        <p>Šī instalācija, datubāze un visi dati pieder tikai tavai grupai.</p>
+        <span className="auth-step">First run</span>
+        <h1>Set up your<br />community system.</h1>
+        <p>This installation, its database and all its data belong only to your community.</p>
         <ol>{steps.map((label, index) => <li className={index === step ? "current" : index < step ? "done" : ""} key={label}><b>{index < step ? "✓" : index + 1}</b><span>{label}</span></li>)}</ol>
       </aside>
 
       <section className="setup-card">
         {step === 0 && <>
-          <span className="auth-step">1. Sistēmas pārbaude</span>
-          <h2>Vai viss ir gatavs?</h2>
-          <p>Vednis pārbauda tikai nepieciešamo infrastruktūru. Datubāzes paroles šeit nav jāievada.</p>
+          <span className="auth-step">1. System check</span>
+          <h2>Is everything ready?</h2>
+          <p>The wizard checks only the required infrastructure. Database credentials are never entered here.</p>
           <div className="check-list">
-            <div className={initialStatus.databaseConnected ? "ok" : "bad"}><b>{initialStatus.databaseConnected ? "✓" : "!"}</b><span><strong>{initialStatus.databaseProvider} datubāze</strong><small>{initialStatus.databaseConnected ? "Savienojums darbojas" : initialStatus.error}</small></span></div>
-            <div className={initialStatus.setupPasswordConfigured ? "ok" : "bad"}><b>{initialStatus.setupPasswordConfigured ? "✓" : "!"}</b><span><strong>Instalācijas parole</strong><small>{initialStatus.setupPasswordConfigured ? "SETUP_SECRET ir saglabāts Vercel" : "Vercel jāpievieno SETUP_SECRET un jāveic redeploy"}</small></span></div>
-            <div className="ok"><b>✓</b><span><strong>Publiskā adrese</strong><small>{initialStatus.detectedUrl}</small></span></div>
+            <div className={initialStatus.databaseConnected ? "ok" : "bad"}><b>{initialStatus.databaseConnected ? "✓" : "!"}</b><span><strong>{initialStatus.databaseProvider} database</strong><small>{initialStatus.databaseConnected ? "Connection works" : initialStatus.error}</small></span></div>
+            <div className={initialStatus.setupPasswordConfigured ? "ok" : "bad"}><b>{initialStatus.setupPasswordConfigured ? "✓" : "!"}</b><span><strong>Installation secret</strong><small>{initialStatus.setupPasswordConfigured ? "SETUP_SECRET is stored in Vercel" : "Add SETUP_SECRET in Vercel and redeploy"}</small></span></div>
+            <div className="ok"><b>✓</b><span><strong>Public URL</strong><small>{initialStatus.detectedUrl}</small></span></div>
           </div>
-          {!canContinue && <p className="setup-warning">Novērs norādīto problēmu un pārlādē šo lapu. <Link href="/help/install">Atvērt instalēšanas palīdzību</Link></p>}
+          {!canContinue && <p className="setup-warning">Fix the issue shown above and reload this page. <Link href="/help/install">Open installation help</Link></p>}
         </>}
 
         {step === 1 && <>
-          <span className="auth-step">2. Grupas informācija</span>
-          <h2>Nosauc savu instanci.</h2>
-          <p>Šis nosaukums būs redzams biedriem un citām savienotajām grupām.</p>
+          <span className="auth-step">2. Community information</span>
+          <h2>Name your instance.</h2>
+          <p>This name will be visible to members and connected communities.</p>
           <div className="setup-fields">
-            <label>Grupas nosaukums<input className="field" value={form.instanceName} onChange={(event) => update("instanceName", event.target.value)} placeholder="Rīgas uzņēmēju kopiena" autoFocus /></label>
-            <div className="form-grid"><label>Laika zona<select className="field" value={form.timezone} onChange={(event) => update("timezone", event.target.value)}><option value="Europe/Riga">Europe/Riga</option><option value="Europe/Tallinn">Europe/Tallinn</option><option value="Europe/Vilnius">Europe/Vilnius</option></select></label><label>Valoda<select className="field" value={form.locale} onChange={(event) => update("locale", event.target.value)}><option value="lv">Latviešu</option><option value="en">English</option></select></label></div>
+            <label>Community name<input className="field" value={form.instanceName} onChange={(event) => update("instanceName", event.target.value)} placeholder="Riga Business Community" autoFocus /></label>
+            <div className="form-grid"><label>Time zone<select className="field" value={form.timezone} onChange={(event) => update("timezone", event.target.value)}><option value="Europe/Riga">Europe/Riga</option><option value="Europe/Tallinn">Europe/Tallinn</option><option value="Europe/Vilnius">Europe/Vilnius</option></select></label><label>Default language<select className="field" value={form.locale} onChange={(event) => update("locale", event.target.value)}><option value="lv">Latviešu</option><option value="en">English</option><option value="lt">Lietuvių</option><option value="et">Eesti</option></select></label></div>
           </div>
         </>}
 
         {step === 2 && <>
-          <span className="auth-step">3. WhatsApp savienojums</span>
-          <h2>Pieslēdz grupas numuru.</h2>
-          <p>Numurs veidos autorizācijas saiti. Meta App Secret glabāsies šifrēts tikai tavas instances datubāzē.</p>
+          <span className="auth-step">3. WhatsApp connection</span>
+          <h2>Connect the community number.</h2>
+          <p>The number is used in the sign-in link. The Meta App Secret is encrypted before it is stored in this instance’s database.</p>
           <div className="setup-fields">
-            <label>WhatsApp Business numurs<input className="field" value={form.whatsappBusinessNumber} onChange={(event) => update("whatsappBusinessNumber", event.target.value)} placeholder="+37120000000" inputMode="tel" /></label>
+            <label>WhatsApp Business number<input className="field" value={form.whatsappBusinessNumber} onChange={(event) => update("whatsappBusinessNumber", event.target.value)} placeholder="+37120000000" inputMode="tel" /></label>
             <label>Meta App Secret<input className="field" value={form.whatsappAppSecret} onChange={(event) => update("whatsappAppSecret", event.target.value)} type="password" autoComplete="off" /><small>Meta for Developers → App settings → Basic → App Secret</small></label>
           </div>
-          <p className="setup-note">Webhook adresi un verifikācijas tokenu vednis izveidos automātiski pēdējā solī.</p>
+          <p className="setup-note">The wizard creates the webhook URL and verification token automatically in the final step.</p>
         </>}
 
         {step === 3 && <>
-          <span className="auth-step">4. Pirmais administrators</span>
-          <h2>Izveido īpašnieku.</h2>
-          <p>Šim lietotājam būs pilnas tiesības pārvaldīt instanci un pievienot citus administratorus.</p>
+          <span className="auth-step">4. First administrator</span>
+          <h2>Create the owner account.</h2>
+          <p>This user has full permission to manage the instance and add other administrators.</p>
           <div className="setup-fields">
-            <div className="form-grid"><label>Vārds<input className="field" value={form.firstName} onChange={(event) => update("firstName", event.target.value)} /></label><label>Uzvārds<input className="field" value={form.lastName} onChange={(event) => update("lastName", event.target.value)} /></label></div>
-            <label>Uzņēmums<input className="field" value={form.company} onChange={(event) => update("company", event.target.value)} /></label>
-            <div className="form-grid"><label>WhatsApp numurs<input className="field" value={form.phone} onChange={(event) => update("phone", event.target.value)} inputMode="tel" /></label><label>E-pasts (nav obligāts)<input className="field" value={form.email} onChange={(event) => update("email", event.target.value)} type="email" /></label></div>
-            <div className="form-grid"><label>Admina parole<input className="field" value={form.adminPassword} onChange={(event) => update("adminPassword", event.target.value)} type="password" minLength={12} maxLength={200} autoComplete="new-password" /><small>Vismaz 12 rakstzīmes. Tiks glabāts tikai paroles hash.</small></label><label>Atkārto admina paroli<input className="field" value={form.adminPasswordConfirm} onChange={(event) => update("adminPasswordConfirm", event.target.value)} type="password" minLength={12} maxLength={200} autoComplete="new-password" /><small>{form.adminPasswordConfirm && form.adminPassword !== form.adminPasswordConfirm ? "Paroles nesakrīt." : "Šī parole paredzēta tikai /admin ieejai."}</small></label></div>
-            <label>Instalācijas parole<input className="field" value={form.setupPassword} onChange={(event) => update("setupPassword", event.target.value)} type="password" autoComplete="current-password" /><small>Tā pati vismaz 12 rakstzīmju parole, kuru izvēlējies Vercel instalēšanas laikā.</small></label>
+            <div className="form-grid"><label>First name<input className="field" value={form.firstName} onChange={(event) => update("firstName", event.target.value)} /></label><label>Last name<input className="field" value={form.lastName} onChange={(event) => update("lastName", event.target.value)} /></label></div>
+            <label>Company<input className="field" value={form.company} onChange={(event) => update("company", event.target.value)} /></label>
+            <div className="form-grid"><label>WhatsApp number<input className="field" value={form.phone} onChange={(event) => update("phone", event.target.value)} inputMode="tel" /></label><label>Email (optional)<input className="field" value={form.email} onChange={(event) => update("email", event.target.value)} type="email" /></label></div>
+            <div className="form-grid"><label>Admin password<input className="field" value={form.adminPassword} onChange={(event) => update("adminPassword", event.target.value)} type="password" minLength={12} maxLength={200} autoComplete="new-password" /><small>At least 12 characters. Only a password hash is stored.</small></label><label>Repeat admin password<input className="field" value={form.adminPasswordConfirm} onChange={(event) => update("adminPasswordConfirm", event.target.value)} type="password" minLength={12} maxLength={200} autoComplete="new-password" /><small>{form.adminPasswordConfirm && form.adminPassword !== form.adminPasswordConfirm ? "Passwords do not match." : "This password is only used for /admin sign-in."}</small></label></div>
+            <label>Installation secret<input className="field" value={form.setupPassword} onChange={(event) => update("setupPassword", event.target.value)} type="password" autoComplete="current-password" /><small>Enter the same 12+ character value selected for SETUP_SECRET during the Vercel deployment.</small></label>
           </div>
         </>}
 
         {step === 4 && result && <>
-          <span className="auth-step">Instalācija pabeigta</span>
-          <h2>Instance ir gatava.</h2>
-          <p>Tagad Meta webhook iestatījumos ievadi šīs divas vērtības un abonē <b>messages</b> notikumus.</p>
+          <span className="auth-step">Installation complete</span>
+          <h2>Your instance is ready.</h2>
+          <p>Paste these two values into the Meta webhook settings and subscribe to the <b>messages</b> field.</p>
           <div className="result-values">
-            <label>Callback URL<div><code>{result.webhookUrl}</code><button type="button" onClick={() => copy(result.webhookUrl)}>Kopēt</button></div></label>
-            <label>Verify token<div><code>{result.webhookVerifyToken}</code><button type="button" onClick={() => copy(result.webhookVerifyToken)}>Kopēt</button></div></label>
+            <label>Callback URL<div><code>{result.webhookUrl}</code><button type="button" onClick={() => copy(result.webhookUrl)}>Copy</button></div></label>
+            <label>Verify token<div><code>{result.webhookVerifyToken}</code><button type="button" onClick={() => copy(result.webhookVerifyToken)}>Copy</button></div></label>
           </div>
-          <div className="setup-warning">Saglabā verify tokenu drošā vietā. To varēs mainīt vēlāk administrācijas iestatījumos.</div>
-          <Link className="button button-accent button-wide" href="/admin">Atvērt administrāciju</Link>
+          <div className="setup-warning">Keep the verify token in a safe place. It can be rotated later in the administration settings.</div>
+          <Link className="button button-accent button-wide" href="/admin">Open administration</Link>
         </>}
 
         {error && <div className="form-error">{error}</div>}
         {step < 4 && <footer className="setup-actions">
-          {step > 0 ? <button className="button button-ghost" type="button" onClick={() => { setError(""); setStep((value) => value - 1); }}>Atpakaļ</button> : <Link className="button button-ghost" href="/help/install">Palīdzība</Link>}
-          {step < 3 ? <button className="button button-dark" type="button" disabled={!canContinue} onClick={() => { setError(""); setStep((value) => value + 1); }}>Turpināt</button> : <button className="button button-accent" type="button" disabled={!canContinue || busy} onClick={finish}>{busy ? "Uzstādām…" : "Pabeigt instalāciju"}</button>}
+          {step > 0 ? <button className="button button-ghost" type="button" onClick={() => { setError(""); setStep((value) => value - 1); }}>Back</button> : <Link className="button button-ghost" href="/help/install">Help</Link>}
+          {step < 3 ? <button className="button button-dark" type="button" disabled={!canContinue} onClick={() => { setError(""); setStep((value) => value + 1); }}>Continue</button> : <button className="button button-accent" type="button" disabled={!canContinue || busy} onClick={finish}>{busy ? "Installing…" : "Complete installation"}</button>}
         </footer>}
       </section>
     </div>

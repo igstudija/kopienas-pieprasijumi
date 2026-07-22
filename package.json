@@ -29,13 +29,14 @@
     "qrcode": "1.5.4",
     "react": "19.2.1",
     "react-dom": "19.2.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "@types/node": "22.19.7",
+    "@types/qrcode": "1.5.5",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "@types/qrcode": "1.5.5",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.2",
     "eslint-config-next": "16.1.6",

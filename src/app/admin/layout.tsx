@@ -1,17 +1,22 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { Brand } from "@/components/brand";
+import { AppNavigation } from "@/components/app-navigation";
 import { AdminPasswordLogin } from "@/components/admin-password-login";
-import { LogoutButton } from "@/components/logout-button";
+import { AdminSectionNav } from "@/components/admin-section-nav";
 import { currentUserFromPage } from "@/lib/services/auth";
+import { parseLocale } from "@/lib/i18n";
+import { adminCopy } from "@/lib/admin-i18n";
 
 export const dynamic = "force-dynamic";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUserFromPage();
+  const locale = parseLocale((await cookies()).get("community_locale")?.value);
   if (!user) {
-    return <main className="auth-shell"><div className="auth-brand"><Brand /></div><section className="auth-card"><span className="auth-step">Administratoriem</span><h1>Pārvaldi savu<br />kopienu.</h1><p>Ievadi administratora tālruņa numuru un paroli. Biedri šeit nepieslēdzas.</p><AdminPasswordLogin /></section><aside className="auth-aside"><blockquote>“Piekļuves biedriem un sistēmas pārvaldība ir divas atšķirīgas atbildības.”</blockquote><span>— drošas instances princips</span></aside></main>;
+    const copy = adminCopy[locale];
+    return <main className="auth-shell"><div className="auth-brand"><Brand /></div><section className="auth-card"><span className="auth-step">{copy.authEyebrow}</span><h1>{copy.authTitle}</h1><p>{copy.authIntro}</p><AdminPasswordLogin /></section><aside className="auth-aside"><blockquote>{copy.authQuote}</blockquote><span>{copy.authQuoteBy}</span></aside></main>;
   }
   if (user.role === "member") redirect("/app");
   const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`;
-  return <div className="app-shell"><nav className="app-nav"><Brand /><div className="app-nav-links"><Link href="/app">Pieprasījumi</Link><Link href="/admin">Administrācija</Link><div className="user-chip"><span className="avatar">{initials}</span><span><b>{user.displayName}</b><small>{user.company}</small></span></div><LogoutButton redirectTo="/admin" /></div></nav>{children}</div>;
+  return <div className="app-shell"><AppNavigation user={{ displayName: user.displayName, company: user.company, initials }} showAdmin logoutRedirect="/admin" /><AdminSectionNav />{children}</div>;
 }

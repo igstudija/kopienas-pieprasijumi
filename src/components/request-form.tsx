@@ -4,16 +4,33 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowIcon } from "./icons";
+import { useLanguage } from "./language-provider";
 
-export function RequestForm() {
+type EditableRequest = {
+  id: string;
+  title: string;
+  details: string;
+  target?: string | null;
+  industry?: string | null;
+  region?: string | null;
+  tags: string[];
+  visibility: "local" | "selected_peers" | "all_peers";
+};
+
+export function RequestForm({ request, onSaved, onCancel }: {
+  request?: EditableRequest;
+  onSaved?: () => void | Promise<void>;
+  onCancel?: () => void;
+}) {
+  const { messages } = useLanguage();
   const router = useRouter(); const [loading, setLoading] = useState(false); const [error, setError] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setLoading(true); setError("");
     const data = new FormData(event.currentTarget);
     const body = { title: data.get("title"), details: data.get("details"), target: data.get("target") || null, industry: data.get("industry") || null, region: data.get("region") || null, tags: String(data.get("tags") ?? "").split(",").map((tag) => tag.trim()).filter(Boolean), visibility: data.get("visibility") };
-    try { const response = await fetch("/api/v1/requests", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); router.push("/app"); router.refresh(); }
+    try { const response = await fetch(request ? `/api/v1/requests/${request.id}` : "/api/v1/requests", { method: request ? "PATCH" : "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); if (onSaved) await onSaved(); else { router.push("/app"); router.refresh(); } }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Neizdevās saglabāt."); }
     finally { setLoading(false); }
   }
-  return <form className="form-card" onSubmit={submit}><div className="form-grid"><div className="form-group full"><label htmlFor="title">Ko tieši tu meklē?</label><input className="field" id="title" name="title" required minLength={4} maxLength={180} placeholder="Piemēram: kontakts ražošanas uzņēmuma vadībā" /></div><div className="form-group full"><label htmlFor="details">Konteksts un vēlamais rezultāts</label><textarea className="field" id="details" name="details" required minLength={10} maxLength={4000} placeholder="Apraksti, ar kādu cilvēku vai uzņēmumu vēlies iepazīties un kāpēc…" /></div><div className="form-group"><label htmlFor="target">Mērķa uzņēmums vai persona</label><input className="field" id="target" name="target" maxLength={240} placeholder="Neobligāti" /></div><div className="form-group"><label htmlFor="industry">Nozare</label><input className="field" id="industry" name="industry" maxLength={160} placeholder="Piemēram: ražošana" /></div><div className="form-group"><label htmlFor="region">Reģions</label><input className="field" id="region" name="region" maxLength={160} placeholder="Piemēram: Rīga, Baltija" /></div><div className="form-group"><label htmlFor="tags">Atslēgvārdi</label><input className="field" id="tags" name="tags" placeholder="B2B, eksports, vadība" /></div><div className="form-group full"><label htmlFor="visibility">Kas to redzēs?</label><select className="field" id="visibility" name="visibility" defaultValue="local"><option value="local">Tikai mana lokālā grupa</option><option value="all_peers">Lokālā un visas savienotās grupas</option></select></div></div>{error && <div className="form-error">{error}</div>}<div className="form-actions"><button className="button button-accent" disabled={loading}>{loading ? "Saglabājam…" : <>Publicēt pieprasījumu <ArrowIcon /></>}</button><Link className="button button-ghost" href="/app">Atcelt</Link></div></form>;
+  return <form className="form-card" onSubmit={submit}><div className="form-grid"><div className="form-group full"><label htmlFor="title">{messages.whatLookingFor}</label><input className="field" id="title" name="title" required minLength={4} maxLength={180} placeholder={messages.whatPlaceholder} defaultValue={request?.title} autoFocus={Boolean(onSaved)} /></div><div className="form-group full"><label htmlFor="details">{messages.contextResult}</label><textarea className="field" id="details" name="details" required minLength={10} maxLength={4000} placeholder={messages.contextPlaceholder} defaultValue={request?.details} /></div><div className="form-group"><label htmlFor="target">{messages.target}</label><input className="field" id="target" name="target" maxLength={240} placeholder={messages.optional} defaultValue={request?.target ?? ""} /></div><div className="form-group"><label htmlFor="industry">{messages.industry}</label><input className="field" id="industry" name="industry" maxLength={160} placeholder={messages.industryPlaceholder} defaultValue={request?.industry ?? ""} /></div><div className="form-group"><label htmlFor="region">{messages.region}</label><input className="field" id="region" name="region" maxLength={160} placeholder={messages.regionPlaceholder} defaultValue={request?.region ?? ""} /></div><div className="form-group"><label htmlFor="tags">{messages.tags}</label><input className="field" id="tags" name="tags" placeholder={messages.tagsPlaceholder} defaultValue={request?.tags.join(", ") ?? ""} /></div><div className="form-group full"><label htmlFor="visibility">{messages.visibility}</label><select className="field" id="visibility" name="visibility" defaultValue={request?.visibility === "all_peers" ? "all_peers" : "local"}><option value="local">{messages.localOnly}</option><option value="all_peers">{messages.allPeers}</option></select></div></div>{error && <div className="form-error">{error}</div>}<div className="form-actions"><button className="button button-accent" disabled={loading}>{loading ? messages.saving : <>{request ? messages.saveRequest : messages.publishRequest} <ArrowIcon /></>}</button>{onCancel ? <button className="button button-ghost" type="button" onClick={onCancel} disabled={loading}>{messages.cancel}</button> : <Link className="button button-ghost" href="/app">{messages.cancel}</Link>}</div></form>;
 }

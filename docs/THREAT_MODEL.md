@@ -1,33 +1,33 @@
-# Draudu modelis
+# Threat model
 
-## Aizsargājamie aktīvi
+## Protected assets
 
-- biedru tālruņu numuri un profili;
-- lokālo un koplietoto pieprasījumu saturs;
-- WhatsApp API rekvizīti;
-- sesiju un vienreizējo WhatsApp challenge noslēpumi;
-- administratoru paroļu hash;
-- federācijas privātā atslēga;
-- auditācijas pierādījumi.
+- member phone numbers and profiles;
+- local and shared request content;
+- WhatsApp API credentials;
+- session and one-time WhatsApp challenge secrets;
+- administrator password hashes;
+- the federation private key;
+- audit evidence.
 
-## Galvenie draudi un kontroles
+## Main threats and controls
 
-| Drauds | Kontrole |
+| Threat | Control |
 | --- | --- |
-| Reģistrētu numuru uzskaitīšana | Vienāda publiskā atbilde visiem numuriem |
-| Login saites minēšana vai atkārtota izmantošana | Augstas entropijas tokens, 2 minūšu TTL, HMAC digest un vienreizēja izmantošana; sūtītājam jābūt aktīvam reģistrētam numuram |
-| Datubāzes noplūde | Challenge un sesiju HMAC digest; tālrunis šifrēts + HMAC lookup |
-| Sesijas zādzība | HttpOnly/Secure/SameSite cookie, servera revokācija |
-| Invite token atkārtota lietošana | 256 bitu secrets, hash glabāšana, expiry, single use |
-| Negribēta abpusēja datu koplietošana | Katrs savienošanas kods atļauj plūsmu tikai vienā virzienā; pretējam virzienam vajadzīgs otras puses kods |
-| Viltots federācijas event | Ed25519 paraksts un uzticamo peer saraksts |
-| Replay | Timestamp, unikāls nonce un event ID |
-| Datu izplatīšanās pa ķēdi | Tikai home instances ieraksti drīkst tikt sūtīti tālāk |
-| SSRF handshake laikā | HTTPS, redirect aizliegums, IP/DNS validācija pirms production |
-| Admina paroles noplūde | scrypt ar unikālu salt; datubāzē netiek glabāta atjaunojama parole |
-| Admina paroles minēšana | Vienāda kļūda nepareizam numuram/parolei, dummy scrypt pārbaude un 5 mēģinājumu limits 15 minūtēs vienai tālruņa/IP kombinācijai |
-| Admina konta pārņemšana | Paroles ieeja tikai aktīvām Owner/Admin lomām; WebAuthn paredzēts kā papildu aizsardzība |
+| Enumeration of registered phone numbers | The same public response is returned for registered and unknown numbers |
+| Guessing or replaying a login link | High-entropy token, two-minute TTL, HMAC digest and single use; the sender must match an active registered number |
+| Database disclosure | Challenge and session HMAC digests; encrypted phone numbers plus an HMAC lookup identifier |
+| Session theft | HttpOnly, Secure and SameSite cookies with server-side revocation |
+| Reuse of a pairing code | 256-bit secrets, hash-only storage, expiry and single use |
+| Accidental two-way sharing | Every pairing code authorises one direction only; the opposite direction needs the other installation's code |
+| Forged federation event | Ed25519 signature verification and an explicit trusted-peer list |
+| Replay | Timestamp validation, unique nonce and event ID |
+| Transitive data spreading | Only records from their home installation may be forwarded |
+| SSRF during federation handshake | HTTPS, redirects disabled, IP and DNS validation before production |
+| Administrator password disclosure | scrypt with a unique salt; no recoverable password is stored |
+| Administrator password guessing | Generic error response, dummy scrypt verification and a five-attempt limit per phone/IP combination for 15 minutes |
+| Administrator account takeover | Password login only for active Owner/Admin roles; WebAuthn is recommended as an additional control |
 
-## Production vārti
+## Production gates
 
-Pirms sistēma glabā reālus biedru datus, obligāti jāizmanto HTTPS, jāiestata unikāls `SETUP_SECRET`, jāpārbauda Meta webhook paraksts un jāapsver WebAuthn Owner/Admin lomām.
+Before storing real member data, use HTTPS, set a unique `SETUP_SECRET`, verify Meta webhook signatures, review retention and backup settings, and consider WebAuthn for Owner/Admin roles.

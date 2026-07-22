@@ -60,6 +60,7 @@ async function deliver(job: typeof federationOutbox.$inferSelect) {
     .where(and(eq(federationOutbox.id, job.id), eq(peerInstances.status, "active"), eq(peerInstances.allowOutgoing, true)))
     .limit(1);
   if (!record) throw new Error("Outbox ierakstam nav aktīva peer vai pieprasījuma.");
+  if (!record.peer.baseUrl) throw new Error("Peer nav konfigurēts federācijas domēns.");
 
   const event: FederationEvent = {
     eventId: job.eventId,

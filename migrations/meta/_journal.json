@@ -22,6 +22,20 @@
       "when": 1784733436915,
       "tag": "0002_watery_mockingbird",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784739075605,
+      "tag": "0003_portal_drafts",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784742428998,
+      "tag": "0004_legal-settings",
+      "breakpoints": true
     }
   ]
 }

@@ -7,11 +7,11 @@ export const dynamic = "force-dynamic";
 
 export default async function SetupPage() {
   const status = await installationStatus();
-  if (status.installed) redirect("/login");
+  if (status.installed) redirect("/");
 
   return (
     <main className="setup-shell">
-      <header className="setup-header"><Brand /><span>Neatkarīgas instances uzstādīšana</span></header>
+      <header className="setup-header"><Brand /><span>Independent instance installation</span></header>
       <SetupWizard initialStatus={status} />
     </main>
   );

@@ -14,6 +14,7 @@ import {
   type User,
 } from "@/lib/db/schema";
 import { HttpError } from "@/lib/http";
+import { decodePairingCode, type PairingPayload } from "@/lib/federation-code";
 import { generateToken, inviteDigest, safeEqualHex, sha256 } from "@/lib/security";
 import { writeAudit } from "./audit";
 import { getInstanceRuntime } from "./installation";
@@ -21,14 +22,6 @@ import { getInstanceRuntime } from "./installation";
 const PROTOCOL_VERSION = 1;
 const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000;
 
-type PairingPayload = {
-  endpoint: string;
-  inviteId: string;
-  secret: string;
-  expiresAt: string;
-  issuerName?: string;
-  issuerBaseUrl?: string;
-};
 type PeerMetadata = {
   instanceId: string;
   name: string;
@@ -66,20 +59,53 @@ export async function federationIdentity(): Promise<PeerMetadata & { privateKey:
   };
 }
 
-export async function createFederationInvite(actor: User, label?: string) {
+export async function createFederationPeerDraft(
+  actor: User,
+  nameInput: string,
+  audit: { ipAddress?: string | null; requestId?: string | null },
+) {
+  if (actor.role !== "owner" && actor.role !== "admin") throw new HttpError(403, "Nepietiekamas tiesības.");
+  const name = nameInput.trim();
+  if (name.length < 2 || name.length > 160) throw new HttpError(400, "Portāla nosaukumam jābūt 2–160 rakstzīmes garam.");
+  const db = getDb();
+  return db.transaction(async (tx) => {
+    const [peer] = await tx.insert(peerInstances).values({
+      name,
+      status: "pending",
+      allowIncoming: false,
+      allowOutgoing: false,
+    }).returning();
+    await writeAudit(tx, {
+      actorUserId: actor.id,
+      action: "federation.peer_draft_created",
+      objectType: "peer_instance",
+      objectId: peer.id,
+      details: { name },
+      ipAddress: audit.ipAddress,
+      requestId: audit.requestId,
+    });
+    return peer;
+  });
+}
+
+export async function createFederationInvite(actor: User, label: string | undefined, peerId?: string) {
   if (actor.role !== "owner" && actor.role !== "admin") throw new HttpError(403, "Nepietiekamas tiesības.");
   const db = getDb();
+  if (peerId) {
+    const [peer] = await db.select({ id: peerInstances.id }).from(peerInstances).where(eq(peerInstances.id, peerId)).limit(1);
+    if (!peer) throw new HttpError(404, "Savienotais portāls nav atrasts.");
+  }
   const id = crypto.randomUUID();
   const secret = generateToken(32);
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await db.transaction(async (tx) => {
-    await tx.insert(federationInvites).values({ id, secretDigest: inviteDigest(secret), label, createdBy: actor.id, expiresAt });
+    await tx.insert(federationInvites).values({ id, secretDigest: inviteDigest(secret), label, peerId, createdBy: actor.id, expiresAt });
     await writeAudit(tx, {
       actorUserId: actor.id,
       action: "federation.invite_created",
       objectType: "federation_invite",
       objectId: id,
-      details: { label, expiresAt: expiresAt.toISOString() },
+      details: { label, peerId, expiresAt: expiresAt.toISOString() },
     });
   });
 
@@ -109,33 +135,34 @@ export async function acceptHandshake(input: { inviteId: string; secret: string;
 
   const permissions = await db.transaction(async (tx) => {
     const [existingPeer] = await tx
-      .select({ id: peerInstances.id, allowOutgoing: peerInstances.allowOutgoing })
+      .select()
       .from(peerInstances)
       .where(eq(peerInstances.remoteInstanceId, input.peer.instanceId))
       .limit(1);
-    await tx.insert(peerInstances).values({
+    const [linkedPeer] = invite.peerId
+      ? await tx.select().from(peerInstances).where(eq(peerInstances.id, invite.peerId)).limit(1)
+      : [];
+    let targetPeer = linkedPeer ?? existingPeer;
+    if (linkedPeer && existingPeer && linkedPeer.id !== existingPeer.id) {
+      await tx.update(federationInvites).set({ peerId: existingPeer.id }).where(eq(federationInvites.peerId, linkedPeer.id));
+      await tx.delete(peerInstances).where(eq(peerInstances.id, linkedPeer.id));
+      targetPeer = { ...existingPeer, name: linkedPeer.name };
+    }
+    const hadOutgoing = targetPeer?.allowOutgoing ?? false;
+    const values = {
       remoteInstanceId: input.peer.instanceId,
-      name: input.peer.name,
+      name: targetPeer?.name ?? input.peer.name,
       baseUrl: input.peer.baseUrl,
       publicKey: input.peer.publicKey,
       keyId: input.peer.keyId,
       protocolVersion: input.peer.protocolVersion,
-      status: "active",
-      allowIncoming: false,
+      status: "active" as const,
       allowOutgoing: true,
-    }).onConflictDoUpdate({
-      target: peerInstances.remoteInstanceId,
-      set: {
-        name: input.peer.name,
-        baseUrl: input.peer.baseUrl,
-        publicKey: input.peer.publicKey,
-        keyId: input.peer.keyId,
-        protocolVersion: input.peer.protocolVersion,
-        status: "active",
-        allowOutgoing: true,
-        updatedAt: new Date(),
-      },
-    });
+      updatedAt: new Date(),
+    };
+    const [storedPeer] = targetPeer
+      ? await tx.update(peerInstances).set(values).where(eq(peerInstances.id, targetPeer.id)).returning()
+      : await tx.insert(peerInstances).values({ ...values, allowIncoming: false }).returning();
     await tx.update(federationInvites).set({ usedAt: new Date() }).where(eq(federationInvites.id, invite.id));
     await writeAudit(tx, {
       actorUserId: invite.createdBy,
@@ -144,12 +171,7 @@ export async function acceptHandshake(input: { inviteId: string; secret: string;
       objectId: input.peer.instanceId,
       details: { name: input.peer.name, baseUrl: input.peer.baseUrl, remoteCanReadLocal: true },
     });
-    const [storedPeer] = await tx
-      .select({ id: peerInstances.id, allowIncoming: peerInstances.allowIncoming, allowOutgoing: peerInstances.allowOutgoing })
-      .from(peerInstances)
-      .where(eq(peerInstances.remoteInstanceId, input.peer.instanceId))
-      .limit(1);
-    if (storedPeer && !existingPeer?.allowOutgoing) await queueShareableRequestBackfill(tx, storedPeer.id);
+    if (!hadOutgoing) await queueShareableRequestBackfill(tx, storedPeer.id);
     return {
       localCanReadRemote: storedPeer?.allowIncoming ?? false,
       remoteCanReadLocal: storedPeer?.allowOutgoing ?? true,
@@ -160,8 +182,13 @@ export async function acceptHandshake(input: { inviteId: string; secret: string;
   return { peer: publicIdentity, permissions };
 }
 
-export async function connectToPeer(actor: User, pairingCode: string) {
+export async function connectToPeer(actor: User, pairingCode: string, peerId?: string) {
   if (actor.role !== "owner" && actor.role !== "admin") throw new HttpError(403, "Nepietiekamas tiesības.");
+  const db = getDb();
+  const [selectedPeer] = peerId
+    ? await db.select().from(peerInstances).where(eq(peerInstances.id, peerId)).limit(1)
+    : [];
+  if (peerId && !selectedPeer) throw new HttpError(404, "Savienotais portāls nav atrasts.");
   const pairing = parsePairingCode(pairingCode);
   validateEndpoint(pairing.endpoint);
   if (new Date(pairing.expiresAt) <= new Date()) throw new HttpError(400, "Uzaicinājuma termiņš ir beidzies.");
@@ -180,31 +207,29 @@ export async function connectToPeer(actor: User, pairingCode: string) {
   } | null;
   if (!response.ok || !data?.peer) throw new HttpError(400, data?.error ?? "Savienojumu neizdevās izveidot.");
   validatePeerMetadata(data.peer);
-  const db = getDb();
   const permissions = await db.transaction(async (tx) => {
-    await tx.insert(peerInstances).values({
+    const [existingPeer] = await tx.select().from(peerInstances).where(eq(peerInstances.remoteInstanceId, data.peer!.instanceId)).limit(1);
+    const [draftPeer] = peerId ? await tx.select().from(peerInstances).where(eq(peerInstances.id, peerId)).limit(1) : [];
+    let targetPeer = draftPeer ?? existingPeer;
+    if (draftPeer && existingPeer && draftPeer.id !== existingPeer.id) {
+      await tx.update(federationInvites).set({ peerId: existingPeer.id }).where(eq(federationInvites.peerId, draftPeer.id));
+      await tx.delete(peerInstances).where(eq(peerInstances.id, draftPeer.id));
+      targetPeer = { ...existingPeer, name: draftPeer.name };
+    }
+    const values = {
       remoteInstanceId: data.peer!.instanceId,
-      name: data.peer!.name,
+      name: targetPeer?.name ?? data.peer!.name,
       baseUrl: data.peer!.baseUrl,
       publicKey: data.peer!.publicKey,
       keyId: data.peer!.keyId,
       protocolVersion: data.peer!.protocolVersion,
-      status: "active",
+      status: "active" as const,
       allowIncoming: true,
-      allowOutgoing: false,
-    }).onConflictDoUpdate({
-      target: peerInstances.remoteInstanceId,
-      set: {
-        name: data.peer!.name,
-        baseUrl: data.peer!.baseUrl,
-        publicKey: data.peer!.publicKey,
-        keyId: data.peer!.keyId,
-        protocolVersion: data.peer!.protocolVersion,
-        status: "active",
-        allowIncoming: true,
-        updatedAt: new Date(),
-      },
-    });
+      updatedAt: new Date(),
+    };
+    const [storedPeer] = targetPeer
+      ? await tx.update(peerInstances).set(values).where(eq(peerInstances.id, targetPeer.id)).returning()
+      : await tx.insert(peerInstances).values({ ...values, allowOutgoing: false }).returning();
     await writeAudit(tx, {
       actorUserId: actor.id,
       action: "federation.incoming_enabled",
@@ -212,17 +237,66 @@ export async function connectToPeer(actor: User, pairingCode: string) {
       objectId: data.peer!.instanceId,
       details: { name: data.peer!.name, baseUrl: data.peer!.baseUrl, localCanReadRemote: true },
     });
-    const [storedPeer] = await tx
-      .select({ allowIncoming: peerInstances.allowIncoming, allowOutgoing: peerInstances.allowOutgoing })
-      .from(peerInstances)
-      .where(eq(peerInstances.remoteInstanceId, data.peer!.instanceId))
-      .limit(1);
     return {
       localCanReadRemote: storedPeer?.allowIncoming ?? true,
       remoteCanReadLocal: storedPeer?.allowOutgoing ?? false,
     };
   });
   return { ...data.peer, status: "active" as const, ...permissions };
+}
+
+export async function updateFederationPeer(
+  actor: User,
+  peerId: string,
+  input: { name?: string; status?: "pending" | "active" | "paused" },
+  audit: { ipAddress?: string | null; requestId?: string | null },
+) {
+  if (actor.role !== "owner" && actor.role !== "admin") throw new HttpError(403, "Nepietiekamas tiesības.");
+  const db = getDb();
+  const [peer] = await db.select().from(peerInstances).where(eq(peerInstances.id, peerId)).limit(1);
+  if (!peer) throw new HttpError(404, "Savienotais portāls nav atrasts.");
+  const name = input.name?.trim();
+  if (name !== undefined && (name.length < 2 || name.length > 160)) throw new HttpError(400, "Portāla nosaukumam jābūt 2–160 rakstzīmes garam.");
+  if (name === undefined && input.status === undefined) throw new HttpError(400, "Nav norādītas izmaiņas.");
+  await db.transaction(async (tx) => {
+    await tx.update(peerInstances).set({
+      ...(name !== undefined ? { name } : {}),
+      ...(input.status !== undefined ? { status: input.status } : {}),
+      updatedAt: new Date(),
+    }).where(eq(peerInstances.id, peerId));
+    await writeAudit(tx, {
+      actorUserId: actor.id,
+      action: input.status === "paused" ? "federation.peer_paused" : input.status === "active" ? "federation.peer_activated" : "federation.peer_updated",
+      objectType: "peer_instance",
+      objectId: peer.remoteInstanceId,
+      details: { name: name ?? peer.name, status: input.status ?? peer.status },
+      ipAddress: audit.ipAddress,
+      requestId: audit.requestId,
+    });
+  });
+}
+
+export async function deleteFederationPeer(
+  actor: User,
+  peerId: string,
+  audit: { ipAddress?: string | null; requestId?: string | null },
+) {
+  if (actor.role !== "owner" && actor.role !== "admin") throw new HttpError(403, "Nepietiekamas tiesības.");
+  const db = getDb();
+  const [peer] = await db.select().from(peerInstances).where(eq(peerInstances.id, peerId)).limit(1);
+  if (!peer) throw new HttpError(404, "Savienotais portāls nav atrasts.");
+  await db.transaction(async (tx) => {
+    await tx.delete(peerInstances).where(eq(peerInstances.id, peerId));
+    await writeAudit(tx, {
+      actorUserId: actor.id,
+      action: "federation.peer_deleted",
+      objectType: "peer_instance",
+      objectId: peer.remoteInstanceId,
+      details: { name: peer.name, baseUrl: peer.baseUrl },
+      ipAddress: audit.ipAddress,
+      requestId: audit.requestId,
+    });
+  });
 }
 
 type FederationTransaction = Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0];
@@ -268,7 +342,7 @@ export async function verifyFederationRequest(input: {
     .from(peerInstances)
     .where(and(eq(peerInstances.remoteInstanceId, input.peerInstanceId), eq(peerInstances.status, "active"), eq(peerInstances.allowIncoming, true)))
     .limit(1);
-  if (!peer || peer.keyId !== input.keyId) throw new HttpError(401, "Neuzticama instance vai atslēga.");
+  if (!peer || !peer.publicKey || !peer.keyId || peer.keyId !== input.keyId) throw new HttpError(401, "Neuzticama instance vai atslēga.");
 
   const publicKey = createPublicKey({ key: Buffer.from(peer.publicKey, "base64"), type: "spki", format: "der" });
   const canonical = canonicalRequest(input.method, input.path, input.timestamp, input.nonce, input.body);
@@ -330,9 +404,7 @@ function canonicalRequest(method: string, path: string, timestamp: string, nonce
 
 function parsePairingCode(code: string): PairingPayload {
   try {
-    const value = JSON.parse(Buffer.from(code.trim(), "base64url").toString("utf8")) as PairingPayload;
-    if (!value.endpoint || !value.inviteId || !value.secret || !value.expiresAt) throw new Error();
-    return value;
+    return decodePairingCode(code);
   } catch {
     throw new HttpError(400, "Savienošanas kods nav derīgs.");
   }

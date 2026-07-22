@@ -29,6 +29,7 @@ export type RequestInput = {
 
 export async function listGroupedRequests() {
   const db = getDb();
+  const runtime = await getInstanceRuntime();
   const localRows = await db
     .select({ request: specificRequests, author: users })
     .from(specificRequests)
@@ -60,6 +61,8 @@ export async function listGroupedRequests() {
       createdAt: request.createdAt,
       origin: "local" as const,
       peerName: null,
+      sourceId: "local",
+      sourceName: runtime.name,
     })),
     ...remoteRows.map(({ request, peer }) => ({
       id: request.id,
@@ -77,8 +80,62 @@ export async function listGroupedRequests() {
       createdAt: request.originCreatedAt,
       origin: "remote" as const,
       peerName: peer.name,
+      sourceId: `peer:${peer.id}`,
+      sourceName: peer.name,
     })),
   ]);
+}
+
+export async function getOwnRequestForEdit(actor: User, requestId: string) {
+  const db = getDb();
+  const [request] = await db.select().from(specificRequests).where(and(eq(specificRequests.id, requestId), eq(specificRequests.authorId, actor.id), eq(specificRequests.status, "active"))).limit(1);
+  if (!request) return null;
+  const selectedPeers = await db.select({ peerId: requestPeerVisibility.peerId }).from(requestPeerVisibility).where(eq(requestPeerVisibility.requestId, requestId));
+  return {
+    id: request.id,
+    title: request.title,
+    details: request.details,
+    target: request.target,
+    industry: request.industry,
+    region: request.region,
+    tags: request.tags,
+    visibility: request.visibility,
+    peerIds: selectedPeers.map((row) => row.peerId),
+  };
+}
+
+export async function deleteOwnRequest(actor: User, requestId: string, audit: { ipAddress?: string | null; requestId?: string | null }) {
+  const db = getDb();
+  const [existing] = await db.select().from(specificRequests).where(eq(specificRequests.id, requestId)).limit(1);
+  if (!existing || existing.status === "archived") throw new HttpError(404, "Pieprasījums nav atrasts.");
+  if (existing.authorId !== actor.id) throw new HttpError(403, "Var dzēst tikai savus pieprasījumus.");
+  const revision = existing.revision + 1;
+  await db.transaction(async (tx) => {
+    const selectedRows = await tx.select({ peerId: requestPeerVisibility.peerId }).from(requestPeerVisibility).where(eq(requestPeerVisibility.requestId, requestId));
+    const targets = await resolveTargetPeerIds(tx, existing.visibility, selectedRows.map((row) => row.peerId));
+    await tx.update(specificRequests).set({
+      title: "Dzēsts pieprasījums",
+      details: "Pieprasījuma saturu izdzēsa tā autors.",
+      target: null,
+      industry: null,
+      region: null,
+      tags: [],
+      status: "archived",
+      revision,
+      updatedAt: new Date(),
+      archivedAt: new Date(),
+    }).where(eq(specificRequests.id, requestId));
+    if (targets.length) await queueRequestEvents(tx, requestId, targets, "request.deleted", revision);
+    await writeAudit(tx, {
+      actorUserId: actor.id,
+      action: "request.deleted",
+      objectType: "specific_request",
+      objectId: requestId,
+      details: { revision },
+      ipAddress: audit.ipAddress,
+      requestId: audit.requestId,
+    });
+  });
 }
 
 export async function createRequest(actor: User, input: RequestInput, audit: { ipAddress?: string | null; requestId?: string | null }) {

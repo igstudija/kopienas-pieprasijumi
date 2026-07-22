@@ -3,11 +3,13 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "./language-provider";
 
 type QrLogin = { challengeId: string; browserToken: string; deepLink: string; qrDataUrl: string; expiresAt: string };
 
 export function LoginChoices() {
   const router = useRouter();
+  const { messages } = useLanguage();
   const [qr, setQr] = useState<QrLogin | null>(null);
   const [error, setError] = useState("");
   const [canRetry, setCanRetry] = useState(false);
@@ -25,6 +27,7 @@ export function LoginChoices() {
         if (!response.ok) {
           setError(data.error ?? "QR neizdevās izveidot.");
           setCanRetry(true);
+          timeout = setTimeout(() => setRestartKey((current) => current + 1), 2500);
           return;
         }
         setQr(data);
@@ -33,6 +36,7 @@ export function LoginChoices() {
         if (!cancelled) {
           setError("Neizdevās savienoties ar sistēmu.");
           setCanRetry(true);
+          timeout = setTimeout(() => setRestartKey((current) => current + 1), 2500);
         }
       }
     }
@@ -51,6 +55,7 @@ export function LoginChoices() {
         if (data.status === "invalid") {
           setError("QR kodu neizdevās pārbaudīt.");
           setCanRetry(true);
+          timeout = setTimeout(() => setRestartKey((current) => current + 1), 1500);
           return;
         }
         timeout = setTimeout(() => poll(value), 1500);
@@ -58,6 +63,7 @@ export function LoginChoices() {
         if (!cancelled) {
           setError("Neizdevās pārbaudīt QR kodu.");
           setCanRetry(true);
+          timeout = setTimeout(() => poll(value), 2500);
         }
       }
     }
@@ -72,5 +78,5 @@ export function LoginChoices() {
     setRestartKey((value) => value + 1);
   }
 
-  return <div className="qr-login">{qr ? <><div className="qr-frame"><Image src={qr.qrDataUrl} width={240} height={240} unoptimized alt="WhatsApp autorizācijas QR kods" /></div><ol><li>Noskenē QR ar telefona kameru</li><li>WhatsApp nospied “Sūtīt”</li><li>Šī lapa tevi ielaidīs automātiski</li></ol><a className="button button-accent button-wide mobile-whatsapp" href={qr.deepLink}>Ieiet ar WhatsApp</a></> : <div className="qr-loading"><span /><p>Veidojam drošu WhatsApp ieeju…</p></div>}{error && <div className="form-error">{error}</div>}{canRetry && <button className="button button-dark button-wide" type="button" onClick={restart}>Izveidot jaunu QR kodu</button>}</div>;
+  return <div className="qr-login">{qr ? <><div className="qr-frame"><Image src={qr.qrDataUrl} width={240} height={240} unoptimized alt={messages.qrAlt} /></div><ol><li>{messages.qrStep1}</li><li>{messages.qrStep2}</li><li>{messages.qrStep3}</li></ol><a className="button button-accent button-wide mobile-whatsapp" href={qr.deepLink}>{messages.loginWhatsapp}</a></> : <div className="qr-loading"><span /><p>{messages.qrLoading}</p></div>}{error && <div className="form-error">{error}</div>}{canRetry && <button className="button button-dark button-wide" type="button" onClick={restart}>{messages.qrRetry}</button>}</div>;
 }

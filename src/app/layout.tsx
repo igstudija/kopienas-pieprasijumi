@@ -1,9 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Newsreader } from "next/font/google";
+import { cookies } from "next/headers";
+import { Figtree, Outfit } from "next/font/google";
+import { CookieNotice } from "@/components/cookie-notice";
+import { LanguageProvider } from "@/components/language-provider";
+import { SiteFooter } from "@/components/site-footer";
+import { parseLocale } from "@/lib/i18n";
 import "./globals.css";
 
-const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
-const newsreader = Newsreader({ subsets: ["latin"], variable: "--font-serif" });
+const outfit = Outfit({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-sans",
+  weight: "variable",
+});
+const figtree = Figtree({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-serif",
+  weight: "variable",
+});
 
 export const metadata: Metadata = {
   title: { default: "Specifiskie prasījumi", template: "%s · Specifiskie prasījumi" },
@@ -13,10 +26,11 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#12372a", colorScheme: "light" };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = parseLocale((await cookies()).get("community_locale")?.value);
   return (
-    <html lang="lv" className={`${manrope.variable} ${newsreader.variable}`}>
-      <body>{children}</body>
+    <html lang={locale} className={`${outfit.variable} ${figtree.variable}`}>
+      <body><LanguageProvider initialLocale={locale}>{children}<SiteFooter /><CookieNotice /></LanguageProvider></body>
     </html>
   );
 }
