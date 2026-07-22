@@ -137,6 +137,7 @@ svg { width: 1.15em; height: 1.15em; }
 .app-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 42px; }
 .app-heading h1 { font-family: var(--font-serif), serif; font-size: clamp(45px, 6vw, 70px); font-weight: 520; letter-spacing: -.05em; line-height: .9; margin: 11px 0 0; }
 .app-heading p { color: var(--muted); margin: 0; }
+.app-heading-actions { display: flex; align-items: center; gap: 10px; }
 .dashboard-toolbar { display: flex; gap: 10px; margin-bottom: 28px; }
 .search-input { flex: 1; min-height: 46px; border: 1px solid var(--line); background: rgba(255,255,255,.55); border-radius: 99px; padding: 0 18px; }
 .member-groups { display: grid; gap: 16px; }
@@ -171,7 +172,6 @@ textarea.field { min-height: 150px; resize: vertical; }
 .form-actions { display: flex; align-items: center; gap: 12px; margin-top: 24px; }
 
 .admin-grid { display: grid; grid-template-columns: 1.3fr .7fr; gap: 24px; align-items: start; }
-.users-admin-grid { grid-template-columns: 1.5fr .7fr; }
 .federation-admin-grid { grid-template-columns: .85fr 1.15fr; }
 .data-card { background: var(--cream); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
 .data-card h2 { margin: 0; padding: 20px; font-family: var(--font-serif), serif; font-size: 25px; border-bottom: 1px solid var(--line); }
@@ -204,6 +204,16 @@ textarea.field { min-height: 150px; resize: vertical; }
 .pairing-output b { font-size: 11px; }
 .pairing-output small { color: var(--muted); font-size: 9px; }
 .pairing-output .button { justify-self: start; }
+.users-list-card { width: 100%; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 100; padding: 24px; background: rgba(13,42,33,.58); backdrop-filter: blur(7px); display: grid; place-items: center; overflow-y: auto; }
+.modal-card { width: min(680px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; background: var(--cream); border: 1px solid rgba(255,255,255,.35); border-radius: 24px; box-shadow: 0 34px 100px rgba(8,28,21,.35); padding: 30px; }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.modal-header h2 { margin: 8px 0 0; font-family: var(--font-serif), serif; font-size: 42px; line-height: 1; font-weight: 560; letter-spacing: -.035em; }
+.modal-close { width: 40px; height: 40px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 50%; background: white; cursor: pointer; font-size: 24px; line-height: 1; }
+.modal-close:disabled { opacity: .45; cursor: wait; }
+.modal-intro { color: var(--muted); font-size: 11px; line-height: 1.6; margin: 14px 0 25px; }
+.modal-form .form-error { margin-bottom: 0; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
 
 .setup-shell { min-height: 100vh; background: var(--paper); }
 .setup-header { width: min(1180px, calc(100% - 48px)); height: 82px; margin: 0 auto; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
@@ -299,6 +309,7 @@ textarea.field { min-height: 150px; resize: vertical; }
   .app-main { width: min(100% - 24px, 1050px); padding-top: 38px; }
   .app-heading { align-items: flex-start; flex-direction: column; }
   .app-heading .button { width: 100%; }
+  .app-heading-actions { width: 100%; flex-direction: column; }
   .request-item { grid-template-columns: 1fr; padding: 20px; }
   .request-side { display: none; }
   .member-activity span { display: none; }
@@ -311,6 +322,11 @@ textarea.field { min-height: 150px; resize: vertical; }
   .user-phone-form .field { grid-column: 1 / -1; }
   .pairing-step { padding-left: 52px; }
   .pairing-step-number { left: 16px; }
+  .modal-backdrop { padding: 12px; place-items: start center; }
+  .modal-card { max-height: calc(100vh - 24px); border-radius: 18px; padding: 22px 18px; }
+  .modal-header h2 { font-size: 36px; }
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions .button { width: 100%; }
   .setup-header { width: calc(100% - 28px); }
   .setup-header > span { display: none; }
   .setup-layout { width: min(100% - 24px, 680px); padding: 32px 0 60px; grid-template-columns: 1fr; gap: 28px; }

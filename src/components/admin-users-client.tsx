@@ -23,6 +23,7 @@ export function AdminUsersClient() {
   const [busyUserId, setBusyUserId] = useState("");
   const [editingPhoneId, setEditingPhoneId] = useState("");
   const [newRole, setNewRole] = useState("member");
+  const [showCreate, setShowCreate] = useState(false);
 
   async function load() {
     const response = await fetch("/api/v1/admin/users");
@@ -52,6 +53,38 @@ export function AdminUsersClient() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    if (!showCreate) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape" && !loading) {
+        setError("");
+        setNewRole("member");
+        setShowCreate(false);
+      }
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [loading, showCreate]);
+
+  function openCreate() {
+    setError("");
+    setNotice("");
+    setNewRole("member");
+    setShowCreate(true);
+  }
+
+  function closeCreate() {
+    if (loading) return;
+    setError("");
+    setNewRole("member");
+    setShowCreate(false);
+  }
+
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -72,6 +105,7 @@ export function AdminUsersClient() {
         setNewRole("member");
         setNotice("Lietotājs ir pievienots.");
         await load();
+        setShowCreate(false);
       }
     } catch {
       setError("Lietotāju neizdevās izveidot.");
@@ -136,55 +170,68 @@ export function AdminUsersClient() {
     <main className="app-main">
       <header className="app-heading">
         <div><span className="auth-step">Instances administrācija</span><h1>Biedri un<br />piekļuves.</h1></div>
-        <Link className="button button-dark" href="/admin/federation">Savienotās instalācijas</Link>
+        <div className="app-heading-actions">
+          <button className="button button-accent" type="button" onClick={openCreate}>Pievienot biedru</button>
+          <Link className="button button-dark" href="/admin/federation">Savienotās instalācijas</Link>
+        </div>
       </header>
-      {error && <div className="form-error">{error}</div>}
+      {error && !showCreate && <div className="form-error">{error}</div>}
       {notice && <div className="form-success">{notice}</div>}
-      <div className="admin-grid users-admin-grid">
-        <section className="data-card">
-          <h2>Reģistrētie biedri</h2>
-          {users.map((user) => {
-            const protectedUser = user.role === "owner" || user.id === actorUserId;
-            const busy = busyUserId === user.id;
-            return (
-              <div className="user-row admin-user-row" key={user.id}>
-                <div><strong>{user.displayName}</strong><small>{user.company} · •••• {user.phoneLast4}</small></div>
-                <div><small>{user.category ?? "Nav kategorijas"}</small></div>
-                <span className={`status-pill ${user.status}`}>{roleLabel(user.role)} · {statusLabel(user.status)}</span>
-                <div className="user-actions">
-                  <button className="row-action" type="button" onClick={() => setEditingPhoneId(editingPhoneId === user.id ? "" : user.id)} disabled={busy}>Mainīt tālruni</button>
-                  <button className="row-action" type="button" onClick={() => toggleStatus(user)} disabled={busy || protectedUser}>{user.status === "suspended" ? "Aktivizēt" : "Deaktivizēt"}</button>
-                  <button className="row-action row-action-danger" type="button" onClick={() => remove(user)} disabled={busy || protectedUser}>Dzēst</button>
-                </div>
-                {editingPhoneId === user.id && (
-                  <form className="user-phone-form" onSubmit={(event) => updatePhone(event, user)}>
-                    <input className="field" name="phone" type="tel" inputMode="tel" placeholder="Jaunais numurs, piemēram, +371 2…" required />
-                    <button className="button button-dark button-small" disabled={busy}>Saglabāt</button>
-                    <button className="button button-ghost button-small" type="button" onClick={() => setEditingPhoneId("")}>Atcelt</button>
-                  </form>
-                )}
+      <section className="data-card users-list-card">
+        <h2>Reģistrētie biedri</h2>
+        {users.map((user) => {
+          const protectedUser = user.role === "owner" || user.id === actorUserId;
+          const busy = busyUserId === user.id;
+          return (
+            <div className="user-row admin-user-row" key={user.id}>
+              <div><strong>{user.displayName}</strong><small>{user.company} · •••• {user.phoneLast4}</small></div>
+              <div><small>{user.category ?? "Nav kategorijas"}</small></div>
+              <span className={`status-pill ${user.status}`}>{roleLabel(user.role)} · {statusLabel(user.status)}</span>
+              <div className="user-actions">
+                <button className="row-action" type="button" onClick={() => setEditingPhoneId(editingPhoneId === user.id ? "" : user.id)} disabled={busy}>Mainīt tālruni</button>
+                <button className="row-action" type="button" onClick={() => toggleStatus(user)} disabled={busy || protectedUser}>{user.status === "suspended" ? "Aktivizēt" : "Deaktivizēt"}</button>
+                <button className="row-action row-action-danger" type="button" onClick={() => remove(user)} disabled={busy || protectedUser}>Dzēst</button>
               </div>
-            );
-          })}
-        </section>
-        <section className="data-card">
-          <h2>Pievienot biedru</h2>
-          <form className="compact-form" onSubmit={create}>
-            <input className="field" name="firstName" placeholder="Vārds" required />
-            <input className="field" name="lastName" placeholder="Uzvārds" required />
-            <input className="field" name="company" placeholder="Uzņēmums" required />
-            <input className="field" name="category" placeholder="Nozare / kategorija" />
-            <input className="field" name="phone" type="tel" placeholder="+371 2…" required />
-            <input className="field" name="email" type="email" placeholder="E-pasts (neobligāti)" />
-            <select className="field" name="role" value={newRole} onChange={(event) => setNewRole(event.target.value)}>
-              <option value="member">Biedrs — ieeja ar WhatsApp</option>
-              <option value="admin">Administrators — arī ar paroli</option>
-            </select>
-            {newRole === "admin" && <input className="field" name="password" type="password" minLength={12} maxLength={200} autoComplete="new-password" placeholder="Sākotnējā admina parole (12+)" required />}
-            <button className="button button-accent" disabled={loading}>{loading ? "Pievienojam…" : "Pievienot biedru"}</button>
-          </form>
-        </section>
-      </div>
+              {editingPhoneId === user.id && (
+                <form className="user-phone-form" onSubmit={(event) => updatePhone(event, user)}>
+                  <input className="field" name="phone" type="tel" inputMode="tel" placeholder="Jaunais numurs, piemēram, +371 2…" required />
+                  <button className="button button-dark button-small" disabled={busy}>Saglabāt</button>
+                  <button className="button button-ghost button-small" type="button" onClick={() => setEditingPhoneId("")}>Atcelt</button>
+                </form>
+              )}
+            </div>
+          );
+        })}
+      </section>
+
+      {showCreate && (
+        <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCreate(); }}>
+          <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-user-title">
+            <header className="modal-header">
+              <div><span className="auth-step">Jauna piekļuve</span><h2 id="create-user-title">Pievienot biedru</h2></div>
+              <button className="modal-close" type="button" onClick={closeCreate} disabled={loading} aria-label="Aizvērt">×</button>
+            </header>
+            <p className="modal-intro">Pievieno biedru ar WhatsApp ieeju vai administratoru ar sākotnējo paroli.</p>
+            <form className="modal-form" onSubmit={create}>
+              <div className="form-grid">
+                <div className="form-group"><label htmlFor="new-first-name">Vārds</label><input className="field" id="new-first-name" name="firstName" autoFocus required /></div>
+                <div className="form-group"><label htmlFor="new-last-name">Uzvārds</label><input className="field" id="new-last-name" name="lastName" required /></div>
+                <div className="form-group"><label htmlFor="new-company">Uzņēmums</label><input className="field" id="new-company" name="company" required /></div>
+                <div className="form-group"><label htmlFor="new-category">Nozare / kategorija</label><input className="field" id="new-category" name="category" /></div>
+                <div className="form-group"><label htmlFor="new-phone">Tālruņa numurs</label><input className="field" id="new-phone" name="phone" type="tel" inputMode="tel" placeholder="+371 2…" required /></div>
+                <div className="form-group"><label htmlFor="new-email">E-pasts (neobligāti)</label><input className="field" id="new-email" name="email" type="email" /></div>
+                <div className="form-group full"><label htmlFor="new-role">Piekļuves veids</label><select className="field" id="new-role" name="role" value={newRole} onChange={(event) => setNewRole(event.target.value)}><option value="member">Biedrs — ieeja ar WhatsApp</option><option value="admin">Administrators — arī ar paroli</option></select></div>
+                {newRole === "admin" && <div className="form-group full"><label htmlFor="new-password">Sākotnējā administratora parole</label><input className="field" id="new-password" name="password" type="password" minLength={12} maxLength={200} autoComplete="new-password" placeholder="Vismaz 12 rakstzīmes" required /></div>}
+              </div>
+              {error && <div className="form-error">{error}</div>}
+              <div className="modal-actions">
+                <button className="button button-ghost" type="button" onClick={closeCreate} disabled={loading}>Atcelt</button>
+                <button className="button button-accent" disabled={loading}>{loading ? "Pievienojam…" : "Pievienot biedru"}</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
