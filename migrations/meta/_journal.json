@@ -36,6 +36,20 @@
       "when": 1784742428998,
       "tag": "0004_legal-settings",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784753914465,
+      "tag": "0005_easy_butterfly",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784754250079,
+      "tag": "0006_nervous_dagger",
+      "breakpoints": true
     }
   ]
 }

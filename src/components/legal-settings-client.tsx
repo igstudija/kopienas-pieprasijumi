@@ -1,10 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { LegalSettings } from "@/lib/legal-settings";
 import { useLanguage } from "./language-provider";
 import { adminCopy } from "@/lib/admin-i18n";
+import { fetchJson, isAbortError, jsonRequest } from "@/lib/client-api";
+import { useModalDialog } from "@/lib/use-modal-dialog";
 
 export function LegalSettingsClient() {
   const { locale } = useLanguage();
@@ -16,26 +18,24 @@ export function LegalSettingsClient() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const dialogRef = useModalDialog<HTMLElement>(editing, () => setEditing(false), saving);
 
-  async function load() {
-    const response = await fetch("/api/v1/admin/legal");
-    const data = await response.json();
-    if (!response.ok) throw new Error(loadError);
+  const load = useCallback(async (signal?: AbortSignal) => {
+    const data = await fetchJson<{ settings: LegalSettings }>("/api/v1/admin/legal", { signal });
     setSettings(data.settings);
-  }
+  }, []);
 
   useEffect(() => {
-    let active = true;
-    fetch("/api/v1/admin/legal")
-      .then(async (response) => ({ response, data: await response.json() }))
-      .then(({ response, data }) => {
-        if (!active) return;
-        if (!response.ok) setError(loadError);
-        else setSettings(data.settings);
+    const controller = new AbortController();
+    fetchJson<{ settings: LegalSettings }>("/api/v1/admin/legal", { signal: controller.signal })
+      .then((data) => setSettings(data.settings))
+      .catch((cause: unknown) => {
+        if (!isAbortError(cause)) setError(loadError);
       })
-      .catch(() => { if (active) setError(loadError); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [loadError]);
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -45,9 +45,7 @@ export function LegalSettingsClient() {
     setNotice("");
     const body = Object.fromEntries(new FormData(event.currentTarget).entries());
     try {
-      const response = await fetch("/api/v1/admin/legal", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-      await response.json();
-      if (!response.ok) throw new Error(copy.legalSaveError);
+      await fetchJson("/api/v1/admin/legal", jsonRequest("PATCH", body));
       await load();
       setNotice(copy.legalSaved);
       setEditing(false);
@@ -66,7 +64,7 @@ export function LegalSettingsClient() {
       {settings && <div className="settings-summary"><div><span>{copy.legalEntity}</span><strong>{settings.legalEntityName || copy.legalNotProvided}</strong></div><div><span>{copy.legalPrivacyContact}</span><strong>{settings.privacyContactEmail || settings.legalEmail || copy.legalNotProvidedMasculine}</strong></div><div><span>{copy.legalRetention}</span><strong>{settings.dataRetentionMonths} {copy.legalMonths}</strong></div><div className="settings-public-links"><Link href="/par-risinajumu">{copy.legalViewImprint}</Link><Link href="/privacy">{copy.legalViewPrivacy}</Link></div></div>}
       {editing && settings && (
         <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setEditing(false); }}>
-          <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="legal-settings-title">
+          <section ref={dialogRef} className="modal-card" role="dialog" aria-modal="true" aria-labelledby="legal-settings-title" tabIndex={-1}>
             <header className="modal-header"><div><span className="auth-step">{copy.legalController}</span><h2 id="legal-settings-title">{copy.legalModalTitle}</h2></div><button className="modal-close" type="button" aria-label={copy.close} onClick={() => setEditing(false)} disabled={saving}>×</button></header>
             <p className="modal-intro">{copy.legalModalIntro}</p>
             <form onSubmit={save}>

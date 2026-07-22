@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ApiError, fetchJson, isAbortError, jsonRequest } from "@/lib/client-api";
 import { useLanguage } from "./language-provider";
 
 type QrLogin = { challengeId: string; browserToken: string; deepLink: string; qrDataUrl: string; expiresAt: string };
@@ -17,34 +18,32 @@ export function LoginChoices() {
 
   useEffect(() => {
     let cancelled = false; let timeout: ReturnType<typeof setTimeout>;
+    const controller = new AbortController();
     async function start() {
       setError("");
       setCanRetry(false);
       try {
-        const response = await fetch("/api/v1/auth/qr/start", { method: "POST" });
-        const data = await response.json();
+        const data = await fetchJson<QrLogin>("/api/v1/auth/qr/start", { method: "POST", signal: controller.signal });
         if (cancelled) return;
-        if (!response.ok) {
-          setError(data.error ?? "QR neizdevās izveidot.");
-          setCanRetry(true);
-          timeout = setTimeout(() => setRestartKey((current) => current + 1), 2500);
-          return;
-        }
         setQr(data);
         poll(data);
-      } catch {
-        if (!cancelled) {
-          setError("Neizdevās savienoties ar sistēmu.");
+      } catch (cause) {
+        if (!cancelled && !isAbortError(cause)) {
+          setError(cause instanceof Error ? cause.message : "Neizdevās savienoties ar sistēmu.");
           setCanRetry(true);
-          timeout = setTimeout(() => setRestartKey((current) => current + 1), 2500);
+          if (!(cause instanceof ApiError) || cause.status !== 429) {
+            timeout = setTimeout(() => setRestartKey((current) => current + 1), 2500);
+          }
         }
       }
     }
     async function poll(value: QrLogin) {
       if (cancelled) return;
       try {
-        const response = await fetch("/api/v1/auth/qr/status", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ challengeId: value.challengeId, browserToken: value.browserToken }) });
-        const data = await response.json();
+        const data = await fetchJson<{ status: "pending" | "complete" | "expired" | "invalid" }>(
+          "/api/v1/auth/qr/status",
+          jsonRequest("POST", { challengeId: value.challengeId, browserToken: value.browserToken }, { signal: controller.signal }),
+        );
         if (data.status === "complete") { router.push("/app"); router.refresh(); return; }
         if (data.status === "expired") {
           setQr(null);
@@ -59,8 +58,8 @@ export function LoginChoices() {
           return;
         }
         timeout = setTimeout(() => poll(value), 1500);
-      } catch {
-        if (!cancelled) {
+      } catch (cause) {
+        if (!cancelled && !isAbortError(cause)) {
           setError("Neizdevās pārbaudīt QR kodu.");
           setCanRetry(true);
           timeout = setTimeout(() => poll(value), 2500);
@@ -68,7 +67,7 @@ export function LoginChoices() {
       }
     }
     void start();
-    return () => { cancelled = true; clearTimeout(timeout); };
+    return () => { cancelled = true; controller.abort(); clearTimeout(timeout); };
   }, [restartKey, router]);
 
   function restart() {

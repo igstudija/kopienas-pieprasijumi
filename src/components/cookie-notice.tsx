@@ -35,7 +35,7 @@ export function CookieNotice() {
 
   if (!visible) return null;
   return (
-    <aside className={`cookie-notice ${details ? "cookie-details" : ""}`} role="dialog" aria-modal="true" aria-labelledby="cookie-title">
+    <aside className={`cookie-notice ${details ? "cookie-details" : ""}`} role="region" aria-labelledby="cookie-title">
       <div className="cookie-copy"><strong id="cookie-title">{messages.cookieTitle}</strong><p>{messages.cookieText}</p><Link href="/privacy">{messages.cookieMore}</Link></div>
       {details && <div className="cookie-categories">
         <div><span><b>{messages.cookieNecessary}</b><small>{messages.cookieNecessaryText}</small></span><em>{messages.cookieAlwaysOn}</em></div>

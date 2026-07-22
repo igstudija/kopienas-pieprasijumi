@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchJson, isAbortError, jsonRequest } from "@/lib/client-api";
 
 type Settings = {
   businessNumber: string;
@@ -19,13 +20,16 @@ export function WhatsappAdminClient() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    let active = true;
-    fetch("/api/v1/admin/whatsapp")
-      .then(async (response) => ({ response, data: await response.json() }))
-      .then(({ response, data }) => { if (!active) return; if (!response.ok) setError(data.error ?? "Settings could not be loaded."); else setSettings(data.settings); })
-      .catch(() => { if (active) setError("Settings could not be loaded."); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+    const controller = new AbortController();
+    fetchJson<{ settings: Settings }>("/api/v1/admin/whatsapp", { signal: controller.signal })
+      .then((data) => setSettings(data.settings))
+      .catch((cause: unknown) => {
+        if (!isAbortError(cause)) setError(cause instanceof Error ? cause.message : "Settings could not be loaded.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, []);
 
   async function save(form: HTMLFormElement, regenerateVerifyToken = false) {
@@ -34,9 +38,7 @@ export function WhatsappAdminClient() {
     setNotice("");
     const body = { ...Object.fromEntries(new FormData(form).entries()), regenerateVerifyToken };
     try {
-      const response = await fetch("/api/v1/admin/whatsapp", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Settings could not be saved.");
+      const data = await fetchJson<{ settings: Settings }>("/api/v1/admin/whatsapp", jsonRequest("PATCH", body));
       setSettings(data.settings);
       setNotice(regenerateVerifyToken ? "A new verify token has been generated. Update it in Meta now." : "WhatsApp settings have been saved.");
       const appSecret = form.elements.namedItem("appSecret") as HTMLInputElement | null;

@@ -1,15 +1,20 @@
 import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, lt } from "drizzle-orm";
 import QRCode from "qrcode";
 import { getDb } from "@/lib/db";
 import { sessions, users, whatsappLoginChallenges } from "@/lib/db/schema";
+import { HttpError } from "@/lib/http";
 import { generateToken, normalizePhone, phoneLookup, sessionDigest, whatsappBrowserTokenDigest, whatsappMessageTokenDigest } from "@/lib/security";
 import { writeAudit } from "./audit";
 import { getInstanceRuntime } from "./installation";
 
 const QR_TTL_MS = 2 * 60 * 1000;
+const QR_RATE_WINDOW_MS = 5 * 60 * 1000;
+const QR_RATE_LIMIT = 10;
+const QR_UNKNOWN_IP_RATE_LIMIT = 100;
+const QR_RETENTION_MS = 24 * 60 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const LOGIN_PREFIX = "PIETEIKTIES";
 type Context = { ipAddress?: string | null; userAgent?: string | null; requestId?: string | null };
@@ -17,18 +22,34 @@ type Context = { ipAddress?: string | null; userAgent?: string | null; requestId
 export async function startWhatsappQrLogin(context: Context) {
   const businessNumber = (await getInstanceRuntime()).whatsappBusinessNumber;
   if (!businessNumber) throw new Error("WHATSAPP_BUSINESS_NUMBER nav konfigurēts.");
+  const db = getDb();
+  const requestedIp = context.ipAddress?.slice(0, 64) ?? null;
+  const rateLimit = requestedIp ? QR_RATE_LIMIT : QR_UNKNOWN_IP_RATE_LIMIT;
+  await db.delete(whatsappLoginChallenges).where(lt(whatsappLoginChallenges.expiresAt, new Date(Date.now() - QR_RETENTION_MS)));
+  const recentChallenges = await db
+    .select({ id: whatsappLoginChallenges.id })
+    .from(whatsappLoginChallenges)
+    .where(and(
+      requestedIp ? eq(whatsappLoginChallenges.requestedIp, requestedIp) : isNull(whatsappLoginChallenges.requestedIp),
+      gt(whatsappLoginChallenges.createdAt, new Date(Date.now() - QR_RATE_WINDOW_MS)),
+    ))
+    .limit(rateLimit);
+  if (recentChallenges.length >= rateLimit) {
+    await writeAudit(db, { action: "auth.whatsapp_qr_rate_limited", objectType: "authentication", ipAddress: context.ipAddress, requestId: context.requestId });
+    throw new HttpError(429, "Pārāk daudz autorizācijas mēģinājumu. Mēģini vēlreiz pēc piecām minūtēm.");
+  }
   const id = crypto.randomUUID();
   const messageToken = generateToken(18);
   const browserToken = generateToken(32);
   const expiresAt = new Date(Date.now() + QR_TTL_MS);
   const text = `${LOGIN_PREFIX} ${messageToken}`;
   const deepLink = `https://wa.me/${businessNumber.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
-  await getDb().insert(whatsappLoginChallenges).values({
+  await db.insert(whatsappLoginChallenges).values({
     id,
     messageTokenDigest: whatsappMessageTokenDigest(messageToken),
     browserTokenDigest: whatsappBrowserTokenDigest(browserToken),
     expiresAt,
-    requestedIp: context.ipAddress ?? null,
+    requestedIp,
     userAgent: context.userAgent ?? null,
   });
   return {

@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { extractWhatsappTextMessages } from "@/lib/whatsapp-webhook";
 import { registerWhatsappLoginMessage, verifyWhatsappWebhookSignature } from "@/lib/services/whatsapp-qr-auth";
 import { getInstanceRuntime } from "@/lib/services/installation";
+import { safeEqualHex, sha256 } from "@/lib/security";
 
 export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get("hub.mode");
   const token = request.nextUrl.searchParams.get("hub.verify_token");
   const challenge = request.nextUrl.searchParams.get("hub.challenge");
   const expectedToken = (await getInstanceRuntime()).whatsappWebhookVerifyToken;
-  if (mode === "subscribe" && token && token === expectedToken && challenge) return new NextResponse(challenge, { status: 200 });
+  if (mode === "subscribe" && token && expectedToken && safeEqualHex(sha256(token), sha256(expectedToken)) && challenge) return new NextResponse(challenge, { status: 200 });
   return NextResponse.json({ error: "Webhook verifikācija neizdevās." }, { status: 403 });
 }
 

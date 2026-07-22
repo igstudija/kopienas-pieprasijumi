@@ -1,10 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { pairingCodePreview, type PairingCodePreview } from "@/lib/federation-code";
 import { useLanguage } from "@/components/language-provider";
 import { EditIcon, PauseIcon, PlayIcon, TrashIcon } from "@/components/icons";
 import { adminCopy } from "@/lib/admin-i18n";
+import { fetchJson, isAbortError, jsonRequest } from "@/lib/client-api";
+import { useModalDialog } from "@/lib/use-modal-dialog";
 
 type CodeState = "missing" | "created" | "accepted";
 
@@ -20,6 +22,7 @@ type Peer = {
   remoteCodeState: CodeState;
   localCodeState: CodeState;
 };
+type PeersResponse = { peers: Peer[] };
 
 export function FederationClient() {
   const { locale } = useLanguage();
@@ -39,40 +42,22 @@ export function FederationClient() {
   const [loading, setLoading] = useState(false);
   const [busyPeerId, setBusyPeerId] = useState("");
   const [copied, setCopied] = useState(false);
+  const dialogRef = useModalDialog<HTMLElement>(Boolean(modalMode), () => setModalMode(null), loading);
 
-  async function load() {
-    const response = await fetch("/api/v1/admin/federation/peers");
-    const data = await response.json();
-    if (response.ok) setPeers(data.peers);
-    else setError(peersLoadError);
-  }
+  const load = useCallback(async (signal?: AbortSignal) => {
+    const data = await fetchJson<PeersResponse>("/api/v1/admin/federation/peers", { signal });
+    setPeers(data.peers);
+  }, []);
 
   useEffect(() => {
-    let active = true;
-    fetch("/api/v1/admin/federation/peers")
-      .then(async (response) => ({ response, data: await response.json() }))
-      .then(({ response, data }) => {
-        if (!active) return;
-        if (response.ok) setPeers(data.peers);
-        else setError(peersLoadError);
-      })
-      .catch(() => { if (active) setError(peersLoadError); });
-    return () => { active = false; };
+    const controller = new AbortController();
+    fetchJson<PeersResponse>("/api/v1/admin/federation/peers", { signal: controller.signal })
+      .then((data) => setPeers(data.peers))
+      .catch((cause: unknown) => {
+        if (!isAbortError(cause)) setError(peersLoadError);
+      });
+    return () => controller.abort();
   }, [peersLoadError]);
-
-  useEffect(() => {
-    if (!modalMode) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape" && !loading) setModalMode(null);
-    }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [loading, modalMode]);
 
   function resetCodeFields() {
     setPairingCode("");
@@ -110,13 +95,7 @@ export function FederationClient() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/v1/admin/federation/peers", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: remoteName }),
-      });
-      await response.json();
-      if (!response.ok) throw new Error(copy.peersAddError);
+      await fetchJson("/api/v1/admin/federation/peers", jsonRequest("POST", { name: remoteName }));
       await load();
       setNotice(copy.peersDraftSaved);
       setModalMode(null);
@@ -133,13 +112,7 @@ export function FederationClient() {
     setError("");
     setCopied(false);
     try {
-      const response = await fetch("/api/v1/admin/federation/invites", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ label: remoteName, peerId: editingPeer.id }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(copy.peersCodeError);
+      const data = await fetchJson<{ pairingCode: string }>("/api/v1/admin/federation/invites", jsonRequest("POST", { label: remoteName, peerId: editingPeer.id }));
       setPairingCode(data.pairingCode);
       setOurCodePreview(pairingCodePreview(data.pairingCode));
       await load();
@@ -170,13 +143,7 @@ export function FederationClient() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/v1/admin/federation/peers", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ peerId: editingPeer.id, pairingCode: remoteCode }),
-      });
-      await response.json();
-      if (!response.ok) throw new Error(copy.peersConnectError);
+      await fetchJson("/api/v1/admin/federation/peers", jsonRequest("POST", { peerId: editingPeer.id, pairingCode: remoteCode }));
       await load();
       setNotice(copy.peersConnected);
       setModalMode(null);
@@ -215,12 +182,10 @@ export function FederationClient() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch(`/api/v1/admin/federation/peers/${peerId}`, {
+      await fetchJson(`/api/v1/admin/federation/peers/${peerId}`, {
         ...init,
-        headers: { "content-type": "application/json" },
+        headers: init.body ? { "content-type": "application/json", ...init.headers } : init.headers,
       });
-      await response.json();
-      if (!response.ok) throw new Error(copy.peersUpdateError);
       await load();
       setNotice(successMessage);
       return true;
@@ -266,7 +231,7 @@ export function FederationClient() {
 
       {modalMode && (
         <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeModal(); }}>
-          <section className="modal-card federation-modal" role="dialog" aria-modal="true" aria-labelledby="portal-modal-title">
+          <section ref={dialogRef} className="modal-card federation-modal" role="dialog" aria-modal="true" aria-labelledby="portal-modal-title" tabIndex={-1}>
             <header className="modal-header">
               <div><span className="auth-step">{modalMode === "add" ? copy.peersNew : copy.peersSettings}</span><h2 id="portal-modal-title">{modalMode === "add" ? copy.peersAddTitle : `${copy.peersEditTitle}: ${editingPeer?.name}`}</h2></div>
               <button className="modal-close" type="button" onClick={closeModal} disabled={loading} aria-label={copy.close}>×</button>
