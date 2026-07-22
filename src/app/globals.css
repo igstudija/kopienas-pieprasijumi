@@ -275,7 +275,6 @@ svg { width: 1.15em; height: 1.15em; }
 .request-count-panel i { margin-top: 5px; color: var(--muted); font-size: 16px; font-style: normal; }
 .request-count-panel.single { cursor: default; }
 .member-expanded-requests { padding: 21px 24px 24px; border-top: 1px solid var(--line); background: rgba(255,255,255,.38); }
-.member-expanded-requests h3 { margin: 0 0 13px; padding-left: min(34%, 350px); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; }
 .expanded-request-list { width: min(760px, 74%); margin-left: auto; display: grid; gap: 10px; }
 .expanded-request-item { padding: 17px 19px; border: 1px solid var(--line); border-radius: 13px; background: white; }
 .expanded-request-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
@@ -603,7 +602,6 @@ textarea.field { min-height: 150px; resize: vertical; }
   .request-count-panel b { font-size: 27px; }
   .request-count-panel span { font-size: 11px; }
   .member-expanded-requests { padding: 16px; }
-  .member-expanded-requests h3 { padding-left: 0; }
   .expanded-request-list { width: 100%; }
   .expanded-request-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
   .floating-add-button { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); width: 58px; height: 58px; }

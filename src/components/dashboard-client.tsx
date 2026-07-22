@@ -156,7 +156,7 @@ function MemberGroup({ group, currentUserId, deletingId, onDelete, onEdit, local
         </article>
         {canExpand ? <button className="request-count-panel" type="button" aria-expanded={expanded} onClick={() => setExpanded((current) => !current)}><b>{group.requests.length}</b><span>{messages.requestMany}</span><i aria-hidden="true">{expanded ? "⌃" : "⌄"}</i></button> : <div className="request-count-panel single"><b>1</b><span>{messages.requestOne}</span></div>}
       </div>
-      {expanded && canExpand && <div className="member-expanded-requests"><h3>{messages.allMemberRequests}</h3><div className="expanded-request-list">{group.requests.map((item) => <ExpandedRequest item={item} key={item.id} canManage={item.origin === "local" && item.authorId === currentUserId} deleting={deletingId === item.id} onDelete={onDelete} onEdit={onEdit} locale={locale} />)}</div></div>}
+      {expanded && canExpand && <div className="member-expanded-requests"><div className="expanded-request-list">{group.requests.map((item) => <ExpandedRequest item={item} key={item.id} canManage={item.origin === "local" && item.authorId === currentUserId} deleting={deletingId === item.id} onDelete={onDelete} onEdit={onEdit} locale={locale} />)}</div></div>}
     </section>
   );
 }
