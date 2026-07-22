@@ -6,6 +6,10 @@ export function vercelDeployUrl(repositoryUrl: string) {
   url.searchParams.set("env", "SETUP_SECRET");
   url.searchParams.set("envDescription", "Izvēlies vismaz 12 rakstzīmju instalācijas paroli. Tā būs vajadzīga tikai pirmās palaišanas vednī.");
   url.searchParams.set("envLink", `${repositoryUrl.replace(/\/$/, "")}/blob/main/docs/INSTALLATION.md`);
-  url.searchParams.set("products", JSON.stringify({ integrationSlug: "supabase", productSlug: "supabase", protocol: "storage" }));
+  url.searchParams.set("stores", JSON.stringify([{
+    type: "integration",
+    integrationSlug: "supabase",
+    productSlug: "supabase",
+  }]));
   return url.toString();
 }
