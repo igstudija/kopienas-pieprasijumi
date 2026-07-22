@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { jsonError } from "@/lib/http";
 import { acceptHandshake } from "@/lib/services/federation";
+import { dispatchFederationOutbox } from "@/lib/services/federation-dispatch";
 
 const schema = z.object({
   inviteId: z.uuid(),
@@ -19,7 +20,9 @@ const schema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const input = schema.parse(await request.json());
-    return NextResponse.json({ peer: await acceptHandshake(input) });
+    const result = await acceptHandshake(input);
+    after(() => dispatchFederationOutbox().catch((error) => console.error("Federācijas sākotnējā sinhronizācija neizdevās", error)));
+    return NextResponse.json(result);
   } catch (error) {
     return jsonError(error, "Federācijas handshake neizdevās.");
   }

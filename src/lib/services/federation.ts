@@ -7,8 +7,10 @@ import {
   federationInbox,
   federationInvites,
   federationNonces,
+  federationOutbox,
   peerInstances,
   remoteRequests,
+  specificRequests,
   type User,
 } from "@/lib/db/schema";
 import { HttpError } from "@/lib/http";
@@ -19,7 +21,14 @@ import { getInstanceRuntime } from "./installation";
 const PROTOCOL_VERSION = 1;
 const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000;
 
-type PairingPayload = { endpoint: string; inviteId: string; secret: string; expiresAt: string };
+type PairingPayload = {
+  endpoint: string;
+  inviteId: string;
+  secret: string;
+  expiresAt: string;
+  issuerName?: string;
+  issuerBaseUrl?: string;
+};
 type PeerMetadata = {
   instanceId: string;
   name: string;
@@ -80,6 +89,8 @@ export async function createFederationInvite(actor: User, label?: string) {
     inviteId: id,
     secret,
     expiresAt: expiresAt.toISOString(),
+    issuerName: identity.name,
+    issuerBaseUrl: identity.baseUrl,
   };
   return { pairingCode: Buffer.from(JSON.stringify(payload)).toString("base64url"), expiresAt };
 }
@@ -96,7 +107,12 @@ export async function acceptHandshake(input: { inviteId: string; secret: string;
   const identity = await federationIdentity();
   if (input.peer.instanceId === identity.instanceId) throw new HttpError(400, "Instanci nevar savienot pašai ar sevi.");
 
-  await db.transaction(async (tx) => {
+  const permissions = await db.transaction(async (tx) => {
+    const [existingPeer] = await tx
+      .select({ id: peerInstances.id, allowOutgoing: peerInstances.allowOutgoing })
+      .from(peerInstances)
+      .where(eq(peerInstances.remoteInstanceId, input.peer.instanceId))
+      .limit(1);
     await tx.insert(peerInstances).values({
       remoteInstanceId: input.peer.instanceId,
       name: input.peer.name,
@@ -105,19 +121,43 @@ export async function acceptHandshake(input: { inviteId: string; secret: string;
       keyId: input.peer.keyId,
       protocolVersion: input.peer.protocolVersion,
       status: "active",
+      allowIncoming: false,
+      allowOutgoing: true,
+    }).onConflictDoUpdate({
+      target: peerInstances.remoteInstanceId,
+      set: {
+        name: input.peer.name,
+        baseUrl: input.peer.baseUrl,
+        publicKey: input.peer.publicKey,
+        keyId: input.peer.keyId,
+        protocolVersion: input.peer.protocolVersion,
+        status: "active",
+        allowOutgoing: true,
+        updatedAt: new Date(),
+      },
     });
     await tx.update(federationInvites).set({ usedAt: new Date() }).where(eq(federationInvites.id, invite.id));
     await writeAudit(tx, {
       actorUserId: invite.createdBy,
-      action: "federation.peer_connected",
+      action: "federation.outgoing_enabled",
       objectType: "peer_instance",
       objectId: input.peer.instanceId,
-      details: { name: input.peer.name, baseUrl: input.peer.baseUrl },
+      details: { name: input.peer.name, baseUrl: input.peer.baseUrl, remoteCanReadLocal: true },
     });
+    const [storedPeer] = await tx
+      .select({ id: peerInstances.id, allowIncoming: peerInstances.allowIncoming, allowOutgoing: peerInstances.allowOutgoing })
+      .from(peerInstances)
+      .where(eq(peerInstances.remoteInstanceId, input.peer.instanceId))
+      .limit(1);
+    if (storedPeer && !existingPeer?.allowOutgoing) await queueShareableRequestBackfill(tx, storedPeer.id);
+    return {
+      localCanReadRemote: storedPeer?.allowIncoming ?? false,
+      remoteCanReadLocal: storedPeer?.allowOutgoing ?? true,
+    };
   });
   const { privateKey: _, ...publicIdentity } = identity;
   void _;
-  return publicIdentity;
+  return { peer: publicIdentity, permissions };
 }
 
 export async function connectToPeer(actor: User, pairingCode: string) {
@@ -134,11 +174,14 @@ export async function connectToPeer(actor: User, pairingCode: string) {
     body: JSON.stringify({ inviteId: pairing.inviteId, secret: pairing.secret, peer: identity }),
     signal: AbortSignal.timeout(10_000),
   });
-  const data = (await response.json().catch(() => null)) as { peer?: PeerMetadata; error?: string } | null;
+  const data = (await response.json().catch(() => null)) as {
+    peer?: PeerMetadata;
+    error?: string;
+  } | null;
   if (!response.ok || !data?.peer) throw new HttpError(400, data?.error ?? "Savienojumu neizdevās izveidot.");
   validatePeerMetadata(data.peer);
   const db = getDb();
-  await db.transaction(async (tx) => {
+  const permissions = await db.transaction(async (tx) => {
     await tx.insert(peerInstances).values({
       remoteInstanceId: data.peer!.instanceId,
       name: data.peer!.name,
@@ -147,16 +190,57 @@ export async function connectToPeer(actor: User, pairingCode: string) {
       keyId: data.peer!.keyId,
       protocolVersion: data.peer!.protocolVersion,
       status: "active",
+      allowIncoming: true,
+      allowOutgoing: false,
+    }).onConflictDoUpdate({
+      target: peerInstances.remoteInstanceId,
+      set: {
+        name: data.peer!.name,
+        baseUrl: data.peer!.baseUrl,
+        publicKey: data.peer!.publicKey,
+        keyId: data.peer!.keyId,
+        protocolVersion: data.peer!.protocolVersion,
+        status: "active",
+        allowIncoming: true,
+        updatedAt: new Date(),
+      },
     });
     await writeAudit(tx, {
       actorUserId: actor.id,
-      action: "federation.peer_connected",
+      action: "federation.incoming_enabled",
       objectType: "peer_instance",
       objectId: data.peer!.instanceId,
-      details: { name: data.peer!.name, baseUrl: data.peer!.baseUrl },
+      details: { name: data.peer!.name, baseUrl: data.peer!.baseUrl, localCanReadRemote: true },
     });
+    const [storedPeer] = await tx
+      .select({ allowIncoming: peerInstances.allowIncoming, allowOutgoing: peerInstances.allowOutgoing })
+      .from(peerInstances)
+      .where(eq(peerInstances.remoteInstanceId, data.peer!.instanceId))
+      .limit(1);
+    return {
+      localCanReadRemote: storedPeer?.allowIncoming ?? true,
+      remoteCanReadLocal: storedPeer?.allowOutgoing ?? false,
+    };
   });
-  return data.peer;
+  return { ...data.peer, status: "active" as const, ...permissions };
+}
+
+type FederationTransaction = Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0];
+
+async function queueShareableRequestBackfill(tx: FederationTransaction, peerId: string) {
+  const requests = await tx
+    .select({ id: specificRequests.id, revision: specificRequests.revision })
+    .from(specificRequests)
+    .where(and(eq(specificRequests.status, "active"), eq(specificRequests.visibility, "all_peers")));
+  if (!requests.length) return;
+  await tx.insert(federationOutbox).values(requests.map((request) => ({
+    eventId: crypto.randomUUID(),
+    peerId,
+    eventType: "request.upserted",
+    aggregateId: request.id,
+    revision: request.revision,
+    payload: { requestId: request.id },
+  })));
 }
 
 export async function signFederationRequest(method: string, path: string, timestamp: string, nonce: string, body: string) {

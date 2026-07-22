@@ -30,6 +30,16 @@ Datubāzes credentials glabājas Vercel Environment Variables un netiek ievadīt
 - Sistēma nesūta maksas OTP vai SMS ziņas.
 - `owner` un `admin` lomas var ieiet `/admin` ar reģistrēto tālruņa numuru un paroli.
 - Adminu paroles tiek glabātas tikai kā scrypt hash; biedriem paroles netiek veidotas.
+- Administrators var biedram mainīt tālruņa numuru, deaktivizēt/aktivizēt piekļuvi vai dzēst konta personas datus. Vēsturiskie pieprasījumi pēc dzēšanas paliek anonimizēti.
+
+## Instalāciju savienošana
+
+- Katras instalācijas administrators izveido vienreizēju kodu konkrētajai otrai grupai.
+- Kodā jau ir iekļauts izdevējas instalācijas domēns un identitāte; domēns nav jāievada atsevišķi.
+- Ievadot otras grupas kodu, šī instalācija saņem viņu kopīgotos pieprasījumus.
+- Otra grupa šīs instalācijas pieprasījumus neredz, kamēr tā savā pusē nav ievadījusi pretējo kodu.
+- Ja abas puses ievada viena otras kodus, koplietošana darbojas abos virzienos.
+- Katrs kods ir derīgs 24 stundas un izmantojams vienu reizi.
 
 ## Lokālā palaišana
 

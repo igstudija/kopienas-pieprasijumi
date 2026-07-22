@@ -19,6 +19,7 @@
 | Datubāzes noplūde | Challenge un sesiju HMAC digest; tālrunis šifrēts + HMAC lookup |
 | Sesijas zādzība | HttpOnly/Secure/SameSite cookie, servera revokācija |
 | Invite token atkārtota lietošana | 256 bitu secrets, hash glabāšana, expiry, single use |
+| Negribēta abpusēja datu koplietošana | Katrs savienošanas kods atļauj plūsmu tikai vienā virzienā; pretējam virzienam vajadzīgs otras puses kods |
 | Viltots federācijas event | Ed25519 paraksts un uzticamo peer saraksts |
 | Replay | Timestamp, unikāls nonce un event ID |
 | Datu izplatīšanās pa ķēdi | Tikai home instances ieraksti drīkst tikt sūtīti tālāk |
