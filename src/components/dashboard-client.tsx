@@ -63,6 +63,31 @@ export function DashboardClient() {
     };
   }, [editingRequest, showCreate]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    let previousY = Math.max(0, window.scrollY);
+    let frame = 0;
+
+    function updateChrome() {
+      const currentY = Math.max(0, window.scrollY);
+      if (currentY <= 24 || currentY < previousY) root.classList.remove("request-chrome-hidden");
+      else if (currentY > 120 && currentY > previousY) root.classList.add("request-chrome-hidden");
+      previousY = currentY;
+      frame = 0;
+    }
+
+    function handleScroll() {
+      if (!frame) frame = window.requestAnimationFrame(updateChrome);
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+      root.classList.remove("request-chrome-hidden");
+    };
+  }, []);
+
   const sources = useMemo(() => {
     const values = new Map<string, string>();
     for (const group of groups) for (const item of group.requests) if (item.origin === "remote") values.set(item.sourceId, item.sourceName);
