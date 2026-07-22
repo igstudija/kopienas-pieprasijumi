@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { EditIcon, GlobeIcon, PlusIcon, TrashIcon } from "./icons";
+import { ChevronDownIcon, EditIcon, GlobeIcon, PlusIcon, TrashIcon } from "./icons";
 import { useLanguage } from "./language-provider";
 import { RequestForm } from "./request-form";
 
@@ -21,7 +21,7 @@ export function DashboardClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
-  const [source, setSource] = useState("all");
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [period, setPeriod] = useState<Period>("all");
   const [deletingId, setDeletingId] = useState("");
   const [visibleGroups, setVisibleGroups] = useState(8);
@@ -75,13 +75,13 @@ export function DashboardClient() {
     return groups.map((group) => ({
       ...group,
       requests: group.requests.filter((item) => {
-        if (source !== "all" && item.sourceId !== source) return false;
+        if (selectedSources.length && !selectedSources.includes(item.sourceId)) return false;
         if (boundary && new Date(item.createdAt) < boundary) return false;
         if (!needle) return true;
         return [item.title, item.details, item.authorName, item.authorCompany, item.authorCategory, item.target, item.industry, item.region, ...item.tags].filter(Boolean).join(" ").toLocaleLowerCase("lv").includes(needle);
       }),
     })).filter((group) => group.requests.length);
-  }, [groups, period, query, source]);
+  }, [groups, period, query, selectedSources]);
 
   const requestCount = filtered.reduce((total, group) => total + group.requests.length, 0);
   const visible = filtered.slice(0, visibleGroups);
@@ -107,8 +107,29 @@ export function DashboardClient() {
       <div className="dashboard-filter-bar">
         <div className="dashboard-filters">
           <input className="search-input" type="search" placeholder={messages.searchRequests} value={query} onChange={(event) => { setQuery(event.target.value); setVisibleGroups(8); }} aria-label={messages.searchRequests} />
-          <FilterRow label={messages.filterGroup}><FilterButton active={source === "all"} onClick={() => { setSource("all"); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton>{sources.map((item) => <FilterButton key={item.id} active={source === item.id} onClick={() => { setSource(item.id); setVisibleGroups(8); }}>{item.name}</FilterButton>)}</FilterRow>
-          <FilterRow label={messages.filterPeriod}><FilterButton active={period === "all"} onClick={() => { setPeriod("all"); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton><FilterButton active={period === "week"} onClick={() => { setPeriod("week"); setVisibleGroups(8); }}>{messages.filterWeek}</FilterButton><FilterButton active={period === "month"} onClick={() => { setPeriod("month"); setVisibleGroups(8); }}>{messages.filterMonth}</FilterButton></FilterRow>
+          <FilterRow className="group-filter-row" label={messages.filterGroup}><FilterButton active={!selectedSources.length} onClick={() => { setSelectedSources([]); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton>{sources.map((item) => <FilterButton key={item.id} active={selectedSources.includes(item.id)} onClick={() => { setSelectedSources((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id]); setVisibleGroups(8); }}>{item.name}</FilterButton>)}</FilterRow>
+          <div className="mobile-select-filter mobile-group-filter">
+            <b>{messages.filterGroup}</b>
+            <details>
+              <summary><span>{selectedSources.length ? selectedSources.map((id) => sources.find((item) => item.id === id)?.name).filter(Boolean).join(", ") : messages.filterAll}</span><ChevronDownIcon /></summary>
+              <div className="mobile-filter-options">
+                <button type="button" className={!selectedSources.length ? "active" : ""} aria-pressed={!selectedSources.length} onClick={() => { setSelectedSources([]); setVisibleGroups(8); }}><i aria-hidden="true">{!selectedSources.length ? "✓" : ""}</i>{messages.filterAll}</button>
+                {sources.map((item) => <button type="button" key={item.id} className={selectedSources.includes(item.id) ? "active" : ""} aria-pressed={selectedSources.includes(item.id)} onClick={() => { setSelectedSources((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id]); setVisibleGroups(8); }}><i aria-hidden="true">{selectedSources.includes(item.id) ? "✓" : ""}</i>{item.name}</button>)}
+              </div>
+            </details>
+          </div>
+          <FilterRow className="period-filter-row" label={messages.filterPeriod}><FilterButton active={period === "all"} onClick={() => { setPeriod("all"); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton><FilterButton active={period === "week"} onClick={() => { setPeriod("week"); setVisibleGroups(8); }}>{messages.filterWeek}</FilterButton><FilterButton active={period === "month"} onClick={() => { setPeriod("month"); setVisibleGroups(8); }}>{messages.filterMonth}</FilterButton></FilterRow>
+          <div className="mobile-select-filter mobile-period-filter">
+            <b>{messages.filterPeriod}</b>
+            <details>
+              <summary><span>{period === "all" ? messages.filterAll : period === "week" ? messages.filterWeek : messages.filterMonth}</span><ChevronDownIcon /></summary>
+              <div className="mobile-filter-options">
+                <MobilePeriodOption active={period === "all"} onClick={() => { setPeriod("all"); setVisibleGroups(8); }}>{messages.filterAll}</MobilePeriodOption>
+                <MobilePeriodOption active={period === "week"} onClick={() => { setPeriod("week"); setVisibleGroups(8); }}>{messages.filterWeek}</MobilePeriodOption>
+                <MobilePeriodOption active={period === "month"} onClick={() => { setPeriod("month"); setVisibleGroups(8); }}>{messages.filterMonth}</MobilePeriodOption>
+              </div>
+            </details>
+          </div>
         </div>
       </div>
       <div className="app-main request-dashboard-content">
@@ -136,12 +157,16 @@ export function DashboardClient() {
   );
 }
 
-function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="filter-row"><b>{label}</b><div>{children}</div></div>;
+function FilterRow({ className = "", label, children }: { className?: string; label: string; children: React.ReactNode }) {
+  return <div className={`filter-row ${className}`}><b>{label}</b><div>{children}</div></div>;
 }
 
 function FilterButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return <button type="button" className={active ? "active" : ""} aria-pressed={active} onClick={onClick}>{children}</button>;
+}
+
+function MobilePeriodOption({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return <button type="button" className={active ? "active" : ""} aria-pressed={active} onClick={(event) => { onClick(); event.currentTarget.closest("details")?.removeAttribute("open"); }}><i aria-hidden="true">{active ? "✓" : ""}</i>{children}</button>;
 }
 
 function MemberGroup({ group, currentUserId, deletingId, onDelete, onEdit, locale }: { group: RequestGroup; currentUserId: string; deletingId: string; onDelete: (item: RequestItem) => void; onEdit: (item: RequestItem) => void; locale: "lv" | "en" | "lt" | "et" }) {
