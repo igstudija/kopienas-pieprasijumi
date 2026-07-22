@@ -288,7 +288,7 @@ svg { width: 1.15em; height: 1.15em; }
 .empty-state p { color: var(--muted); margin: 0 0 25px; }
 .loading-state { display: grid; gap: 15px; }
 .load-more-row { padding: 24px 0 4px; text-align: center; }
-.floating-add-button { position: fixed; z-index: 8; right: max(24px, calc((100vw - 1160px) / 2)); bottom: max(24px, env(safe-area-inset-bottom)); width: 64px; height: 64px; border: 0; border-radius: 50%; background: var(--accent); color: var(--ink-deep); display: grid; place-items: center; box-shadow: 0 15px 35px rgba(117,56,26,.28); cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; }
+.floating-add-button { position: fixed; z-index: 8; right: max(24px, env(safe-area-inset-right)); bottom: max(24px, env(safe-area-inset-bottom)); width: 64px; height: 64px; border: 0; border-radius: 50%; background: var(--accent); color: var(--ink-deep); display: grid; place-items: center; box-shadow: 0 15px 35px rgba(117,56,26,.28); cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; }
 .floating-add-button:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 19px 40px rgba(117,56,26,.34); }
 .floating-add-button svg { width: 28px; height: 28px; }
 .request-create-modal { width: min(760px, 100%); }
