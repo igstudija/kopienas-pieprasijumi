@@ -33,7 +33,8 @@ export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/" }:
   const profileTitle = `${messages.profileTitleFirst} ${messages.profileTitleSecond}`.replace(/\.$/, "");
   const newRequestTitle = `${messages.newTitleFirst} ${messages.newTitleSecond}`.replace(/\.$/, "");
   const editRequestTitle = `${messages.editTitleFirst} ${messages.editTitleSecond}`.replace(/\.$/, "");
-  const sectionTitle = pathname.startsWith("/privacy") ? legalCopy[locale].privacy.eyebrow
+  const sectionTitle = pathname === "/" ? messages.loginEyebrow
+    : pathname.startsWith("/privacy") ? legalCopy[locale].privacy.eyebrow
     : pathname.startsWith("/par-risinajumu") || pathname.startsWith("/impressum") ? legalCopy[locale].impressum.title.replace(/\.$/, "")
       : pathname === "/app" ? dashboardTitle
     : pathname === "/app/profile" ? profileTitle
@@ -47,7 +48,7 @@ export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/" }:
 
   return <AppHeader title={sectionTitle} homeHref={user ? "/app" : "/"}>{(closeMenu) => <>
         <div className="mobile-nav-links">
-          <Link href="/app" onClick={closeMenu} className={pathname === "/app" ? "active" : ""} aria-current={pathname === "/app" ? "page" : undefined}>{messages.navRequests}</Link>
+          {user && <Link href="/app" onClick={closeMenu} className={pathname === "/app" ? "active" : ""} aria-current={pathname === "/app" ? "page" : undefined}>{messages.navRequests}</Link>}
           {showAdmin && <div className="mobile-nav-admin-section">
             <span>{messages.navAdmin}</span>
             {adminLinks.map((link) => <Link key={link.href} href={link.href} onClick={closeMenu} className={link.active ? "active" : ""} aria-current={link.active ? "page" : undefined}>{link.label}</Link>)}
@@ -58,12 +59,12 @@ export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/" }:
           </div>
           <div className="mobile-nav-language"><LanguageSwitcher compact /></div>
         </div>
-        {user ? <div className="mobile-nav-footer">
+        {user && <div className="mobile-nav-footer">
           <div className="mobile-nav-person"><span className="avatar">{user.initials}</span><span><b>{user.displayName}</b><small>{user.company}</small></span></div>
           <div className="mobile-nav-profile-actions">
             <Link href="/app/profile" className="row-action icon-action" aria-label={messages.navProfile} title={messages.navProfile} onClick={closeMenu}><EditIcon /></Link>
             <LogoutButton redirectTo={logoutRedirect} iconOnly />
           </div>
-        </div> : <div className="mobile-nav-footer mobile-nav-guest"><Link href="/" className="button button-accent button-wide" onClick={closeMenu}>{messages.loginWhatsapp}</Link></div>}
+        </div>}
       </>}</AppHeader>;
 }

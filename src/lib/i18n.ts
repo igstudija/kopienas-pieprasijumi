@@ -15,7 +15,6 @@ export function parseLocale(value: string | null | undefined): Locale {
 
 export const globalMessages = {
   lv: {
-    footerCredit: "Šo brīnumu ar aizrautību izstrādāja Artis Čodars no Codars Design.",
     impressum: "Par risinājumu",
     privacy: "Privātums un sīkdatnes",
     language: "Valoda",
@@ -36,7 +35,6 @@ export const globalMessages = {
     loginDesktop: "Noskenē QR kodu, lai ieietu ar WhatsApp.",
     loginMobile: "Nospied “Ieiet ar WhatsApp”, lai turpinātu.",
     loginQuote: "“Viens precīzs jautājums īstajiem cilvēkiem ir vērtīgāks par simts nejaušiem kontaktiem.”",
-    loginQuoteAuthor: "— kopienas princips",
     qrAlt: "WhatsApp autorizācijas QR kods",
     qrStep1: "Noskenē QR ar telefona kameru",
     qrStep2: "WhatsApp nospied “Sūtīt”",
@@ -126,7 +124,6 @@ export const globalMessages = {
     cookieMore: "Uzzināt vairāk",
   },
   en: {
-    footerCredit: "This little wonder was built with enthusiasm by Artis Čodars of Codars Design.",
     impressum: "About the solution",
     privacy: "Privacy and cookies",
     language: "Language",
@@ -147,7 +144,6 @@ export const globalMessages = {
     loginDesktop: "Scan the QR code to sign in with WhatsApp.",
     loginMobile: "Tap “Log in with WhatsApp” to continue.",
     loginQuote: "“One precise question to the right people is worth more than a hundred random contacts.”",
-    loginQuoteAuthor: "— community principle",
     qrAlt: "WhatsApp authentication QR code",
     qrStep1: "Scan the QR with your phone camera",
     qrStep2: "Tap “Send” in WhatsApp",
@@ -237,7 +233,6 @@ export const globalMessages = {
     cookieMore: "Learn more",
   },
   lt: {
-    footerCredit: "Šį mažą stebuklą su entuziazmu sukūrė Artis Čodars iš „Codars Design“.",
     impressum: "Apie sprendimą",
     privacy: "Privatumas ir slapukai",
     language: "Kalba",
@@ -258,7 +253,6 @@ export const globalMessages = {
     loginDesktop: "Nuskaitykite QR kodą ir prisijunkite per „WhatsApp“.",
     loginMobile: "Norėdami tęsti, spauskite „Prisijungti per WhatsApp“.",
     loginQuote: "„Vienas tikslus klausimas tinkamiems žmonėms vertingesnis už šimtą atsitiktinių kontaktų.“",
-    loginQuoteAuthor: "— bendruomenės principas",
     qrAlt: "„WhatsApp“ autentifikavimo QR kodas",
     qrStep1: "Nuskaitykite QR telefono kamera",
     qrStep2: "„WhatsApp“ paspauskite „Siųsti“",
@@ -348,7 +342,6 @@ export const globalMessages = {
     cookieMore: "Sužinoti daugiau",
   },
   et: {
-    footerCredit: "Selle väikese ime lõi suure entusiasmiga Artis Čodars ettevõttest Codars Design.",
     impressum: "Lahendusest",
     privacy: "Privaatsus ja küpsised",
     language: "Keel",
@@ -369,7 +362,6 @@ export const globalMessages = {
     loginDesktop: "WhatsAppiga sisselogimiseks skanni QR-kood.",
     loginMobile: "Jätkamiseks vajuta „Logi sisse WhatsAppiga“.",
     loginQuote: "„Üks täpne küsimus õigetele inimestele on väärt rohkem kui sada juhuslikku kontakti.“",
-    loginQuoteAuthor: "— kogukonna põhimõte",
     qrAlt: "WhatsAppi autentimise QR-kood",
     qrStep1: "Skanni QR-kood telefoni kaameraga",
     qrStep2: "Vajuta WhatsAppis „Saada“",
