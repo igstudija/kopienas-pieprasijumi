@@ -164,5 +164,5 @@ Open `http://localhost:3020`. See the local credential notes in the root [README
 - set the legal entity and privacy contact in `/admin`;
 - review the default privacy notice for the operator's actual processing;
 - define backup, restore, incident-response and retention procedures;
-- run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`;
+- run `pnpm check` and `pnpm audit --audit-level high`;
 - consider WebAuthn or another second factor for Owner/Admin accounts.

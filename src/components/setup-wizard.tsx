@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { fetchJson, jsonRequest } from "@/lib/client-api";
 
 type SetupStatus = {
   databaseConnected: boolean;
@@ -59,10 +60,7 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch("/api/v1/setup/complete", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
+      const data = await fetchJson<SetupResult>("/api/v1/setup/complete", jsonRequest("POST", {
           setupPassword: form.setupPassword,
           instanceName: form.instanceName,
           timezone: form.timezone,
@@ -77,10 +75,7 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
             phone: form.phone,
             password: form.adminPassword,
           },
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "The installation could not be completed.");
+      }));
       setResult(data);
       setStep(4);
     } catch (caught) {

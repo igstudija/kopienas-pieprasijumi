@@ -29,20 +29,21 @@ export type RequestInput = {
 
 export async function listGroupedRequests() {
   const db = getDb();
-  const runtime = await getInstanceRuntime();
-  const localRows = await db
-    .select({ request: specificRequests, author: users })
-    .from(specificRequests)
-    .innerJoin(users, eq(specificRequests.authorId, users.id))
-    .where(eq(specificRequests.status, "active"))
-    .orderBy(desc(specificRequests.updatedAt));
-
-  const remoteRows = await db
-    .select({ request: remoteRequests, peer: peerInstances })
-    .from(remoteRequests)
-    .innerJoin(peerInstances, eq(remoteRequests.peerId, peerInstances.id))
-    .where(and(eq(remoteRequests.status, "active"), eq(peerInstances.status, "active")))
-    .orderBy(desc(remoteRequests.originUpdatedAt));
+  const [runtime, localRows, remoteRows] = await Promise.all([
+    getInstanceRuntime(),
+    db
+      .select({ request: specificRequests, author: users })
+      .from(specificRequests)
+      .innerJoin(users, eq(specificRequests.authorId, users.id))
+      .where(eq(specificRequests.status, "active"))
+      .orderBy(desc(specificRequests.updatedAt)),
+    db
+      .select({ request: remoteRequests, peer: peerInstances })
+      .from(remoteRequests)
+      .innerJoin(peerInstances, eq(remoteRequests.peerId, peerInstances.id))
+      .where(and(eq(remoteRequests.status, "active"), eq(peerInstances.status, "active")))
+      .orderBy(desc(remoteRequests.originUpdatedAt)),
+  ]);
 
   return groupRequests([
     ...localRows.map(({ request, author }) => ({
@@ -67,7 +68,7 @@ export async function listGroupedRequests() {
     })),
     ...remoteRows.map(({ request, peer }) => ({
       id: request.id,
-      authorId: `${request.originInstanceId}:${request.authorDisplayName}`,
+      authorId: `${request.originInstanceId}:${request.originAuthorId ?? request.authorDisplayName}`,
       authorName: request.authorDisplayName,
       authorCompany: request.authorCompany,
       authorCategory: request.authorCategory,

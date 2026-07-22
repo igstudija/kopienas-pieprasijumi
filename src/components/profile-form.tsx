@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { fetchJson, isAbortError, jsonRequest } from "@/lib/client-api";
 import { useLanguage } from "./language-provider";
 
 type Profile = {
@@ -23,17 +24,18 @@ export function ProfileForm() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    let active = true;
-    fetch("/api/v1/profile")
-      .then(async (response) => ({ response, data: await response.json() }))
-      .then(({ response, data }) => {
-        if (!active) return;
-        if (!response.ok) setError(data.error ?? "Profilu neizdevās ielādēt.");
-        else setProfile(data.profile);
+    const controller = new AbortController();
+    fetchJson<{ profile: Profile }>("/api/v1/profile", { signal: controller.signal })
+      .then((data) => {
+        setProfile(data.profile);
       })
-      .catch(() => { if (active) setError("Profilu neizdevās ielādēt."); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+      .catch((cause: unknown) => {
+        if (!isAbortError(cause)) setError(cause instanceof Error ? cause.message : "Profilu neizdevās ielādēt.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, []);
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -43,9 +45,7 @@ export function ProfileForm() {
     setNotice("");
     const body = Object.fromEntries(new FormData(event.currentTarget).entries());
     try {
-      const response = await fetch("/api/v1/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Profilu neizdevās saglabāt.");
+      await fetchJson("/api/v1/profile", jsonRequest("PATCH", body));
       setNotice(messages.profileSaved);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Profilu neizdevās saglabāt.");

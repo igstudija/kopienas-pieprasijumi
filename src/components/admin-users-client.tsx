@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ExcelUserImport } from "@/components/excel-user-import";
 import { useLanguage } from "@/components/language-provider";
 import { adminCopy } from "@/lib/admin-i18n";
+import { fetchJson, isAbortError, jsonRequest } from "@/lib/client-api";
+import { useModalDialog } from "@/lib/use-modal-dialog";
 
 type AdminUser = {
   id: string;
@@ -18,6 +20,7 @@ type AdminUser = {
   status: "invited" | "active" | "suspended";
   lastLoginAt?: string | null;
 };
+type UsersResponse = { users: AdminUser[]; actorUserId: string; actorRole: AdminUser["role"] };
 
 export function AdminUsersClient() {
   const { locale } = useLanguage();
@@ -36,54 +39,37 @@ export function AdminUsersClient() {
   const [newRole, setNewRole] = useState("member");
   const [showCreate, setShowCreate] = useState(false);
   const [createMode, setCreateMode] = useState<"manual" | "excel">("manual");
+  const dialogRef = useModalDialog<HTMLElement>(Boolean(showCreate || editingUser), () => {
+    setError("");
+    setNewRole("member");
+    setCreateMode("manual");
+    setShowCreate(false);
+    setEditingUser(null);
+  }, loading || Boolean(busyUserId));
 
-  async function load() {
-    const response = await fetch("/api/v1/admin/users");
-    const data = await response.json();
-    if (response.ok) {
-      setUsers(data.users);
-      setActorUserId(data.actorUserId);
-      setActorRole(data.actorRole);
-    } else setError(usersLoadError);
-  }
+  const load = useCallback(async (signal?: AbortSignal) => {
+    const data = await fetchJson<UsersResponse>("/api/v1/admin/users", { signal });
+    setUsers(data.users);
+    setActorUserId(data.actorUserId);
+    setActorRole(data.actorRole);
+  }, []);
 
   useEffect(() => {
-    let active = true;
-    fetch("/api/v1/admin/users")
-      .then(async (response) => ({ response, data: await response.json() }))
-      .then(({ response, data }) => {
-        if (!active) return;
-        if (response.ok) {
-          setUsers(data.users);
-          setActorUserId(data.actorUserId);
-          setActorRole(data.actorRole);
-        } else setError(usersLoadError);
+    const controller = new AbortController();
+    fetchJson<UsersResponse>("/api/v1/admin/users", { signal: controller.signal })
+      .then((data) => {
+        setUsers(data.users);
+        setActorUserId(data.actorUserId);
+        setActorRole(data.actorRole);
       })
-      .catch(() => { if (active) setError(usersLoadError); });
-    return () => { active = false; };
+      .catch((cause: unknown) => {
+        if (!isAbortError(cause)) setError(usersLoadError);
+      });
+    return () => controller.abort();
   }, [usersLoadError]);
 
-  useEffect(() => {
-    if (!showCreate && !editingUser) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key !== "Escape" || loading) return;
-      setError("");
-      setNewRole("member");
-      setCreateMode("manual");
-      setShowCreate(false);
-      setEditingUser(null);
-    }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [editingUser, loading, showCreate]);
-
   const filteredUsers = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase("lv");
+    const needle = query.trim().toLocaleLowerCase(locale);
     if (!needle) return users;
     return users.filter((user) => [user.displayName, user.company, user.category, user.email, user.phoneLast4, roleLabel(user.role, copy), statusLabel(user.status, copy)].filter(Boolean).join(" ").toLocaleLowerCase(locale).includes(needle));
   }, [copy, locale, query, users]);
@@ -119,16 +105,12 @@ export function AdminUsersClient() {
     const form = event.currentTarget;
     const body = Object.fromEntries(new FormData(form).entries());
     try {
-      const response = await fetch("/api/v1/admin/users", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-      await response.json();
-      if (!response.ok) setError(copy.usersCreateError);
-      else {
-        form.reset();
-        setNewRole("member");
-        setNotice(copy.usersAdded);
-        await load();
-        setShowCreate(false);
-      }
+      await fetchJson("/api/v1/admin/users", jsonRequest("POST", body));
+      form.reset();
+      setNewRole("member");
+      setNotice(copy.usersAdded);
+      await load();
+      setShowCreate(false);
     } catch {
       setError(copy.usersCreateError);
     } finally {
@@ -160,9 +142,10 @@ export function AdminUsersClient() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch(`/api/v1/admin/users/${userId}`, { ...init, headers: { "content-type": "application/json", ...init.headers } });
-      await response.json();
-      if (!response.ok) { setError(copy.usersUpdateError); return false; }
+      await fetchJson(`/api/v1/admin/users/${userId}`, {
+        ...init,
+        headers: init.body ? { "content-type": "application/json", ...init.headers } : init.headers,
+      });
       setNotice(successMessage);
       await load();
       return true;
@@ -200,7 +183,7 @@ export function AdminUsersClient() {
       </section>
       {showCreate && (
         <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCreate(); }}>
-          <section className={`modal-card ${createMode === "excel" ? "excel-modal" : ""}`} role="dialog" aria-modal="true" aria-labelledby="create-user-title">
+          <section ref={dialogRef} className={`modal-card ${createMode === "excel" ? "excel-modal" : ""}`} role="dialog" aria-modal="true" aria-labelledby="create-user-title" tabIndex={-1}>
             <header className="modal-header"><div><span className="auth-step">{copy.usersCreateEyebrow}</span><h2 id="create-user-title">{copy.usersCreateTitle}</h2></div><button className="modal-close" type="button" onClick={closeCreate} disabled={loading} aria-label={copy.close}>×</button></header>
             <p className="modal-intro">{copy.usersCreateIntro}</p>
             <div className="modal-tabs" role="tablist" aria-label={copy.usersModeAria}><button type="button" role="tab" aria-selected={createMode === "manual"} className={createMode === "manual" ? "active" : ""} onClick={() => { setError(""); setCreateMode("manual"); }}>{copy.usersManual}</button><button type="button" role="tab" aria-selected={createMode === "excel"} className={createMode === "excel" ? "active" : ""} onClick={() => { setError(""); setCreateMode("excel"); }}>{copy.usersExcel}</button></div>
@@ -224,7 +207,7 @@ export function AdminUsersClient() {
 
       {editingUser && (
         <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !busyUserId) setEditingUser(null); }}>
-          <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
+          <section ref={dialogRef} className="modal-card" role="dialog" aria-modal="true" aria-labelledby="edit-user-title" tabIndex={-1}>
             <header className="modal-header"><div><span className="auth-step">{copy.usersProfileEyebrow}</span><h2 id="edit-user-title">{copy.usersEditTitle}</h2></div><button className="modal-close" type="button" onClick={() => setEditingUser(null)} disabled={Boolean(busyUserId)} aria-label={copy.close}>×</button></header>
             <p className="modal-intro">{copy.usersEditIntro}</p>
             <form onSubmit={saveProfile}>

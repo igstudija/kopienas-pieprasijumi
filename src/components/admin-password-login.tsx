@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useLanguage } from "./language-provider";
 import { adminCopy } from "@/lib/admin-i18n";
+import { fetchJson, jsonRequest } from "@/lib/client-api";
 
 export function AdminPasswordLogin() {
   const { locale } = useLanguage();
@@ -17,19 +18,13 @@ export function AdminPasswordLogin() {
     setError("");
     const form = new FormData(event.currentTarget);
     try {
-      const response = await fetch("/api/v1/auth/admin-password", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
+      await fetchJson("/api/v1/auth/admin-password", jsonRequest("POST", {
           phone: form.get("phone"),
           password: form.get("password"),
-        }),
-      });
-      await response.json();
-      if (!response.ok) throw new Error(copy.authError);
+      }));
       window.location.assign("/admin");
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : copy.authError);
+    } catch {
+      setError(copy.authError);
       setBusy(false);
     }
   }

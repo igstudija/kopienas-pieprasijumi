@@ -1,0 +1,2 @@
+CREATE INDEX "federation_nonces_received_idx" ON "federation_nonces" USING btree ("received_at");--> statement-breakpoint
+CREATE INDEX "whatsapp_login_ip_created_idx" ON "whatsapp_login_challenges" USING btree ("requested_ip","created_at");

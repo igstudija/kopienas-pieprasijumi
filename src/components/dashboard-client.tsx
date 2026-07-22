@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { fetchJson, isAbortError } from "@/lib/client-api";
+import { useModalDialog } from "@/lib/use-modal-dialog";
 import { ChevronDownIcon, EditIcon, GlobeIcon, PlusIcon, TrashIcon } from "./icons";
 import { useLanguage } from "./language-provider";
 import { RequestForm } from "./request-form";
@@ -13,6 +15,7 @@ type RequestItem = {
 };
 type RequestGroup = { authorId: string; authorName: string; authorCompany: string; authorCategory?: string | null; lastActivityAt: string; requests: RequestItem[] };
 type Period = "all" | "week" | "month";
+type RequestsResponse = { groups: RequestGroup[]; currentUserId: string };
 
 export function DashboardClient() {
   const { locale, messages } = useLanguage();
@@ -28,40 +31,34 @@ export function DashboardClient() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingRequest, setEditingRequest] = useState<RequestItem | null>(null);
 
-  async function loadRequests() {
-    const response = await fetch("/api/v1/requests");
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error);
+  const loadRequests = useCallback(async (signal?: AbortSignal) => {
+    const data = await fetchJson<RequestsResponse>("/api/v1/requests", { signal });
     setGroups(data.groups);
     setCurrentUserId(data.currentUserId);
-  }
-
-  useEffect(() => {
-    let active = true;
-    fetch("/api/v1/requests")
-      .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
-        if (active) { setGroups(data.groups); setCurrentUserId(data.currentUserId); }
-      })
-      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "Neizdevās ielādēt."); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
   }, []);
 
+  const dialogRef = useModalDialog<HTMLElement>(Boolean(showCreate || editingRequest), () => {
+    setShowCreate(false);
+    setEditingRequest(null);
+  });
+
   useEffect(() => {
-    if (!showCreate && !editingRequest) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") { setShowCreate(false); setEditingRequest(null); }
-    }
-    window.addEventListener("keydown", closeOnEscape);
+    const controller = new AbortController();
+    fetchJson<RequestsResponse>("/api/v1/requests", { signal: controller.signal })
+      .then((data) => {
+        setGroups(data.groups);
+        setCurrentUserId(data.currentUserId);
+      })
+      .catch((cause: unknown) => {
+        if (!isAbortError(cause)) setError(cause instanceof Error ? cause.message : "Neizdevās ielādēt.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
     return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
+      controller.abort();
     };
-  }, [editingRequest, showCreate]);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -95,7 +92,7 @@ export function DashboardClient() {
   }, [groups]);
 
   const filtered = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase("lv");
+    const needle = query.trim().toLocaleLowerCase(locale);
     const boundary = periodBoundary(period);
     return groups.map((group) => ({
       ...group,
@@ -103,10 +100,10 @@ export function DashboardClient() {
         if (selectedSources.length && !selectedSources.includes(item.sourceId)) return false;
         if (boundary && new Date(item.createdAt) < boundary) return false;
         if (!needle) return true;
-        return [item.title, item.details, item.authorName, item.authorCompany, item.authorCategory, item.target, item.industry, item.region, ...item.tags].filter(Boolean).join(" ").toLocaleLowerCase("lv").includes(needle);
+        return [item.title, item.details, item.authorName, item.authorCompany, item.authorCategory, item.target, item.industry, item.region, ...item.tags].filter(Boolean).join(" ").toLocaleLowerCase(locale).includes(needle);
       }),
     })).filter((group) => group.requests.length);
-  }, [groups, period, query, selectedSources]);
+  }, [groups, locale, period, query, selectedSources]);
 
   const requestCount = filtered.reduce((total, group) => total + group.requests.length, 0);
   const visible = filtered.slice(0, visibleGroups);
@@ -116,9 +113,7 @@ export function DashboardClient() {
     setDeletingId(item.id);
     setError("");
     try {
-      const response = await fetch(`/api/v1/requests/${item.id}`, { method: "DELETE" });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Pieprasījumu neizdevās dzēst.");
+      await fetchJson(`/api/v1/requests/${item.id}`, { method: "DELETE" });
       setGroups((current) => current.map((group) => ({ ...group, requests: group.requests.filter((requestItem) => requestItem.id !== item.id) })).filter((group) => group.requests.length));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Pieprasījumu neizdevās dzēst.");
@@ -165,14 +160,14 @@ export function DashboardClient() {
       </div>
       <button type="button" className="floating-add-button" aria-label={messages.newRequest} title={messages.newRequest} onClick={() => setShowCreate(true)}><PlusIcon /></button>
       {showCreate && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCreate(false); }}>
-        <section className="modal-card request-create-modal" role="dialog" aria-modal="true" aria-labelledby="create-request-title">
+        <section ref={dialogRef} className="modal-card request-create-modal" role="dialog" aria-modal="true" aria-labelledby="create-request-title" tabIndex={-1}>
           <header className="modal-header"><div><span className="auth-step">{messages.newEntry}</span><h2 id="create-request-title">{messages.newRequest}</h2></div><button className="modal-close" type="button" aria-label={messages.cancel} onClick={() => setShowCreate(false)}>×</button></header>
           <p className="modal-intro">{messages.newIntro}</p>
           <RequestForm onCancel={() => setShowCreate(false)} onSaved={async () => { await loadRequests(); setShowCreate(false); }} />
         </section>
       </div>}
       {editingRequest && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setEditingRequest(null); }}>
-        <section className="modal-card request-create-modal" role="dialog" aria-modal="true" aria-labelledby="edit-request-title">
+        <section ref={dialogRef} className="modal-card request-create-modal" role="dialog" aria-modal="true" aria-labelledby="edit-request-title" tabIndex={-1}>
           <header className="modal-header"><div><span className="auth-step">{messages.editEntry}</span><h2 id="edit-request-title">{messages.editRequest}</h2></div><button className="modal-close" type="button" aria-label={messages.cancel} onClick={() => setEditingRequest(null)}>×</button></header>
           <p className="modal-intro">{messages.editIntro}</p>
           <RequestForm key={editingRequest.id} request={editingRequest} onCancel={() => setEditingRequest(null)} onSaved={async () => { await loadRequests(); setEditingRequest(null); }} />

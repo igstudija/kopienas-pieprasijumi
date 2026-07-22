@@ -97,13 +97,11 @@ Place the printed values in `.env`. Never copy a private federation key to anoth
 ## Quality checks
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
+pnpm check
+pnpm audit --audit-level high
 ```
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md), [docs/INSTALLATION.md](./docs/INSTALLATION.md) and [docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md).
+See [ARCHITECTURE.md](./ARCHITECTURE.md), [docs/INSTALLATION.md](./docs/INSTALLATION.md), [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md), [docs/CODE_REVIEW.md](./docs/CODE_REVIEW.md), and [docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md).
 
 ## Licence
 

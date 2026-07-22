@@ -1,0 +1,1 @@
+ALTER TABLE "remote_requests" ADD COLUMN "origin_author_id" uuid;

@@ -4,7 +4,8 @@ import { and, eq, inArray, lte } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { federationOutbox, peerInstances, specificRequests, users } from "@/lib/db/schema";
 import { generateToken } from "@/lib/security";
-import { federationIdentity, signFederationRequest, type FederationEvent } from "./federation";
+import { validateFederationBaseUrl } from "@/lib/federation-endpoint";
+import { federationIdentity, signWithIdentity, type FederationEvent } from "./federation";
 
 const MAX_ATTEMPTS = 8;
 const EVENT_PATH = "/api/v1/federation/events";
@@ -61,11 +62,13 @@ async function deliver(job: typeof federationOutbox.$inferSelect) {
     .limit(1);
   if (!record) throw new Error("Outbox ierakstam nav aktīva peer vai pieprasījuma.");
   if (!record.peer.baseUrl) throw new Error("Peer nav konfigurēts federācijas domēns.");
+  const peerBaseUrl = await validateFederationBaseUrl(record.peer.baseUrl);
+  const identity = await federationIdentity();
 
   const event: FederationEvent = {
     eventId: job.eventId,
     type: job.eventType as FederationEvent["type"],
-    originInstanceId: (await federationIdentity()).instanceId,
+    originInstanceId: identity.instanceId,
     request: {
       id: record.request.id,
       title: record.request.title,
@@ -79,6 +82,7 @@ async function deliver(job: typeof federationOutbox.$inferSelect) {
       createdAt: record.request.createdAt.toISOString(),
       updatedAt: record.request.updatedAt.toISOString(),
       author: {
+        id: record.author.id,
         displayName: record.author.displayName,
         company: record.author.company,
         category: record.author.category,
@@ -88,8 +92,7 @@ async function deliver(job: typeof federationOutbox.$inferSelect) {
   const body = JSON.stringify(event);
   const timestamp = new Date().toISOString();
   const nonce = generateToken(18);
-  const identity = await federationIdentity();
-  const response = await fetch(`${record.peer.baseUrl.replace(/\/$/, "")}${EVENT_PATH}`, {
+  const response = await fetch(`${peerBaseUrl.origin}${EVENT_PATH}`, {
     method: "POST",
     redirect: "error",
     headers: {
@@ -98,7 +101,7 @@ async function deliver(job: typeof federationOutbox.$inferSelect) {
       "x-community-timestamp": timestamp,
       "x-community-nonce": nonce,
       "x-community-key-id": identity.keyId,
-      "x-community-signature": await signFederationRequest("POST", EVENT_PATH, timestamp, nonce, body),
+      "x-community-signature": signWithIdentity(identity, "POST", EVENT_PATH, timestamp, nonce, body),
     },
     body,
     signal: AbortSignal.timeout(10_000),

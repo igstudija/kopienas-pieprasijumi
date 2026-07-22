@@ -3,6 +3,7 @@
 import { ChangeEvent, useState } from "react";
 import { useLanguage } from "./language-provider";
 import { adminCopy } from "@/lib/admin-i18n";
+import { fetchJson, jsonRequest } from "@/lib/client-api";
 
 type ImportField = "firstName" | "lastName" | "company" | "phone" | "category" | "email";
 type Mapping = Record<ImportField, string>;
@@ -103,14 +104,7 @@ export function ExcelUserImport({ onImported, onCancel }: {
         category: mappedValue(row, mapping.category),
         email: mappedValue(row, mapping.email),
       }));
-      const response = await fetch("/api/v1/admin/users/import", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ rows: payload }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? copy.excelImportError);
-      const nextResult = data as ImportResult;
+      const nextResult = await fetchJson<ImportResult>("/api/v1/admin/users/import", jsonRequest("POST", { rows: payload }));
       setResult(nextResult);
       await onImported(nextResult);
     } catch (cause) {

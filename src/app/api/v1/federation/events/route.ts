@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { jsonError } from "@/lib/http";
+import { HttpError, jsonError } from "@/lib/http";
 import { processFederationEvent, verifyFederationRequest } from "@/lib/services/federation";
 
 const eventSchema = z.object({
@@ -20,6 +20,7 @@ const eventSchema = z.object({
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
     author: z.object({
+      id: z.uuid().optional(),
       displayName: z.string().min(1).max(160),
       company: z.string().min(1).max(180),
       category: z.string().max(180).optional().nullable(),
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       body,
     });
     const event = eventSchema.parse(JSON.parse(body));
-    return NextResponse.json({ ok: true, ...(await processFederationEvent(peer.id, event)) });
+    return NextResponse.json({ ok: true, ...(await processFederationEvent(peer, event)) });
   } catch (error) {
     return jsonError(error, "Federācijas notikumu neizdevās apstrādāt.");
   }
@@ -49,6 +50,6 @@ export async function POST(request: NextRequest) {
 
 function requiredHeader(request: NextRequest, name: string) {
   const value = request.headers.get(name);
-  if (!value) throw new Error(`Trūkst ${name} galvenes.`);
+  if (!value) throw new HttpError(401, `Trūkst ${name} galvenes.`);
   return value;
 }

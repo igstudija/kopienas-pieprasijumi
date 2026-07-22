@@ -87,6 +87,7 @@ export const whatsappLoginChallenges = pgTable(
     uniqueIndex("whatsapp_login_message_token_uq").on(table.messageTokenDigest),
     uniqueIndex("whatsapp_login_browser_token_uq").on(table.browserTokenDigest),
     index("whatsapp_login_expiry_idx").on(table.expiresAt),
+    index("whatsapp_login_ip_created_idx").on(table.requestedIp, table.createdAt),
   ],
 );
 
@@ -198,7 +199,10 @@ export const federationNonces = pgTable(
     nonce: varchar("nonce", { length: 160 }).notNull(),
     receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("federation_nonces_peer_nonce_uq").on(table.peerId, table.nonce)],
+  (table) => [
+    uniqueIndex("federation_nonces_peer_nonce_uq").on(table.peerId, table.nonce),
+    index("federation_nonces_received_idx").on(table.receivedAt),
+  ],
 );
 
 export const federationOutbox = pgTable(
@@ -240,6 +244,7 @@ export const remoteRequests = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     originInstanceId: uuid("origin_instance_id").notNull(),
     originRequestId: uuid("origin_request_id").notNull(),
+    originAuthorId: uuid("origin_author_id"),
     peerId: uuid("peer_id").notNull().references(() => peerInstances.id, { onDelete: "cascade" }),
     authorDisplayName: varchar("author_display_name", { length: 160 }).notNull(),
     authorCompany: varchar("author_company", { length: 180 }).notNull(),

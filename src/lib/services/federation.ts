@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createPrivateKey, createPublicKey, generateKeyPairSync, sign, verify } from "node:crypto";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, lt } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
   federationInbox,
@@ -15,6 +15,8 @@ import {
 } from "@/lib/db/schema";
 import { HttpError } from "@/lib/http";
 import { decodePairingCode, type PairingPayload } from "@/lib/federation-code";
+import { validateFederationBaseUrl, validateFederationHandshakeEndpoint } from "@/lib/federation-endpoint";
+import { assertFederationEventOrigin } from "@/lib/federation-protocol";
 import { generateToken, inviteDigest, safeEqualHex, sha256 } from "@/lib/security";
 import { writeAudit } from "./audit";
 import { getInstanceRuntime } from "./installation";
@@ -122,7 +124,7 @@ export async function createFederationInvite(actor: User, label: string | undefi
 }
 
 export async function acceptHandshake(input: { inviteId: string; secret: string; peer: PeerMetadata }) {
-  validatePeerMetadata(input.peer);
+  await validatePeerMetadata(input.peer);
   const db = getDb();
   const [invite] = await db
     .select()
@@ -190,7 +192,7 @@ export async function connectToPeer(actor: User, pairingCode: string, peerId?: s
     : [];
   if (peerId && !selectedPeer) throw new HttpError(404, "Savienotais portāls nav atrasts.");
   const pairing = parsePairingCode(pairingCode);
-  validateEndpoint(pairing.endpoint);
+  await validateFederationHandshakeEndpoint(pairing.endpoint);
   if (new Date(pairing.expiresAt) <= new Date()) throw new HttpError(400, "Uzaicinājuma termiņš ir beidzies.");
   const { privateKey: _, ...identity } = await federationIdentity();
   void _;
@@ -206,7 +208,7 @@ export async function connectToPeer(actor: User, pairingCode: string, peerId?: s
     error?: string;
   } | null;
   if (!response.ok || !data?.peer) throw new HttpError(400, data?.error ?? "Savienojumu neizdevās izveidot.");
-  validatePeerMetadata(data.peer);
+  await validatePeerMetadata(data.peer);
   const permissions = await db.transaction(async (tx) => {
     const [existingPeer] = await tx.select().from(peerInstances).where(eq(peerInstances.remoteInstanceId, data.peer!.instanceId)).limit(1);
     const [draftPeer] = peerId ? await tx.select().from(peerInstances).where(eq(peerInstances.id, peerId)).limit(1) : [];
@@ -319,6 +321,10 @@ async function queueShareableRequestBackfill(tx: FederationTransaction, peerId: 
 
 export async function signFederationRequest(method: string, path: string, timestamp: string, nonce: string, body: string) {
   const identity = await federationIdentity();
+  return signWithIdentity(identity, method, path, timestamp, nonce, body);
+}
+
+export function signWithIdentity(identity: Awaited<ReturnType<typeof federationIdentity>>, method: string, path: string, timestamp: string, nonce: string, body: string) {
   const canonical = canonicalRequest(method, path, timestamp, nonce, body);
   const privateKey = createPrivateKey({ key: Buffer.from(identity.privateKey, "base64"), type: "pkcs8", format: "der" });
   return sign(null, Buffer.from(canonical), privateKey).toString("base64");
@@ -347,6 +353,7 @@ export async function verifyFederationRequest(input: {
   const publicKey = createPublicKey({ key: Buffer.from(peer.publicKey, "base64"), type: "spki", format: "der" });
   const canonical = canonicalRequest(input.method, input.path, input.timestamp, input.nonce, input.body);
   if (!verify(null, Buffer.from(canonical), publicKey, Buffer.from(input.signature, "base64"))) throw new HttpError(401, "Federācijas paraksts nav derīgs.");
+  await db.delete(federationNonces).where(lt(federationNonces.receivedAt, new Date(Date.now() - MAX_CLOCK_SKEW_MS * 2)));
   try {
     await db.insert(federationNonces).values({ peerId: peer.id, nonce: input.nonce });
   } catch {
@@ -355,12 +362,13 @@ export async function verifyFederationRequest(input: {
   return peer;
 }
 
-export async function processFederationEvent(peerId: string, event: FederationEvent) {
+export async function processFederationEvent(peer: { id: string; remoteInstanceId: string | null }, event: FederationEvent) {
+  assertFederationEventOrigin(peer.remoteInstanceId, event.originInstanceId);
   const db = getDb();
-  const existing = await db.select({ id: federationInbox.id }).from(federationInbox).where(and(eq(federationInbox.eventId, event.eventId), eq(federationInbox.peerId, peerId))).limit(1);
+  const existing = await db.select({ id: federationInbox.id }).from(federationInbox).where(and(eq(federationInbox.eventId, event.eventId), eq(federationInbox.peerId, peer.id))).limit(1);
   if (existing.length) return { duplicate: true };
   await db.transaction(async (tx) => {
-    await tx.insert(federationInbox).values({ eventId: event.eventId, peerId, eventType: event.type, payload: event });
+    await tx.insert(federationInbox).values({ eventId: event.eventId, peerId: peer.id, eventType: event.type, payload: event });
     const current = await tx
       .select()
       .from(remoteRequests)
@@ -368,7 +376,8 @@ export async function processFederationEvent(peerId: string, event: FederationEv
       .limit(1);
     if (current[0] && current[0].revision >= event.request.revision) return;
     const values = {
-      peerId,
+      peerId: peer.id,
+      originAuthorId: event.request.author.id ?? null,
       authorDisplayName: event.request.author.displayName,
       authorCompany: event.request.author.company,
       authorCategory: event.request.author.category ?? null,
@@ -410,16 +419,9 @@ function parsePairingCode(code: string): PairingPayload {
   }
 }
 
-function validateEndpoint(value: string) {
-  const url = new URL(value);
-  const localDev = process.env.NODE_ENV !== "production" && ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
-  if (url.protocol !== "https:" && !(localDev && url.protocol === "http:")) throw new HttpError(400, "Federācijas endpoint jāizmanto HTTPS.");
-  if (url.username || url.password) throw new HttpError(400, "Endpoint nedrīkst saturēt lietotājvārdu vai paroli.");
-}
-
-function validatePeerMetadata(peer: PeerMetadata) {
+async function validatePeerMetadata(peer: PeerMetadata) {
   if (peer.protocolVersion !== PROTOCOL_VERSION) throw new HttpError(400, "Federācijas protokola versija netiek atbalstīta.");
-  validateEndpoint(`${peer.baseUrl.replace(/\/$/, "")}/api/v1/federation/events`);
+  await validateFederationBaseUrl(peer.baseUrl);
   if (!peer.instanceId || !peer.name || !peer.publicKey || !peer.keyId) throw new HttpError(400, "Instances metadati nav pilnīgi.");
   try {
     createPublicKey({ key: Buffer.from(peer.publicKey, "base64"), type: "spki", format: "der" });
@@ -444,6 +446,6 @@ export type FederationEvent = {
     revision: number;
     createdAt: string;
     updatedAt: string;
-    author: { displayName: string; company: string; category?: string | null };
+    author: { id?: string; displayName: string; company: string; category?: string | null };
   };
 };
