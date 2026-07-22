@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { getDb } from "../src/lib/db/index";
+import { getDb } from "../src/lib/db/client";
 import { instanceSettings, users } from "../src/lib/db/schema";
 import { appUrl, instanceId } from "../src/lib/env";
 import { encryptPhone, normalizePhone, phoneLookup } from "../src/lib/security";
