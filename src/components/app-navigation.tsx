@@ -58,7 +58,6 @@ export function AppNavigation({ user, showAdmin, logoutRedirect = "/" }: {
       {open && <button className="mobile-nav-backdrop" type="button" aria-label={messages.closeMenu} onClick={close} />}
       <aside id="mobile-navigation" className={`mobile-nav-drawer ${open ? "open" : ""}`} aria-hidden={!open}>
         <header><span>{messages.menu}</span><button type="button" onClick={close} aria-label={messages.closeMenu}>×</button></header>
-        <div className="mobile-nav-person"><span className="avatar">{user.initials}</span><span><b>{user.displayName}</b><small>{user.company}</small></span></div>
         <div className="mobile-nav-links">
           <Link href="/app" onClick={close}>{messages.navRequests}</Link>
           <Link href="/app/profile" onClick={close}>{messages.navProfile}</Link>
@@ -66,8 +65,12 @@ export function AppNavigation({ user, showAdmin, logoutRedirect = "/" }: {
             <span>{messages.navAdmin}</span>
             {adminLinks.map((link) => <Link key={link.href} href={link.href} onClick={close} className={link.active ? "active" : ""} aria-current={link.active ? "page" : undefined}>{link.label}</Link>)}
           </div>}
+          <div className="mobile-nav-language"><LanguageSwitcher compact /></div>
         </div>
-        <div className="mobile-nav-footer"><LanguageSwitcher compact /><LogoutButton redirectTo={logoutRedirect} /></div>
+        <div className="mobile-nav-footer">
+          <div className="mobile-nav-person"><span className="avatar">{user.initials}</span><span><b>{user.displayName}</b><small>{user.company}</small></span></div>
+          <LogoutButton redirectTo={logoutRedirect} />
+        </div>
       </aside>
     </>
   );
