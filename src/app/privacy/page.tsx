@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { LegalPageNav } from "@/components/legal-page-nav";
+import { AppNavigation } from "@/components/app-navigation";
 import { parseLocale } from "@/lib/i18n";
 import { legalCopy } from "@/lib/legal-copy";
 import { currentUserFromPage } from "@/lib/services/auth";
@@ -14,10 +14,10 @@ export default async function PrivacyPage() {
   const copy = legalCopy[locale];
   const [settings, user] = await Promise.all([getLegalSettings(), currentUserFromPage()]);
   const privacyEmail = settings.privacyContactEmail || settings.legalEmail;
-  const navUser = user ? { displayName: user.displayName, company: user.company, initials: `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`, showAdmin: user.role !== "member" } : undefined;
+  const navUser = user ? { displayName: user.displayName, company: user.company, initials: `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}` } : undefined;
   return (
     <main className="legal-page">
-      <LegalPageNav user={navUser} />
+      <AppNavigation user={navUser} showAdmin={user ? user.role !== "member" : false} />
       <header className="legal-hero"><p>{copy.privacy.intro}</p><small>{copy.updated}</small></header>
       <article className="legal-content privacy-content">
         <section className="legal-card"><h2>{copy.privacy.controller}</h2><p>{copy.privacy.controllerText}</p><dl className="legal-facts compact"><div><dt>{copy.impressum.entity}</dt><dd>{settings.legalEntityName || copy.notProvided}</dd></div><div><dt>{copy.impressum.address}</dt><dd>{settings.legalAddress || copy.notProvided}</dd></div><div><dt>{copy.privacy.privacyContact}</dt><dd>{privacyEmail ? <a href={`mailto:${privacyEmail}`}>{privacyEmail}</a> : copy.notProvided}</dd></div></dl></section>

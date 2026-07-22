@@ -194,13 +194,15 @@ svg { width: 1.15em; height: 1.15em; }
 .mobile-nav-person small { color: var(--muted); font-size: 12px; }
 .mobile-nav-links { padding: 16px 0; display: grid; }
 .mobile-nav-links > a { min-height: 58px; padding: 13px 2px; font-family: var(--font-serif), system-ui, sans-serif; font-size: 24px; font-weight: 600; }
-.mobile-nav-admin-section { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); display: grid; }
-.mobile-nav-admin-section > span { margin-bottom: 7px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-.mobile-nav-admin-section a { min-height: 48px; padding: 12px 10px; border-radius: 10px; display: flex; align-items: center; color: var(--muted); font-size: 15px; font-weight: 750; }
-.mobile-nav-admin-section a:hover { background: var(--paper); color: var(--ink); }
-.mobile-nav-admin-section a.active { background: var(--ink); color: white; }
+.mobile-nav-links > a.active { color: var(--accent-dark); }
+.mobile-nav-admin-section, .mobile-nav-information-section { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); display: grid; }
+.mobile-nav-admin-section > span, .mobile-nav-information-section > span { margin-bottom: 7px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.mobile-nav-admin-section a, .mobile-nav-information-section a { min-height: 48px; padding: 12px 10px; border-radius: 10px; display: flex; align-items: center; color: var(--muted); font-size: 15px; font-weight: 750; }
+.mobile-nav-admin-section a:hover, .mobile-nav-information-section a:hover { background: var(--paper); color: var(--ink); }
+.mobile-nav-admin-section a.active, .mobile-nav-information-section a.active { background: var(--ink); color: white; }
 .mobile-nav-language { padding: 20px 0 4px; }
 .mobile-nav-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.mobile-nav-guest .button { width: 100%; }
 .mobile-nav-footer .mobile-nav-person { min-width: 0; padding: 0; border: 0; }
 .mobile-nav-footer .mobile-nav-person > span:last-child { min-width: 0; }
 .mobile-nav-footer .mobile-nav-person b, .mobile-nav-footer .mobile-nav-person small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
