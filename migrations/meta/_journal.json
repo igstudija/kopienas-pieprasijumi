@@ -15,6 +15,13 @@
       "when": 1784702455177,
       "tag": "0001_easy_argent",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784733436915,
+      "tag": "0002_watery_mockingbird",
+      "breakpoints": true
     }
   ]
 }

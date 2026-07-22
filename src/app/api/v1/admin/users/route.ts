@@ -12,6 +12,11 @@ const userSchema = z.object({
   phone: z.string().min(6).max(30),
   email: z.email().optional().nullable().or(z.literal("")),
   role: z.enum(["owner", "admin", "member"]).default("member"),
+  password: z.string().max(200).optional().or(z.literal("")),
+}).superRefine((input, context) => {
+  if (input.role !== "member" && (!input.password || input.password.length < 12)) {
+    context.addIssue({ code: "custom", path: ["password"], message: "Administratora parolei jābūt vismaz 12 rakstzīmes garai." });
+  }
 });
 
 export async function GET(request: NextRequest) {

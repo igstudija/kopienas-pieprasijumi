@@ -29,7 +29,7 @@ Lietotāja darbības:
 5. Nospied **Deploy**.
 6. Kad deployment ir pabeigts, atver izveidoto aplikācijas adresi.
 7. Aplikācija automātiski atvērs `/setup`.
-8. Vednī ievadi grupu, WhatsApp Business numuru, Meta App Secret un pirmo administratoru.
+8. Vednī ievadi grupu, WhatsApp Business numuru, Meta App Secret, pirmo administratoru un vismaz 12 rakstzīmju admina paroli.
 9. Pēdējā solī nokopē Meta webhook Callback URL un Verify token.
 
 Vercel build komanda pirms aplikācijas būvēšanas izpilda `pnpm db:migrate`, tāpēc tabulas izveidojas automātiski.
@@ -69,7 +69,8 @@ Vednis veic piecas darbības:
 2. saglabā grupas nosaukumu, valodu, laika zonu un instances adresi;
 3. šifrēti saglabā WhatsApp App Secret un ģenerē webhook Verify token;
 4. izveido pirmo aktīvo lietotāju ar `owner` lomu;
-5. ģenerē Ed25519 federācijas atslēgu pāri un šifrē privāto atslēgu.
+5. saglabā tikai pirmā administratora scrypt paroles hash;
+6. ģenerē Ed25519 federācijas atslēgu pāri un šifrē privāto atslēgu.
 
 Kad `instance_settings` ieraksts ir izveidots, publiska atkārtota uzstādīšana tiek bloķēta. `SETUP_SECRET` pēc instalācijas drīkst izņemt no Vercel Environment Variables un veikt redeploy.
 
@@ -97,6 +98,7 @@ Pēc vedņa:
 | PostgreSQL credentials | Vercel Environment Variables |
 | Supabase servera atslēga | Vercel Environment Variables |
 | `SETUP_SECRET` | Vercel Environment Variables, tikai pirmās palaišanas aizsardzībai |
+| Adminu paroles | tikai scrypt hash instances datubāzē |
 | WhatsApp App Secret | šifrēts instances Supabase datubāzē |
 | WhatsApp Verify token | šifrēts instances Supabase datubāzē |
 | Federācijas privātā atslēga | šifrēta instances Supabase datubāzē |
@@ -129,3 +131,10 @@ Pēc vedņa:
 - Verify token ir reģistrjutīgs.
 - Meta aplikācijā ievadītajam App Secret jāatbilst vednī ievadītajam.
 - Webhook abonementā jābūt ieslēgtam `messages` notikumam.
+
+### Administrators nevar ieiet `/admin`
+
+- Izmanto administratora profilā reģistrēto pilno tālruņa numuru starptautiskā formātā.
+- Paroles ieeja darbojas tikai aktīvām `owner` un `admin` lomām; biedri turpina izmantot WhatsApp.
+- Pēc pieciem neveiksmīgiem mēģinājumiem viena tālruņa/IP kombinācija tiek bloķēta uz 15 minūtēm.
+- Lokālai seed instalācijai pārbaudi `SEED_OWNER_PHONE` un `SEED_OWNER_PASSWORD` vērtības `.env`.

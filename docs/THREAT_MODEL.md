@@ -6,6 +6,7 @@
 - lokālo un koplietoto pieprasījumu saturs;
 - WhatsApp API rekvizīti;
 - sesiju un vienreizējo WhatsApp challenge noslēpumi;
+- administratoru paroļu hash;
 - federācijas privātā atslēga;
 - auditācijas pierādījumi.
 
@@ -22,7 +23,9 @@
 | Replay | Timestamp, unikāls nonce un event ID |
 | Datu izplatīšanās pa ķēdi | Tikai home instances ieraksti drīkst tikt sūtīti tālāk |
 | SSRF handshake laikā | HTTPS, redirect aizliegums, IP/DNS validācija pirms production |
-| Admina konta pārņemšana | WhatsApp numura īpašumtiesību pārbaude ar parakstītu webhook; WebAuthn paredzēts kā papildu aizsardzība |
+| Admina paroles noplūde | scrypt ar unikālu salt; datubāzē netiek glabāta atjaunojama parole |
+| Admina paroles minēšana | Vienāda kļūda nepareizam numuram/parolei, dummy scrypt pārbaude un 5 mēģinājumu limits 15 minūtēs vienai tālruņa/IP kombinācijai |
+| Admina konta pārņemšana | Paroles ieeja tikai aktīvām Owner/Admin lomām; WebAuthn paredzēts kā papildu aizsardzība |
 
 ## Production vārti
 

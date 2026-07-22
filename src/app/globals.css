@@ -94,6 +94,9 @@ svg { width: 1.15em; height: 1.15em; }
 .auth-form { margin-top: 38px; }
 .auth-form label { display: block; font-size: 12px; font-weight: 800; margin: 0 0 9px; }
 .auth-form > input, .field, textarea.field, select.field { width: 100%; border: 1px solid var(--line); border-radius: 12px; background: white; color: var(--ink); padding: 15px 16px; min-height: 54px; }
+.admin-auth-form > input { width: 100%; border: 1px solid var(--line); border-radius: 12px; background: white; color: var(--ink); padding: 15px 16px; min-height: 54px; }
+.admin-login-help { color: var(--muted); font-size: 11px; text-align: center; margin: 18px 0 0; }
+.admin-login-help a { text-decoration: underline; text-underline-offset: 3px; }
 .field-help { font-size: 11px !important; margin: 8px 0 20px !important; color: var(--muted) !important; }
 .form-error { background: #ffe3d9; color: #822f14; border-radius: 10px; padding: 11px 13px; font-size: 12px; margin: 12px 0; }
 .privacy-note { display: block; margin-top: 24px; color: var(--muted); font-size: 10px; line-height: 1.5; }

@@ -16,6 +16,7 @@ const schema = z.object({
     company: z.string().trim().min(1, "Ievadi uzņēmuma nosaukumu.").max(180),
     email: z.email("Ievadi derīgu e-pastu.").max(320).optional().or(z.literal("")),
     phone: z.string().trim().min(8).max(32),
+    password: z.string().min(12, "Admina parolei jābūt vismaz 12 rakstzīmes garai.").max(200),
   }),
 });
 

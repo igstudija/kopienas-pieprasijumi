@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Kopienas pieprasījumi",
-    short_name: "Pieprasījumi",
+    name: "Specifiskie prasījumi",
+    short_name: "Prasījumi",
     description: "Slēgtas uzņēmēju kopienas aktuālie pieprasījumi.",
     start_url: "/app",
     display: "standalone",

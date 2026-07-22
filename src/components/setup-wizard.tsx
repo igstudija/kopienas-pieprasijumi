@@ -36,13 +36,18 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
     company: "",
     email: "",
     phone: "+371",
+    adminPassword: "",
+    adminPasswordConfirm: "",
   });
 
   const canContinue = useMemo(() => {
     if (step === 0) return initialStatus.databaseConnected && initialStatus.setupPasswordConfigured;
     if (step === 1) return form.instanceName.trim().length >= 2;
     if (step === 2) return form.whatsappBusinessNumber.trim().length >= 8 && form.whatsappAppSecret.trim().length >= 8;
-    if (step === 3) return form.setupPassword.length >= 12 && Boolean(form.firstName.trim() && form.lastName.trim() && form.company.trim() && form.phone.trim().length >= 8);
+    if (step === 3) return form.setupPassword.length >= 12
+      && form.adminPassword.length >= 12
+      && form.adminPassword === form.adminPasswordConfirm
+      && Boolean(form.firstName.trim() && form.lastName.trim() && form.company.trim() && form.phone.trim().length >= 8);
     return true;
   }, [form, initialStatus, step]);
 
@@ -70,6 +75,7 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
             company: form.company,
             email: form.email,
             phone: form.phone,
+            password: form.adminPassword,
           },
         }),
       });
@@ -139,6 +145,7 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
             <div className="form-grid"><label>Vārds<input className="field" value={form.firstName} onChange={(event) => update("firstName", event.target.value)} /></label><label>Uzvārds<input className="field" value={form.lastName} onChange={(event) => update("lastName", event.target.value)} /></label></div>
             <label>Uzņēmums<input className="field" value={form.company} onChange={(event) => update("company", event.target.value)} /></label>
             <div className="form-grid"><label>WhatsApp numurs<input className="field" value={form.phone} onChange={(event) => update("phone", event.target.value)} inputMode="tel" /></label><label>E-pasts (nav obligāts)<input className="field" value={form.email} onChange={(event) => update("email", event.target.value)} type="email" /></label></div>
+            <div className="form-grid"><label>Admina parole<input className="field" value={form.adminPassword} onChange={(event) => update("adminPassword", event.target.value)} type="password" minLength={12} maxLength={200} autoComplete="new-password" /><small>Vismaz 12 rakstzīmes. Tiks glabāts tikai paroles hash.</small></label><label>Atkārto admina paroli<input className="field" value={form.adminPasswordConfirm} onChange={(event) => update("adminPasswordConfirm", event.target.value)} type="password" minLength={12} maxLength={200} autoComplete="new-password" /><small>{form.adminPasswordConfirm && form.adminPassword !== form.adminPasswordConfirm ? "Paroles nesakrīt." : "Šī parole paredzēta tikai /admin ieejai."}</small></label></div>
             <label>Instalācijas parole<input className="field" value={form.setupPassword} onChange={(event) => update("setupPassword", event.target.value)} type="password" autoComplete="current-password" /><small>Tā pati vismaz 12 rakstzīmju parole, kuru izvēlējies Vercel instalēšanas laikā.</small></label>
           </div>
         </>}
@@ -152,7 +159,7 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
             <label>Verify token<div><code>{result.webhookVerifyToken}</code><button type="button" onClick={() => copy(result.webhookVerifyToken)}>Kopēt</button></div></label>
           </div>
           <div className="setup-warning">Saglabā verify tokenu drošā vietā. To varēs mainīt vēlāk administrācijas iestatījumos.</div>
-          <Link className="button button-accent button-wide" href="/login">Atvērt WhatsApp autorizāciju</Link>
+          <Link className="button button-accent button-wide" href="/admin">Atvērt administrāciju</Link>
         </>}
 
         {error && <div className="form-error">{error}</div>}

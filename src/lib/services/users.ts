@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { sessions, type User, users } from "@/lib/db/schema";
 import { encryptPhone, normalizePhone, phoneLookup } from "@/lib/security";
 import { HttpError } from "@/lib/http";
+import { hashPassword } from "@/lib/password";
 import { writeAudit } from "./audit";
 
 export type NewUserInput = {
@@ -15,6 +16,7 @@ export type NewUserInput = {
   phone: string;
   email?: string | null;
   role?: "owner" | "admin" | "member";
+  password?: string | null;
 };
 
 export async function listUsers() {
@@ -37,7 +39,12 @@ export async function listUsers() {
 export async function createUser(actor: User, input: NewUserInput, audit: { ipAddress?: string | null; requestId?: string | null }) {
   if (actor.role === "member") throw new HttpError(403, "Nepietiekamas tiesības.");
   if (input.role === "owner" && actor.role !== "owner") throw new HttpError(403, "Tikai Owner var piešķirt Owner lomu.");
+  const role = input.role ?? "member";
+  if (role !== "member" && (!input.password || input.password.length < 12)) {
+    throw new HttpError(400, "Administratoram jānorāda vismaz 12 rakstzīmju parole.");
+  }
   const phone = normalizePhone(input.phone);
+  const passwordHash = role === "member" ? null : await hashPassword(input.password!);
   const db = getDb();
   const id = crypto.randomUUID();
   await db.transaction(async (tx) => {
@@ -52,7 +59,8 @@ export async function createUser(actor: User, input: NewUserInput, audit: { ipAd
       phoneEncrypted: encryptPhone(phone),
       phoneLookup: phoneLookup(phone),
       phoneLast4: phone.slice(-4),
-      role: input.role ?? "member",
+      passwordHash,
+      role,
       status: "active",
     });
     await writeAudit(tx, {
@@ -60,7 +68,7 @@ export async function createUser(actor: User, input: NewUserInput, audit: { ipAd
       action: "user.created",
       objectType: "user",
       objectId: id,
-      details: { role: input.role ?? "member" },
+      details: { role },
       ipAddress: audit.ipAddress,
       requestId: audit.requestId,
     });

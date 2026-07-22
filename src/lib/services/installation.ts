@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { auditLog, instanceSettings, users } from "@/lib/db/schema";
 import { appUrl, instanceId, setupSecret } from "@/lib/env";
 import { HttpError } from "@/lib/http";
+import { hashPassword } from "@/lib/password";
 import {
   decryptSecret,
   encryptPhone,
@@ -29,6 +30,7 @@ export type InstallationInput = {
     company: string;
     email?: string | null;
     phone: string;
+    password: string;
   };
 };
 
@@ -65,6 +67,7 @@ export async function completeInstallation(input: InstallationInput, audit: { ip
   const baseUrl = appUrl();
   const instanceUuid = crypto.randomUUID();
   const ownerId = crypto.randomUUID();
+  const ownerPasswordHash = await hashPassword(input.owner.password);
   const verifyToken = generateToken(24);
   const keyId = `primary-${new Date().getUTCFullYear()}`;
   const pair = generateKeyPairSync("ed25519");
@@ -102,6 +105,7 @@ export async function completeInstallation(input: InstallationInput, audit: { ip
         phoneEncrypted: encryptPhone(ownerPhone),
         phoneLookup: phoneLookup(ownerPhone),
         phoneLast4: ownerPhone.slice(-4),
+        passwordHash: ownerPasswordHash,
         role: "owner",
         status: "active",
       });

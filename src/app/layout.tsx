@@ -6,7 +6,7 @@ const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
 const newsreader = Newsreader({ subsets: ["latin"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: { default: "Kopienas pieprasījumi", template: "%s · Kopienas pieprasījumi" },
+  title: { default: "Specifiskie prasījumi", template: "%s · Specifiskie prasījumi" },
   description: "Atrodi īsto kontaktu caur cilvēkiem, kuriem uzticies.",
   manifest: "/manifest.webmanifest",
 };

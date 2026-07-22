@@ -1,4 +1,4 @@
-# Kopienas pieprasījumi
+# Specifiskie prasījumi
 
 Pašhostējama PWA slēgtām uzņēmēju kopienām. Biedri publicē konkrētus biznesa kontaktu pieprasījumus, bet atsevišķas instances var savstarpēji koplietot tikai skaidri atļautos ierakstus.
 
@@ -22,11 +22,14 @@ Datubāzes credentials glabājas Vercel Environment Variables un netiek ievadīt
 
 ## Autorizācija
 
+- Pieprasījumu autori un citi biedri ieiet tikai ar WhatsApp autorizāciju.
 - Datorā tiek rādīts vienreizējs QR kods.
 - Telefonā tā pati saite tiek rādīta kā poga **Ieiet ar WhatsApp**.
 - WhatsApp atver jau sagatavotu vienreizēju ziņu; lietotājs nospiež **Sūtīt**.
 - Cloud API webhook dod sistēmai sūtītāja numuru. Ja tas atbilst aktīvam biedram, sākotnējā pārlūka sesija tiek autorizēta.
 - Sistēma nesūta maksas OTP vai SMS ziņas.
+- `owner` un `admin` lomas var ieiet `/admin` ar reģistrēto tālruņa numuru un paroli.
+- Adminu paroles tiek glabātas tikai kā scrypt hash; biedriem paroles netiek veidotas.
 
 ## Lokālā palaišana
 
@@ -45,6 +48,14 @@ pnpm dev
 Atver `http://localhost:3020`.
 
 Ja datubāze ir tukša, aplikācija automātiski atvērs `/setup`. Lokālās izstrādes instalācijas parole pēc noklusējuma ir `development-setup`; ieteicams to aizstāt `.env` failā.
+
+`pnpm db:seed` izveidotā lokālā Owner ieeja:
+
+- tālrunis: `SEED_OWNER_PHONE` no `.env`;
+- parole: `SEED_OWNER_PASSWORD`, vai `development-admin`, ja lokāli lauks atstāts tukšs;
+- adrese: `http://localhost:3020/admin`.
+
+Production vidē `SEED_OWNER_PASSWORD` noklusējuma vērtības nav, un pirmās palaišanas vednis pieprasa vismaz 12 rakstzīmju admina paroli.
 
 ## WhatsApp Cloud API
 

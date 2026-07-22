@@ -51,6 +51,7 @@ export const users = pgTable(
     phoneEncrypted: text("phone_encrypted").notNull(),
     phoneLookup: varchar("phone_lookup", { length: 64 }).notNull(),
     phoneLast4: varchar("phone_last4", { length: 4 }).notNull(),
+    passwordHash: text("password_hash"),
     role: userRole("role").notNull().default("member"),
     status: userStatus("status").notNull().default("invited"),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
@@ -95,6 +96,21 @@ export const sessions = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("sessions_token_digest_uq").on(table.tokenDigest), index("sessions_user_active_idx").on(table.userId, table.expiresAt)],
+);
+
+export const adminLoginAttempts = pgTable(
+  "admin_login_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    phoneLookup: varchar("phone_lookup", { length: 64 }).notNull(),
+    ipAddress: varchar("ip_address", { length: 64 }).notNull(),
+    succeeded: boolean("succeeded").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("admin_login_attempts_pair_created_idx").on(table.phoneLookup, table.ipAddress, table.createdAt),
+    index("admin_login_attempts_created_idx").on(table.createdAt),
+  ],
 );
 
 export const specificRequests = pgTable(
