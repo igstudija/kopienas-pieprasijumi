@@ -12,5 +12,5 @@ export default async function HomePage() {
   if (!status.installed) redirect("/setup");
   const messages = globalMessages[parseLocale((await cookies()).get("community_locale")?.value)];
 
-  return <><AppNavigation /><main className="auth-shell auth-shell-home"><section className="auth-card"><span className="auth-step">{messages.loginEyebrow}</span><h1>{messages.loginTitleFirst}<br />{messages.loginTitleSecond}</h1><p className="desktop-login-copy">{messages.loginDesktop}</p><p className="mobile-login-copy">{messages.loginMobile}</p><LoginChoices /></section><aside className="auth-aside"><blockquote>{messages.loginQuote}</blockquote></aside></main></>;
+  return <><AppNavigation /><main className="auth-shell auth-shell-home"><section className="auth-card"><h1>{messages.loginTitleFirst}<br />{messages.loginTitleSecond}</h1><p className="desktop-login-copy">{messages.loginDesktop}</p><p className="mobile-login-copy">{messages.loginMobile}</p><LoginChoices /></section><aside className="auth-aside"><blockquote>{messages.loginQuote}</blockquote></aside></main></>;
 }

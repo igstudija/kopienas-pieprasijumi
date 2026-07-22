@@ -30,7 +30,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const locale = parseLocale((await cookies()).get("community_locale")?.value);
   return (
     <html lang={locale} className={`${outfit.variable} ${figtree.variable}`}>
-      <body><LanguageProvider initialLocale={locale}>{children}<SiteFooter /><CookieNotice /></LanguageProvider></body>
+      <body><LanguageProvider initialLocale={locale}><div className="site-frame">{children}</div><SiteFooter /><CookieNotice /></LanguageProvider></body>
     </html>
   );
 }
