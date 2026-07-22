@@ -12,7 +12,7 @@ export function SiteFooter() {
         <a href="https://codars.com" target="_blank" rel="noreferrer">codars.com</a>
       </div>
       <nav aria-label="Legal">
-        <Link href="/impressum">{messages.impressum}</Link>
+        <Link href="/par-risinajumu">{messages.impressum}</Link>
         <Link href="/privacy">{messages.privacy}</Link>
         <button className="footer-text-button" type="button" onClick={() => window.dispatchEvent(new Event("community:open-cookie-settings"))}>{messages.cookieSettings}</button>
       </nav>

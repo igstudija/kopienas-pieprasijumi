@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { adminCopy } from "@/lib/admin-i18n";
-import { Brand } from "./brand";
+import { legalCopy } from "@/lib/legal-copy";
+import { AppHeader } from "./app-header";
 import { EditIcon } from "./icons";
 import { LanguageSwitcher, useLanguage } from "./language-provider";
 import { LogoutButton } from "./logout-button";
@@ -17,8 +17,6 @@ export function AppNavigation({ user, showAdmin, logoutRedirect = "/" }: {
   const { locale, messages } = useLanguage();
   const pathname = usePathname();
   const adminMessages = adminCopy[locale];
-  const [open, setOpen] = useState(false);
-  const close = () => setOpen(false);
   const adminLinks = [
     { href: "/admin", label: adminMessages.usersRegistered, active: pathname === "/admin" },
     { href: "/admin/federation", label: adminMessages.usersPeers, active: pathname.startsWith("/admin/federation") },
@@ -29,7 +27,9 @@ export function AppNavigation({ user, showAdmin, logoutRedirect = "/" }: {
   const profileTitle = `${messages.profileTitleFirst} ${messages.profileTitleSecond}`.replace(/\.$/, "");
   const newRequestTitle = `${messages.newTitleFirst} ${messages.newTitleSecond}`.replace(/\.$/, "");
   const editRequestTitle = `${messages.editTitleFirst} ${messages.editTitleSecond}`.replace(/\.$/, "");
-  const sectionTitle = pathname === "/app" ? dashboardTitle
+  const sectionTitle = pathname.startsWith("/privacy") ? legalCopy[locale].privacy.eyebrow
+    : pathname.startsWith("/par-risinajumu") || pathname.startsWith("/impressum") ? legalCopy[locale].impressum.title.replace(/\.$/, "")
+      : pathname === "/app" ? dashboardTitle
     : pathname === "/app/profile" ? profileTitle
       : pathname === "/app/new" ? newRequestTitle
         : pathname.startsWith("/app/requests/") ? editRequestTitle
@@ -39,42 +39,21 @@ export function AppNavigation({ user, showAdmin, logoutRedirect = "/" }: {
                 : pathname.startsWith("/admin/legal") ? adminMessages.legalTitle
                   : messages.navRequests;
 
-  return (
-    <>
-      <nav className="app-nav">
-        <Brand href="/app" markText="SP" label={sectionTitle} />
-        <div className="app-nav-links">
-          <Link href="/app">{messages.navRequests}</Link>
-          {showAdmin && <Link href="/admin">{messages.navAdmin}</Link>}
-          <Link href="/app/profile" className="user-chip" aria-label={messages.navProfile}>
-            <span className="avatar">{user.initials}</span>
-            <span><b>{user.displayName}</b><small>{user.company}</small></span>
-          </Link>
-          <LogoutButton redirectTo={logoutRedirect} />
-        </div>
-        <button className="mobile-nav-toggle" type="button" aria-label={open ? messages.closeMenu : messages.openMenu} aria-expanded={open} aria-controls="mobile-navigation" onClick={() => setOpen((current) => !current)}>
-          <span /><span /><span />
-        </button>
-      </nav>
-      {open && <button className="mobile-nav-backdrop" type="button" aria-label={messages.closeMenu} onClick={close} />}
-      <aside id="mobile-navigation" className={`mobile-nav-drawer ${open ? "open" : ""}`} aria-hidden={!open}>
-        <header><span>{messages.menu}</span><button type="button" onClick={close} aria-label={messages.closeMenu}>×</button></header>
+  return <AppHeader title={sectionTitle}>{(closeMenu) => <>
         <div className="mobile-nav-links">
-          <Link href="/app" onClick={close}>{messages.navRequests}</Link>
+          <Link href="/app" onClick={closeMenu}>{messages.navRequests}</Link>
           {showAdmin && <div className="mobile-nav-admin-section">
             <span>{messages.navAdmin}</span>
-            {adminLinks.map((link) => <Link key={link.href} href={link.href} onClick={close} className={link.active ? "active" : ""} aria-current={link.active ? "page" : undefined}>{link.label}</Link>)}
+            {adminLinks.map((link) => <Link key={link.href} href={link.href} onClick={closeMenu} className={link.active ? "active" : ""} aria-current={link.active ? "page" : undefined}>{link.label}</Link>)}
           </div>}
           <div className="mobile-nav-language"><LanguageSwitcher compact /></div>
         </div>
         <div className="mobile-nav-footer">
           <div className="mobile-nav-person"><span className="avatar">{user.initials}</span><span><b>{user.displayName}</b><small>{user.company}</small></span></div>
           <div className="mobile-nav-profile-actions">
-            <Link href="/app/profile" className="row-action icon-action" aria-label={messages.navProfile} title={messages.navProfile} onClick={close}><EditIcon /></Link>
+            <Link href="/app/profile" className="row-action icon-action" aria-label={messages.navProfile} title={messages.navProfile} onClick={closeMenu}><EditIcon /></Link>
             <LogoutButton redirectTo={logoutRedirect} iconOnly />
           </div>
         </div>
-      </aside>
-    </>
-  );
+      </>}</AppHeader>;
 }

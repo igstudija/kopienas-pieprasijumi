@@ -50,9 +50,6 @@ svg { width: 1.15em; height: 1.15em; }
 .cookie-categories input { width: 38px; height: 22px; accent-color: var(--lime); }
 
 .legal-page { min-height: 100vh; background: var(--paper); }
-.legal-page-nav { width: 100%; min-height: 76px; padding: 0 max(24px, calc((100% - 1160px) / 2)); border-bottom: 1px solid var(--line); background: rgba(244,241,232,.9); backdrop-filter: blur(14px); position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-.legal-page-nav > div { display: flex; align-items: center; gap: 18px; }
-.legal-page-nav > div > a { color: var(--muted); font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .legal-hero { width: min(800px, calc(100% - 48px)); margin: 0 auto; padding: 48px 0 42px; }
 .legal-hero h1 { max-width: 100%; margin: 16px 0 20px; font-family: var(--font-serif), system-ui, sans-serif; font-size: clamp(42px, 6vw, 68px); font-weight: 580; line-height: 1; letter-spacing: -.045em; text-wrap: balance; overflow-wrap: anywhere; }
 .legal-hero p { max-width: 68ch; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.7; }
@@ -140,6 +137,7 @@ svg { width: 1.15em; height: 1.15em; }
 
 .auth-shell { min-height: 100vh; display: grid; grid-template-columns: 1.15fr .85fr; background: var(--cream); position: relative; }
 .auth-brand { position: absolute; left: 42px; top: 32px; z-index: 2; }
+.auth-language { position: absolute; right: 42px; top: 28px; z-index: 3; }
 .auth-card { align-self: center; width: min(470px, calc(100% - 64px)); margin: 110px auto 70px; }
 .auth-card h1 { font-family: var(--font-serif), system-ui, sans-serif; font-weight: 520; font-size: clamp(52px, 6vw, 78px); line-height: .88; letter-spacing: -.055em; margin: 24px 0; }
 .auth-card > p { color: var(--muted); line-height: 1.6; max-width: 390px; }
@@ -534,10 +532,6 @@ textarea.field { min-height: 150px; resize: vertical; }
   .cookie-notice { right: 12px; bottom: 12px; width: calc(100% - 24px); grid-template-columns: 1fr; gap: 14px; max-height: calc(100vh - 24px); overflow-y: auto; }
   .cookie-actions { align-items: stretch; flex-direction: column; }
   .cookie-actions .button { width: 100%; }
-  .legal-page-nav { width: 100%; min-height: 66px; padding-inline: 14px; }
-  .legal-page-nav > div > a { display: none; }
-  .legal-page-nav .language-switcher { gap: 1px; }
-  .legal-page-nav .language-switcher button { min-width: 29px; padding-inline: 5px; }
   .legal-hero, .legal-content { width: min(100% - 28px, 920px); }
   .legal-hero { padding: 55px 0 45px; }
   .legal-card { padding: 21px !important; }
@@ -557,6 +551,7 @@ textarea.field { min-height: 150px; resize: vertical; }
   .how li { grid-template-columns: 1fr; gap: 8px; }
   .auth-shell { grid-template-columns: 1fr; }
   .auth-brand { left: 22px; top: 20px; }
+  .auth-language { right: 18px; top: 16px; }
   .auth-card { width: min(100% - 36px, 470px); margin-top: 105px; }
   .auth-aside { display: none; }
   .desktop-login-copy { display: none; }

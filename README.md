@@ -107,4 +107,6 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md), [docs/INSTALLATION.md](./docs/INSTALLA
 
 ## Licence
 
-Copyright © 2026 Artis Čodars, Codars Design. Released under the [MIT License](./LICENSE).
+Copyright © 2026 Artis Čodars, Codars Design.
+
+The source code is available under the [PolyForm Noncommercial License 1.0.0](./LICENSE). It may be used, copied, modified and distributed only for permitted noncommercial purposes. Commercial use requires a separate written commercial licence from Artis Čodars, Codars Design.

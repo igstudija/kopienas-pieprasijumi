@@ -16,7 +16,7 @@ export function parseLocale(value: string | null | undefined): Locale {
 export const globalMessages = {
   lv: {
     footerCredit: "Šo brīnumu ar aizrautību izstrādāja Artis Čodars no Codars Design.",
-    impressum: "Impressum",
+    impressum: "Par risinājumu",
     privacy: "Privātums un sīkdatnes",
     language: "Valoda",
     brandAria: "Specifiskie prasījumi — sākums",
@@ -126,7 +126,7 @@ export const globalMessages = {
   },
   en: {
     footerCredit: "This little wonder was built with enthusiasm by Artis Čodars of Codars Design.",
-    impressum: "Imprint",
+    impressum: "About the solution",
     privacy: "Privacy and cookies",
     language: "Language",
     brandAria: "Specific requests — home",
@@ -236,7 +236,7 @@ export const globalMessages = {
   },
   lt: {
     footerCredit: "Šį mažą stebuklą su entuziazmu sukūrė Artis Čodars iš „Codars Design“.",
-    impressum: "Teisinė informacija",
+    impressum: "Apie sprendimą",
     privacy: "Privatumas ir slapukai",
     language: "Kalba",
     brandAria: "Specifiniai prašymai — pradžia",
@@ -346,7 +346,7 @@ export const globalMessages = {
   },
   et: {
     footerCredit: "Selle väikese ime lõi suure entusiasmiga Artis Čodars ettevõttest Codars Design.",
-    impressum: "Juriidiline teave",
+    impressum: "Lahendusest",
     privacy: "Privaatsus ja küpsised",
     language: "Keel",
     brandAria: "Konkreetsed taotlused — avaleht",
