@@ -4,6 +4,8 @@ Pašhostējama PWA slēgtām uzņēmēju kopienām. Biedri publicē konkrētus b
 
 Katrai grupai ir sava GitHub kopija, savs Vercel projekts un sava Supabase datubāze. Sistēmai nav centrālas SaaS datubāzes vai kopīga autorizācijas servera.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Figstudija%2Fkopienas-pieprasijumi&project-name=kopienas-pieprasijumi&repository-name=kopienas-pieprasijumi&env=SETUP_SECRET&envDescription=Izv%C4%93lies+vismaz+12+rakstz%C4%ABmju+instal%C4%81cijas+paroli.+T%C4%81+b%C5%ABs+vajadz%C4%ABga+tikai+pirm%C4%81s+palai%C5%A1anas+vedn%C4%AB.&envLink=https%3A%2F%2Fgithub.com%2Figstudija%2Fkopienas-pieprasijumi%2Fblob%2Fmain%2Fdocs%2FINSTALLATION.md&products=%7B%22integrationSlug%22%3A%22supabase%22%2C%22productSlug%22%3A%22supabase%22%2C%22protocol%22%3A%22storage%22%7D)
+
 ## Ieteicamā instalācija
 
 Pilna Vercel + Supabase procedūra, alternatīvas un problēmu risināšana ir aprakstīta [instalācijas instrukcijā](./docs/INSTALLATION.md).
