@@ -10,13 +10,8 @@ const userSchema = z.object({
   company: z.string().trim().min(2).max(180),
   category: z.string().trim().max(180).optional().nullable(),
   phone: z.string().min(6).max(30),
-  email: z.email().optional().nullable().or(z.literal("")),
+  email: z.email().max(320),
   role: z.enum(["owner", "admin", "member"]).default("member"),
-  password: z.string().max(200).optional().or(z.literal("")),
-}).superRefine((input, context) => {
-  if (input.role !== "member" && (!input.password || input.password.length < 12)) {
-    context.addIssue({ code: "custom", path: ["password"], message: "Administratora parolei jābūt vismaz 12 rakstzīmes garai." });
-  }
 });
 
 export async function GET(request: NextRequest) {
@@ -35,7 +30,7 @@ export async function POST(request: NextRequest) {
     const actor = await currentUserFromRequest(request);
     if (!actor || actor.role === "member") return NextResponse.json({ error: "Nepietiekamas tiesības." }, { status: 403 });
     const input = userSchema.parse(await request.json());
-    const id = await createUser(actor, { ...input, email: input.email || null }, requestMeta(request));
+    const id = await createUser(actor, input, requestMeta(request));
     return NextResponse.json({ id }, { status: 201 });
   } catch (error) {
     return jsonError(error, "Lietotāju neizdevās izveidot.");

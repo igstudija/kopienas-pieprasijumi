@@ -9,7 +9,7 @@ const schema = z.object({
   lastName: z.string().trim().min(2).max(100),
   company: z.string().trim().min(2).max(180),
   category: z.string().trim().max(180).optional().nullable(),
-  email: z.union([z.literal(""), z.email().max(320)]).optional().nullable(),
+  email: z.email().max(320),
   phone: z.string().trim().min(6).max(30),
 });
 

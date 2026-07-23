@@ -30,9 +30,14 @@ export const instanceSettings = pgTable("instance_settings", {
   federationPrivateKeyEncrypted: text("federation_private_key_encrypted"),
   federationKeyId: varchar("federation_key_id", { length: 100 }),
   federationProtocol: integer("federation_protocol").notNull().default(1),
-  whatsappBusinessNumber: varchar("whatsapp_business_number", { length: 32 }),
-  whatsappAppSecretEncrypted: text("whatsapp_app_secret_encrypted"),
-  whatsappWebhookVerifyTokenEncrypted: text("whatsapp_webhook_verify_token_encrypted"),
+  emailProvider: varchar("email_provider", { length: 32 }),
+  smtpHost: varchar("smtp_host", { length: 255 }),
+  smtpPort: integer("smtp_port"),
+  smtpSecure: boolean("smtp_secure").notNull().default(false),
+  smtpUsernameEncrypted: text("smtp_username_encrypted"),
+  smtpPasswordEncrypted: text("smtp_password_encrypted"),
+  emailFromAddress: varchar("email_from_address", { length: 320 }),
+  emailFromName: varchar("email_from_name", { length: 160 }),
   legalEntityName: varchar("legal_entity_name", { length: 200 }),
   legalRegistrationNumber: varchar("legal_registration_number", { length: 100 }),
   legalAddress: text("legal_address"),
@@ -55,39 +60,41 @@ export const users = pgTable(
     displayName: varchar("display_name", { length: 160 }).notNull(),
     company: varchar("company", { length: 180 }).notNull(),
     category: varchar("category", { length: 180 }),
-    email: varchar("email", { length: 320 }),
+    email: varchar("email", { length: 320 }).notNull(),
     phoneEncrypted: text("phone_encrypted").notNull(),
     phoneLookup: varchar("phone_lookup", { length: 64 }).notNull(),
     phoneLast4: varchar("phone_last4", { length: 4 }).notNull(),
-    passwordHash: text("password_hash"),
     role: userRole("role").notNull().default("member"),
     status: userStatus("status").notNull().default("invited"),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("users_phone_lookup_uq").on(table.phoneLookup), index("users_status_role_idx").on(table.status, table.role)],
+  (table) => [
+    uniqueIndex("users_phone_lookup_uq").on(table.phoneLookup),
+    uniqueIndex("users_email_uq").on(table.email),
+    index("users_status_role_idx").on(table.status, table.role),
+  ],
 );
 
-export const whatsappLoginChallenges = pgTable(
-  "whatsapp_login_challenges",
+export const emailLoginChallenges = pgTable(
+  "email_login_challenges",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    messageTokenDigest: varchar("message_token_digest", { length: 64 }).notNull(),
-    browserTokenDigest: varchar("browser_token_digest", { length: 64 }).notNull(),
-    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    tokenDigest: varchar("token_digest", { length: 64 }).notNull(),
+    emailDigest: varchar("email_digest", { length: 64 }).notNull(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    completedAt: timestamp("completed_at", { withTimezone: true }),
     consumedAt: timestamp("consumed_at", { withTimezone: true }),
     requestedIp: varchar("requested_ip", { length: 64 }),
     userAgent: text("user_agent"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("whatsapp_login_message_token_uq").on(table.messageTokenDigest),
-    uniqueIndex("whatsapp_login_browser_token_uq").on(table.browserTokenDigest),
-    index("whatsapp_login_expiry_idx").on(table.expiresAt),
-    index("whatsapp_login_ip_created_idx").on(table.requestedIp, table.createdAt),
+    uniqueIndex("email_login_token_uq").on(table.tokenDigest),
+    index("email_login_email_created_idx").on(table.emailDigest, table.createdAt),
+    index("email_login_ip_created_idx").on(table.requestedIp, table.createdAt),
+    index("email_login_expiry_idx").on(table.expiresAt),
   ],
 );
 
@@ -105,21 +112,6 @@ export const sessions = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("sessions_token_digest_uq").on(table.tokenDigest), index("sessions_user_active_idx").on(table.userId, table.expiresAt)],
-);
-
-export const adminLoginAttempts = pgTable(
-  "admin_login_attempts",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    phoneLookup: varchar("phone_lookup", { length: 64 }).notNull(),
-    ipAddress: varchar("ip_address", { length: 64 }).notNull(),
-    succeeded: boolean("succeeded").notNull().default(false),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [
-    index("admin_login_attempts_pair_created_idx").on(table.phoneLookup, table.ipAddress, table.createdAt),
-    index("admin_login_attempts_created_idx").on(table.createdAt),
-  ],
 );
 
 export const specificRequests = pgTable(

@@ -3,14 +3,17 @@ import "server-only";
 import { generateKeyPairSync } from "node:crypto";
 import { getDb } from "@/lib/db";
 import { auditLog, instanceSettings, users } from "@/lib/db/schema";
+import { resolveEmailTransport, type EmailProvider } from "@/lib/email-config";
 import { appUrl, instanceId, setupSecret } from "@/lib/env";
 import { HttpError } from "@/lib/http";
-import { hashPassword } from "@/lib/password";
+import { smtpTestEmail } from "@/lib/magic-link-email";
+import { sendEmail } from "@/lib/mailer";
+import { assertEmailTransport } from "./email-settings";
 import {
   decryptSecret,
   encryptPhone,
   encryptSecret,
-  generateToken,
+  normalizeEmail,
   normalizePhone,
   phoneLookup,
   safeEqualHex,
@@ -21,16 +24,23 @@ export type InstallationInput = {
   setupPassword: string;
   instanceName: string;
   timezone: string;
-  locale: string;
-  whatsappBusinessNumber: string;
-  whatsappAppSecret: string;
+  locale: "lv" | "en" | "lt" | "et";
+  email: {
+    provider: EmailProvider;
+    host?: string | null;
+    port?: number | null;
+    secure?: boolean | null;
+    username: string;
+    password: string;
+    fromAddress: string;
+    fromName: string;
+  };
   owner: {
     firstName: string;
     lastName: string;
     company: string;
-    email?: string | null;
+    email: string;
     phone: string;
-    password: string;
   };
 };
 
@@ -63,22 +73,28 @@ export async function installationStatus() {
 export async function completeInstallation(input: InstallationInput, audit: { ipAddress?: string | null; requestId?: string | null }) {
   verifySetupPassword(input.setupPassword);
   const ownerPhone = normalizePhone(input.owner.phone);
-  const businessNumber = normalizePhone(input.whatsappBusinessNumber);
+  const ownerEmail = normalizeEmail(input.owner.email);
   const baseUrl = appUrl();
   const instanceUuid = crypto.randomUUID();
   const ownerId = crypto.randomUUID();
-  const ownerPasswordHash = await hashPassword(input.owner.password);
-  const verifyToken = generateToken(24);
   const keyId = `primary-${new Date().getUTCFullYear()}`;
   const pair = generateKeyPairSync("ed25519");
   const publicKey = pair.publicKey.export({ type: "spki", format: "der" }).toString("base64");
   const privateKey = pair.privateKey.export({ type: "pkcs8", format: "der" }).toString("base64");
   const db = getDb();
+  const [existing] = await db.select({ id: instanceSettings.id }).from(instanceSettings).limit(1);
+  if (existing) throw new HttpError(409, "Šī instance jau ir konfigurēta.");
+  const emailConfig = resolveEmailTransport(input.email);
+  assertEmailTransport(emailConfig);
+  await sendEmail(emailConfig, {
+    to: ownerEmail,
+    ...smtpTestEmail(input.locale, input.instanceName.trim()),
+  });
 
   try {
     await db.transaction(async (tx) => {
-      const [existing] = await tx.select({ id: instanceSettings.id }).from(instanceSettings).limit(1);
-      if (existing) throw new HttpError(409, "Šī instance jau ir konfigurēta.");
+      const [installed] = await tx.select({ id: instanceSettings.id }).from(instanceSettings).limit(1);
+      if (installed) throw new HttpError(409, "Šī instance jau ir konfigurēta.");
 
       await tx.insert(instanceSettings).values({
         id: instanceUuid,
@@ -90,9 +106,14 @@ export async function completeInstallation(input: InstallationInput, audit: { ip
         federationPublicKey: publicKey,
         federationPrivateKeyEncrypted: encryptSecret(privateKey),
         federationKeyId: keyId,
-        whatsappBusinessNumber: businessNumber,
-        whatsappAppSecretEncrypted: encryptSecret(input.whatsappAppSecret.trim()),
-        whatsappWebhookVerifyTokenEncrypted: encryptSecret(verifyToken),
+        emailProvider: emailConfig.provider,
+        smtpHost: emailConfig.host,
+        smtpPort: emailConfig.port,
+        smtpSecure: emailConfig.secure,
+        smtpUsernameEncrypted: encryptSecret(emailConfig.username),
+        smtpPasswordEncrypted: encryptSecret(emailConfig.password),
+        emailFromAddress: emailConfig.fromAddress,
+        emailFromName: emailConfig.fromName,
         setupCompletedAt: new Date(),
       });
       await tx.insert(users).values({
@@ -101,11 +122,10 @@ export async function completeInstallation(input: InstallationInput, audit: { ip
         lastName: input.owner.lastName.trim(),
         displayName: `${input.owner.firstName} ${input.owner.lastName}`.trim(),
         company: input.owner.company.trim(),
-        email: input.owner.email?.trim() || null,
+        email: ownerEmail,
         phoneEncrypted: encryptPhone(ownerPhone),
         phoneLookup: phoneLookup(ownerPhone),
         phoneLast4: ownerPhone.slice(-4),
-        passwordHash: ownerPasswordHash,
         role: "owner",
         status: "active",
       });
@@ -130,8 +150,6 @@ export async function completeInstallation(input: InstallationInput, audit: { ip
   return {
     instanceId: instanceUuid,
     ownerId,
-    webhookUrl: `${baseUrl}/api/v1/whatsapp/webhook`,
-    webhookVerifyToken: verifyToken,
   };
 }
 
@@ -148,13 +166,6 @@ export async function getInstanceRuntime() {
       privateKey: stored.federationPrivateKeyEncrypted
         ? decryptSecret(stored.federationPrivateKeyEncrypted)
         : process.env.FEDERATION_PRIVATE_KEY ?? "",
-      whatsappBusinessNumber: stored.whatsappBusinessNumber ?? process.env.WHATSAPP_BUSINESS_NUMBER ?? "",
-      whatsappAppSecret: stored.whatsappAppSecretEncrypted
-        ? decryptSecret(stored.whatsappAppSecretEncrypted)
-        : process.env.WHATSAPP_APP_SECRET ?? "",
-      whatsappWebhookVerifyToken: stored.whatsappWebhookVerifyTokenEncrypted
-        ? decryptSecret(stored.whatsappWebhookVerifyTokenEncrypted)
-        : process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ?? "",
     };
   }
 
@@ -166,9 +177,6 @@ export async function getInstanceRuntime() {
     keyId: process.env.FEDERATION_KEY_ID ?? "primary",
     publicKey: process.env.FEDERATION_PUBLIC_KEY ?? "",
     privateKey: process.env.FEDERATION_PRIVATE_KEY ?? "",
-    whatsappBusinessNumber: process.env.WHATSAPP_BUSINESS_NUMBER ?? "",
-    whatsappAppSecret: process.env.WHATSAPP_APP_SECRET ?? "",
-    whatsappWebhookVerifyToken: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ?? "",
   };
 }
 
