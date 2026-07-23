@@ -6,6 +6,7 @@ export type GroupableRequest = {
   authorCategory?: string | null;
   authorEmail?: string | null;
   authorPhone?: string | null;
+  authorWebsite?: string | null;
   updatedAt: Date | string;
   createdAt: Date | string;
 };
@@ -17,6 +18,7 @@ export type RequestGroup<T extends GroupableRequest> = {
   authorCategory?: string | null;
   authorEmail?: string | null;
   authorPhone?: string | null;
+  authorWebsite?: string | null;
   lastActivityAt: string;
   requests: T[];
 };
@@ -40,6 +42,7 @@ export function groupRequests<T extends GroupableRequest>(items: T[]): RequestGr
         authorCategory: first.authorCategory,
         authorEmail: first.authorEmail,
         authorPhone: first.authorPhone,
+        authorWebsite: first.authorWebsite,
         lastActivityAt: toIso(first.updatedAt),
         requests: sorted,
       };

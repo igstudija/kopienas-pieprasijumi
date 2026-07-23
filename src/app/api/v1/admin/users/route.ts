@@ -9,6 +9,7 @@ const userSchema = z.object({
   lastName: z.string().trim().min(2).max(100),
   company: z.string().trim().min(2).max(180),
   category: z.string().trim().max(180).optional().nullable(),
+  website: z.string().trim().max(500).optional().nullable(),
   phone: z.string().min(6).max(30),
   email: z.email().max(320),
   role: z.enum(["owner", "admin", "member"]).default("member"),
