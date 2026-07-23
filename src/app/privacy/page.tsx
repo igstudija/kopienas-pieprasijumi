@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { AppNavigation } from "@/components/app-navigation";
-import { parseLocale } from "@/lib/i18n";
 import { legalCopy } from "@/lib/legal-copy";
 import { currentUserFromPage } from "@/lib/services/auth";
 import { getLegalSettings } from "@/lib/services/legal-settings";
+import { getInstanceLocale } from "@/lib/services/instance-settings";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Privacy and cookies" };
 
 export default async function PrivacyPage() {
-  const locale = parseLocale((await cookies()).get("community_locale")?.value);
+  const locale = await getInstanceLocale();
   const copy = legalCopy[locale];
   const [settings, user] = await Promise.all([getLegalSettings(), currentUserFromPage()]);
   const privacyEmail = settings.privacyContactEmail || settings.legalEmail;
@@ -25,7 +24,7 @@ export default async function PrivacyPage() {
         <LegalSection title={copy.privacy.purposes} text={copy.privacy.purposesText} />
         <LegalSection title={copy.privacy.access} text={copy.privacy.accessText} />
         <LegalSection title={copy.privacy.authentication} text={copy.privacy.authenticationText} />
-        <section><h2>{copy.privacy.cookies}</h2><p>{copy.privacy.cookiesText}</p><ul><li>{copy.privacy.cookieSession}</li><li>{copy.privacy.cookieLocale}</li><li>{copy.privacy.localStorage}</li></ul><p className="legal-note">{copy.privacy.noAnalytics}</p></section>
+        <section><h2>{copy.privacy.cookies}</h2><p>{copy.privacy.cookiesText}</p><ul><li>{copy.privacy.cookieSession}</li><li>{copy.privacy.localStorage}</li></ul><p className="legal-note">{copy.privacy.noAnalytics}</p></section>
         <LegalSection title={copy.privacy.retention} text={copy.privacy.retentionText(settings.dataRetentionMonths)} />
         <LegalSection title={copy.privacy.providers} text={copy.privacy.providersText} />
         <LegalSection id="data-deletion" title={copy.privacy.rights} text={copy.privacy.rightsText} />

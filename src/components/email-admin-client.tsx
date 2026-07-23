@@ -99,7 +99,7 @@ export function EmailAdminClient() {
     setNotice("");
     const form = new FormData(event.currentTarget);
     try {
-      await fetchJson("/api/v1/admin/email", jsonRequest("POST", { to: form.get("to"), locale }));
+      await fetchJson("/api/v1/admin/email", jsonRequest("POST", { to: form.get("to") }));
       setNotice(messages.tested);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : messages.testError);

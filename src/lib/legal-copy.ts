@@ -44,7 +44,6 @@ type LegalCopy = {
     cookies: string;
     cookiesText: string;
     cookieSession: string;
-    cookieLocale: string;
     localStorage: string;
     retention: string;
     retentionText: (months: number) => string;
@@ -105,10 +104,9 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       authentication: "5. Autorizācija ar e-pastu",
       authenticationText: "Lietotājs ievada administratora reģistrēto e-pasta adresi un saņem vienreizēju autorizācijas saiti. Saites noslēpums datubāzē tiek glabāts tikai neatgriezeniska kopsavilkuma veidā, ir derīgs 10 minūtes un pēc izmantošanas vairs nav lietojams. Operators izvēlas SMTP pakalpojumu; šis pakalpojums apstrādā adresi, ziņojumu un piegādes tehniskos datus saskaņā ar saviem noteikumiem.",
       cookies: "6. Sīkdatnes un lokālā krātuve",
-      cookiesText: "Instalācija pati neizmanto reklāmas vai analītikas sīkdatnes. Tā izmanto tikai funkcionalitātei nepieciešamu autentifikācijas sīkdatni un lietotāja tieši izvēlētu valodas iestatījumu.",
+      cookiesText: "Instalācija pati neizmanto reklāmas vai analītikas sīkdatnes. Tā izmanto tikai funkcionalitātei un drošībai nepieciešamu autentifikācijas sīkdatni.",
       cookieSession: "community_session — HttpOnly autentifikācijas sīkdatne; uztur drošu pieslēguma sesiju līdz 30 dienām vai līdz iziešanai/anulēšanai.",
-      cookieLocale: "community_locale — saglabā lietotāja izvēlēto valodu līdz vienam gadam.",
-      localStorage: "community_cookie_consent_v1 — pārlūka lokālajā krātuvē saglabā obligāto, preferenču un analītikas kategoriju izvēli; to var mainīt footerī.",
+      localStorage: "community_cookie_consent_v1 — pārlūka lokālajā krātuvē saglabā faktu, ka sīkdatņu paziņojums ir izlasīts.",
       retention: "7. Glabāšanas termiņi",
       retentionText: (months) => `Aktīva konta dati tiek glabāti dalības un sistēmas lietošanas laikā. Dzēsts konts tiek anonimizēts. Lietotājs var dzēst savus pieprasījumus; to saturs tiek noņemts, bet minimāls tehnisks dzēšanas marķieris un audita pierādījums var saglabāties federācijas sinhronizācijai un drošībai. Operators ir konfigurējis ${months} mēnešu drošības un audita ierakstu glabāšanas termiņu un ir atbildīgs par tā tehnisku ievērošanu, ja vien nav dokumentētas vajadzības vai juridiska pienākuma glabāt datus citādi. Sesija ir derīga ne ilgāk kā 30 dienas.`,
       providers: "8. Apstrādātāji un starptautiska nodošana",
@@ -166,10 +164,9 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       authentication: "5. Email authentication",
       authenticationText: "The user enters the email address registered by an administrator and receives a one-time sign-in link. The link secret is stored only as a one-way digest, expires after 10 minutes and cannot be reused. The operator selects the SMTP provider; that provider processes the address, message and delivery metadata under its own terms.",
       cookies: "6. Cookies and local storage",
-      cookiesText: "The installation itself uses no advertising or analytics cookies. It uses only a functional authentication cookie and a language setting directly requested by the user.",
+      cookiesText: "The installation itself uses no advertising or analytics cookies. It uses only an authentication cookie required for functionality and security.",
       cookieSession: "community_session — an HttpOnly authentication cookie that maintains a secure login for up to 30 days or until logout/revocation.",
-      cookieLocale: "community_locale — remembers the selected language for up to one year.",
-      localStorage: "community_cookie_consent_v1 — stores the necessary, preference and analytics category choice in browser local storage; it can be changed from the footer.",
+      localStorage: "community_cookie_consent_v1 — stores in browser local storage that the cookie notice has been read.",
       retention: "7. Retention",
       retentionText: (months) => `Active account data is retained while membership and system use continue. A deleted account is anonymised. Users can delete their own requests; the content is erased, while a minimal technical deletion marker and audit evidence may remain for federation synchronisation and security. The operator has configured a ${months}-month retention period for security and audit records and is responsible for enforcing it technically unless a documented need or legal duty requires different retention. A session remains valid for no more than 30 days.`,
       providers: "8. Processors and international transfers",
@@ -227,10 +224,9 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       authentication: "5. Autentifikavimas el. paštu",
       authenticationText: "Naudotojas įveda administratoriaus užregistruotą el. pašto adresą ir gauna vienkartinę prisijungimo nuorodą. Nuorodos paslaptis saugoma tik kaip vienkryptė santrauka, galioja 10 minučių ir negali būti naudojama pakartotinai. Operatorius pasirenka SMTP paslaugą, kuri pagal savo taisykles tvarko adresą, laišką ir pristatymo techninius duomenis.",
       cookies: "6. Slapukai ir vietinė saugykla",
-      cookiesText: "Pats diegimas nenaudoja reklamos ar analitikos slapukų. Naudojamas tik funkcinis autentifikavimo slapukas ir paties naudotojo pasirinktas kalbos nustatymas.",
+      cookiesText: "Pats diegimas nenaudoja reklamos ar analitikos slapukų. Naudojamas tik funkcionalumui ir saugumui būtinas autentifikavimo slapukas.",
       cookieSession: "community_session — HttpOnly autentifikavimo slapukas, palaikantis saugų prisijungimą iki 30 dienų arba iki atsijungimo / panaikinimo.",
-      cookieLocale: "community_locale — iki vienų metų įsimena pasirinktą kalbą.",
-      localStorage: "community_cookie_consent_v1 — naršyklės vietinėje saugykloje išsaugo būtinųjų, nuostatų ir analitikos kategorijų pasirinkimą; jį galima pakeisti poraštėje.",
+      localStorage: "community_cookie_consent_v1 — naršyklės vietinėje saugykloje išsaugo faktą, kad slapukų pranešimas perskaitytas.",
       retention: "7. Saugojimo laikotarpiai",
       retentionText: (months) => `Aktyvios paskyros duomenys saugomi narystės ir sistemos naudojimo laikotarpiu. Ištrinta paskyra anonimizuojama. Naudotojai gali ištrinti savo prašymus; turinys pašalinamas, tačiau minimalus techninis ištrynimo žymuo ir audito įrodymas gali likti federacijos sinchronizavimui bei saugumui. Operatorius nustatė ${months} mėn. saugumo ir audito įrašų saugojimo terminą ir atsako už jo techninį įgyvendinimą, nebent dokumentuotas poreikis ar teisinė prievolė reikalauja kitokio termino. Sesija galioja ne ilgiau kaip 30 dienų.`,
       providers: "8. Duomenų tvarkytojai ir tarptautinis perdavimas",
@@ -288,10 +284,9 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       authentication: "5. E-postiga autentimine",
       authenticationText: "Kasutaja sisestab administraatori registreeritud e-posti aadressi ja saab ühekordse sisselogimislingi. Lingi saladust hoitakse ainult ühesuunalise räsina, see aegub 10 minutiga ja seda ei saa uuesti kasutada. Käitaja valib SMTP-teenuse; teenus töötleb aadressi, sõnumit ja tarne tehnilisi andmeid oma tingimuste alusel.",
       cookies: "6. Küpsised ja kohalik salvestus",
-      cookiesText: "Installatsioon ise ei kasuta reklaami- ega analüütikaküpsiseid. Kasutatakse ainult funktsionaalset autentimisküpsist ja kasutaja enda valitud keeleseadet.",
+      cookiesText: "Installatsioon ise ei kasuta reklaami- ega analüütikaküpsiseid. Kasutatakse ainult funktsionaalsuseks ja turvalisuseks vajalikku autentimisküpsist.",
       cookieSession: "community_session — HttpOnly autentimisküpsis, mis hoiab turvalist sisselogimist kuni 30 päeva või väljalogimise/tühistamiseni.",
-      cookieLocale: "community_locale — mäletab valitud keelt kuni ühe aasta.",
-      localStorage: "community_cookie_consent_v1 — salvestab brauseri kohalikus salvestusruumis vajalike, eelistuste ja analüütika kategooriate valiku; seda saab jaluses muuta.",
+      localStorage: "community_cookie_consent_v1 — salvestab brauseri kohalikus salvestusruumis fakti, et küpsiseteade on läbi loetud.",
       retention: "7. Säilitamine",
       retentionText: (months) => `Aktiivse konto andmeid säilitatakse liikmesuse ja süsteemi kasutamise ajal. Kustutatud konto anonüümitakse. Kasutajad saavad oma taotlused kustutada; sisu eemaldatakse, kuid minimaalne tehniline kustutamismärge ja auditi tõend võivad jääda föderatsiooni sünkroonimiseks ning turvalisuse tagamiseks. Käitaja on määranud turva- ja auditikirjete säilitamisajaks ${months} kuud ning vastutab selle tehnilise jõustamise eest, välja arvatud juhul, kui dokumenteeritud vajadus või juriidiline kohustus nõuab teistsugust tähtaega. Seanss kehtib kuni 30 päeva.`,
       providers: "8. Volitatud töötlejad ja rahvusvaheline edastamine",

@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { AppNavigation } from "@/components/app-navigation";
-import { parseLocale } from "@/lib/i18n";
 import { legalCopy } from "@/lib/legal-copy";
 import { LICENSE_NAME, SOURCE_CODE_URL } from "@/lib/legal-settings";
 import { currentUserFromPage } from "@/lib/services/auth";
 import { getLegalSettings } from "@/lib/services/legal-settings";
+import { getInstanceLocale } from "@/lib/services/instance-settings";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "About the solution" };
 
 export default async function AboutSolutionPage() {
-  const locale = parseLocale((await cookies()).get("community_locale")?.value);
+  const locale = await getInstanceLocale();
   const copy = legalCopy[locale];
   const [settings, user] = await Promise.all([getLegalSettings(), currentUserFromPage()]);
   const navUser = user ? { displayName: user.displayName, company: user.company, initials: `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}` } : undefined;

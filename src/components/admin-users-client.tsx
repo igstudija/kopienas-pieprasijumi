@@ -3,9 +3,11 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ExcelUserImport } from "@/components/excel-user-import";
 import { useLanguage } from "@/components/language-provider";
+import { PhoneInput } from "@/components/phone-input";
 import { adminCopy } from "@/lib/admin-i18n";
 import { fetchJson, isAbortError, jsonRequest } from "@/lib/client-api";
 import type { Locale } from "@/lib/i18n";
+import { phoneCountryFromLocale } from "@/lib/phone-number";
 import { useModalDialog } from "@/lib/use-modal-dialog";
 
 type AdminUser = {
@@ -16,7 +18,7 @@ type AdminUser = {
   company: string;
   category?: string | null;
   email?: string | null;
-  phoneLast4: string;
+  phone: string;
   role: "owner" | "admin" | "member";
   status: "invited" | "active" | "suspended";
   lastLoginAt?: string | null;
@@ -26,6 +28,12 @@ type UsersResponse = { users: AdminUser[]; actorUserId: string; actorRole: Admin
 export function AdminUsersClient() {
   const { locale } = useLanguage();
   const copy = adminCopy[locale];
+  const editIntro = {
+    lv: "E-pasts tiek izmantots autorizācijai. Mainot e-pastu, aktīvās sesijas tiek pārtrauktas. Tālruņa numurs tiek saglabāts starptautiskajā formātā.",
+    en: "Email is used for sign-in. Changing it revokes active sessions. The phone number is stored in international format.",
+    lt: "El. paštas naudojamas prisijungimui. Jį pakeitus aktyvios sesijos nutraukiamos. Telefono numeris saugomas tarptautiniu formatu.",
+    et: "E-posti kasutatakse sisselogimiseks. Selle muutmisel lõpetatakse aktiivsed seansid. Telefoninumber salvestatakse rahvusvahelises vormingus.",
+  }[locale];
   const usersLoadError = copy.usersLoadError;
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [actorUserId, setActorUserId] = useState("");
@@ -72,7 +80,7 @@ export function AdminUsersClient() {
   const filteredUsers = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(locale);
     if (!needle) return users;
-    return users.filter((user) => [user.displayName, user.company, user.category, user.email, user.phoneLast4, roleLabel(user.role, copy), statusLabel(user.status, copy)].filter(Boolean).join(" ").toLocaleLowerCase(locale).includes(needle));
+    return users.filter((user) => [user.displayName, user.company, user.category, user.email, user.phone, roleLabel(user.role, copy), statusLabel(user.status, copy)].filter(Boolean).join(" ").toLocaleLowerCase(locale).includes(needle));
   }, [copy, locale, query, users]);
 
   function openCreate() {
@@ -170,7 +178,7 @@ export function AdminUsersClient() {
           const busy = busyUserId === user.id;
           return (
             <div className="user-row admin-user-row" key={user.id}>
-              <div><strong>{user.displayName}</strong><small>{user.company} · •••• {user.phoneLast4} · {formatAdminEmail(user.email, locale)}</small></div>
+              <div><strong>{user.displayName}</strong><small>{user.company} · {user.phone} · {formatAdminEmail(user.email, locale)}</small></div>
               <div><small>{user.category ?? copy.usersNoCategory}</small></div>
               <span className={`status-pill ${user.status}`}>{roleLabel(user.role, copy)} · {statusLabel(user.status, copy)}</span>
               <div className="user-actions">
@@ -194,7 +202,7 @@ export function AdminUsersClient() {
                 <div className="form-group"><label htmlFor="new-last-name">{copy.lastName}</label><input className="field" id="new-last-name" name="lastName" required /></div>
                 <div className="form-group"><label htmlFor="new-company">{copy.company}</label><input className="field" id="new-company" name="company" required /></div>
                 <div className="form-group"><label htmlFor="new-category">{copy.category}</label><input className="field" id="new-category" name="category" /></div>
-                <div className="form-group"><label htmlFor="new-phone">{copy.phone}</label><input className="field" id="new-phone" name="phone" type="tel" inputMode="tel" placeholder="+371 2…" required /></div>
+                <div className="form-group"><label htmlFor="new-phone">{copy.phone}</label><PhoneInput id="new-phone" name="phone" locale={locale} countryLabel={copy.phoneCountry} defaultCountry={phoneCountryFromLocale(locale)} required /></div>
                 <div className="form-group"><label htmlFor="new-email">{copy.emailRequired}</label><input className="field" id="new-email" name="email" type="email" required /></div>
                 <div className="form-group full"><label htmlFor="new-role">{copy.accessType}</label><select className="field" id="new-role" name="role" value={newRole} onChange={(event) => setNewRole(event.target.value)}><option value="member">{copy.roleMemberEmail}</option><option value="admin">{copy.roleAdminEmail}</option></select></div>
               </div>
@@ -209,7 +217,7 @@ export function AdminUsersClient() {
         <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !busyUserId) setEditingUser(null); }}>
           <section ref={dialogRef} className="modal-card" role="dialog" aria-modal="true" aria-labelledby="edit-user-title" tabIndex={-1}>
             <header className="modal-header"><div><span className="auth-step">{copy.usersProfileEyebrow}</span><h2 id="edit-user-title">{copy.usersEditTitle}</h2></div><button className="modal-close" type="button" onClick={() => setEditingUser(null)} disabled={Boolean(busyUserId)} aria-label={copy.close}>×</button></header>
-            <p className="modal-intro">{copy.usersEditIntro}</p>
+            <p className="modal-intro">{editIntro}</p>
             <form onSubmit={saveProfile}>
               <div className="form-grid">
                 <div className="form-group"><label htmlFor="edit-first-name">{copy.firstName}</label><input className="field" id="edit-first-name" name="firstName" defaultValue={editingUser.firstName} required /></div>
@@ -217,7 +225,7 @@ export function AdminUsersClient() {
                 <div className="form-group"><label htmlFor="edit-company">{copy.company}</label><input className="field" id="edit-company" name="company" defaultValue={editingUser.company} required /></div>
                 <div className="form-group"><label htmlFor="edit-category">{copy.category}</label><input className="field" id="edit-category" name="category" defaultValue={editingUser.category ?? ""} /></div>
                 <div className="form-group"><label htmlFor="edit-email">{copy.email}</label><input className="field" id="edit-email" name="email" type="email" defaultValue={editingUser.email ?? ""} required /></div>
-                <div className="form-group"><label htmlFor="edit-phone">{copy.newPhone}</label><input className="field" id="edit-phone" name="phone" type="tel" inputMode="tel" placeholder={`${copy.currentPhone} •••• ${editingUser.phoneLast4}`} /></div>
+                <div className="form-group"><label htmlFor="edit-phone">{copy.phone}</label><PhoneInput id="edit-phone" name="phone" locale={locale} countryLabel={copy.phoneCountry} defaultCountry={phoneCountryFromLocale(locale)} defaultValue={editingUser.phone} required /></div>
                 {actorRole === "owner" && editingUser.role !== "owner" && editingUser.id !== actorUserId && <div className="form-group full"><label htmlFor="edit-role">{copy.role}</label><select className="field" id="edit-role" name="role" value={editRole} onChange={(event) => setEditRole(event.target.value as "admin" | "member")}><option value="member">{copy.roleMember}</option><option value="admin">{copy.roleAdmin}</option></select></div>}
               </div>
               {error && <div className="form-error">{error}</div>}

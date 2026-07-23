@@ -6,7 +6,7 @@ import { adminCopy } from "@/lib/admin-i18n";
 import { legalCopy } from "@/lib/legal-copy";
 import { AppHeader } from "./app-header";
 import { EditIcon } from "./icons";
-import { LanguageSwitcher, useLanguage } from "./language-provider";
+import { useLanguage } from "./language-provider";
 import { LogoutButton } from "./logout-button";
 
 type NavigationUser = { displayName: string; company: string; initials: string };
@@ -24,6 +24,7 @@ export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/" }:
     { href: "/admin/federation", label: adminMessages.usersPeers, active: pathname.startsWith("/admin/federation") },
     { href: "/admin/email", label: adminMessages.usersEmail, active: pathname.startsWith("/admin/email") },
     { href: "/admin/legal", label: adminMessages.legalTitle, active: pathname.startsWith("/admin/legal") },
+    { href: "/admin/settings", label: adminMessages.usersSettings, active: pathname.startsWith("/admin/settings") },
   ];
   const informationLinks = [
     { href: "/par-risinajumu", label: messages.impressum, active: pathname.startsWith("/par-risinajumu") },
@@ -40,6 +41,7 @@ export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/" }:
             : pathname.startsWith("/admin/federation") ? adminMessages.usersPeers
               : pathname.startsWith("/admin/email") ? adminMessages.usersEmail
                 : pathname.startsWith("/admin/legal") ? adminMessages.legalTitle
+                  : pathname.startsWith("/admin/settings") ? adminMessages.usersSettings
                   : messages.navRequests;
 
   return <AppHeader title={sectionTitle} homeHref="/">{(closeMenu) => <>
@@ -53,7 +55,6 @@ export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/" }:
             <span>{messages.navInformation}</span>
             {informationLinks.map((link) => <Link key={link.href} href={link.href} onClick={closeMenu} className={link.active ? "active" : ""} aria-current={link.active ? "page" : undefined}>{link.label}</Link>)}
           </div>
-          <div className="mobile-nav-language"><LanguageSwitcher compact /></div>
         </div>
         {user && <div className="mobile-nav-footer">
           <div className="mobile-nav-person"><span className="avatar">{user.initials}</span><span><b>{user.displayName}</b><small>{user.company}</small></span></div>
