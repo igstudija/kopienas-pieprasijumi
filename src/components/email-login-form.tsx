@@ -5,7 +5,7 @@ import { fetchJson, jsonRequest } from "@/lib/client-api";
 import { useLanguage } from "./language-provider";
 
 export function EmailLoginForm({ developmentLogin = false }: { developmentLogin?: boolean }) {
-  const { locale, messages } = useLanguage();
+  const { messages } = useLanguage();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -36,7 +36,7 @@ export function EmailLoginForm({ developmentLogin = false }: { developmentLogin?
     setBusy(true);
     setError("");
     try {
-      await fetchJson("/api/v1/auth/email/start", jsonRequest("POST", { email, locale }));
+      await fetchJson("/api/v1/auth/email/start", jsonRequest("POST", { email }));
       setSent(true);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : messages.confirmInvalid);

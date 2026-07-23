@@ -129,28 +129,31 @@ export function DashboardClient() {
       <div className="dashboard-filter-bar">
         <div className="dashboard-filters">
           <input className="search-input" type="search" placeholder={messages.searchRequests} value={query} onChange={(event) => { setQuery(event.target.value); setVisibleGroups(8); }} aria-label={messages.searchRequests} />
-          <FilterRow className="group-filter-row" label={messages.filterGroup}><FilterButton active={!selectedSources.length} onClick={() => { setSelectedSources([]); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton>{sources.map((item) => <FilterButton key={item.id} active={selectedSources.includes(item.id)} onClick={() => { setSelectedSources((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id]); setVisibleGroups(8); }}>{item.name}</FilterButton>)}</FilterRow>
-          <div className="mobile-select-filter mobile-group-filter">
-            <b>{messages.filterGroup}</b>
-            <details>
-              <summary><span>{selectedSources.length ? selectedSources.map((id) => sources.find((item) => item.id === id)?.name).filter(Boolean).join(", ") : messages.filterAll}</span><ChevronDownIcon /></summary>
-              <div className="mobile-filter-options">
-                <button type="button" className={!selectedSources.length ? "active" : ""} aria-pressed={!selectedSources.length} onClick={() => { setSelectedSources([]); setVisibleGroups(8); }}><i aria-hidden="true">{!selectedSources.length ? "✓" : ""}</i>{messages.filterAll}</button>
-                {sources.map((item) => <button type="button" key={item.id} className={selectedSources.includes(item.id) ? "active" : ""} aria-pressed={selectedSources.includes(item.id)} onClick={() => { setSelectedSources((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id]); setVisibleGroups(8); }}><i aria-hidden="true">{selectedSources.includes(item.id) ? "✓" : ""}</i>{item.name}</button>)}
-              </div>
-            </details>
-          </div>
-          <FilterRow className="period-filter-row" label={messages.filterPeriod}><FilterButton active={period === "all"} onClick={() => { setPeriod("all"); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton><FilterButton active={period === "week"} onClick={() => { setPeriod("week"); setVisibleGroups(8); }}>{messages.filterWeek}</FilterButton><FilterButton active={period === "month"} onClick={() => { setPeriod("month"); setVisibleGroups(8); }}>{messages.filterMonth}</FilterButton></FilterRow>
-          <div className="mobile-select-filter mobile-period-filter">
-            <b>{messages.filterPeriod}</b>
-            <details>
-              <summary><span>{period === "all" ? messages.filterAll : period === "week" ? messages.filterWeek : messages.filterMonth}</span><ChevronDownIcon /></summary>
-              <div className="mobile-filter-options">
-                <MobilePeriodOption active={period === "all"} onClick={() => { setPeriod("all"); setVisibleGroups(8); }}>{messages.filterAll}</MobilePeriodOption>
-                <MobilePeriodOption active={period === "week"} onClick={() => { setPeriod("week"); setVisibleGroups(8); }}>{messages.filterWeek}</MobilePeriodOption>
-                <MobilePeriodOption active={period === "month"} onClick={() => { setPeriod("month"); setVisibleGroups(8); }}>{messages.filterMonth}</MobilePeriodOption>
-              </div>
-            </details>
+          <button type="button" className="dashboard-add-button" aria-label={messages.newRequest} title={messages.newRequest} onClick={() => setShowCreate(true)}><PlusIcon /></button>
+          <div className="dashboard-filter-controls">
+            <FilterRow className="group-filter-row" label={messages.filterGroup}><FilterButton active={!selectedSources.length} onClick={() => { setSelectedSources([]); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton>{sources.map((item) => <FilterButton key={item.id} active={selectedSources.includes(item.id)} onClick={() => { setSelectedSources((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id]); setVisibleGroups(8); }}>{item.name}</FilterButton>)}</FilterRow>
+            <div className="mobile-select-filter mobile-group-filter">
+              <b>{messages.filterGroup}</b>
+              <details>
+                <summary><span>{selectedSources.length ? selectedSources.map((id) => sources.find((item) => item.id === id)?.name).filter(Boolean).join(", ") : messages.filterAll}</span><ChevronDownIcon /></summary>
+                <div className="mobile-filter-options">
+                  <button type="button" className={!selectedSources.length ? "active" : ""} aria-pressed={!selectedSources.length} onClick={() => { setSelectedSources([]); setVisibleGroups(8); }}><i aria-hidden="true">{!selectedSources.length ? "✓" : ""}</i>{messages.filterAll}</button>
+                  {sources.map((item) => <button type="button" key={item.id} className={selectedSources.includes(item.id) ? "active" : ""} aria-pressed={selectedSources.includes(item.id)} onClick={() => { setSelectedSources((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id]); setVisibleGroups(8); }}><i aria-hidden="true">{selectedSources.includes(item.id) ? "✓" : ""}</i>{item.name}</button>)}
+                </div>
+              </details>
+            </div>
+            <FilterRow className="period-filter-row" label={messages.filterPeriod}><FilterButton active={period === "all"} onClick={() => { setPeriod("all"); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton><FilterButton active={period === "week"} onClick={() => { setPeriod("week"); setVisibleGroups(8); }}>{messages.filterWeek}</FilterButton><FilterButton active={period === "month"} onClick={() => { setPeriod("month"); setVisibleGroups(8); }}>{messages.filterMonth}</FilterButton></FilterRow>
+            <div className="mobile-select-filter mobile-period-filter">
+              <b>{messages.filterPeriod}</b>
+              <details>
+                <summary><span>{period === "all" ? messages.filterAll : period === "week" ? messages.filterWeek : messages.filterMonth}</span><ChevronDownIcon /></summary>
+                <div className="mobile-filter-options">
+                  <MobilePeriodOption active={period === "all"} onClick={() => { setPeriod("all"); setVisibleGroups(8); }}>{messages.filterAll}</MobilePeriodOption>
+                  <MobilePeriodOption active={period === "week"} onClick={() => { setPeriod("week"); setVisibleGroups(8); }}>{messages.filterWeek}</MobilePeriodOption>
+                  <MobilePeriodOption active={period === "month"} onClick={() => { setPeriod("month"); setVisibleGroups(8); }}>{messages.filterMonth}</MobilePeriodOption>
+                </div>
+              </details>
+            </div>
           </div>
         </div>
       </div>
@@ -160,7 +163,6 @@ export function DashboardClient() {
           <><p className="request-summary">{filtered.length} {filtered.length === 1 ? messages.memberOne : messages.memberMany} · {requestCount} {requestCount === 1 ? messages.requestOne : messages.requestMany}</p><div className="member-groups">{visible.map((group) => <MemberGroup key={group.authorId} group={group} currentUserId={currentUserId} deletingId={deletingId} onDelete={deleteRequest} onEdit={setEditingRequest} locale={locale} />)}</div>{visibleGroups < filtered.length && <div className="load-more-row"><button className="button button-ghost" type="button" onClick={() => setVisibleGroups((count) => count + 8)}>{messages.loadMore}</button></div>}</>
         ) : <div className="empty-state"><h2>{messages.noResults}</h2><p>{messages.noResultsText}</p><button type="button" className="button button-accent" onClick={() => setShowCreate(true)}><PlusIcon /> {messages.createRequest}</button></div>}
       </div>
-      <button type="button" className="floating-add-button" aria-label={messages.newRequest} title={messages.newRequest} onClick={() => setShowCreate(true)}><PlusIcon /></button>
       {showCreate && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCreate(false); }}>
         <section ref={dialogRef} className="modal-card request-create-modal" role="dialog" aria-modal="true" aria-labelledby="create-request-title" tabIndex={-1}>
           <header className="modal-header"><div><span className="auth-step">{messages.newEntry}</span><h2 id="create-request-title">{messages.newRequest}</h2></div><button className="modal-close" type="button" aria-label={messages.cancel} onClick={() => setShowCreate(false)}>×</button></header>

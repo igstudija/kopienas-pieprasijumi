@@ -7,6 +7,7 @@ import {
   sendEmailSettingsTest,
   updateEmailAdminSettings,
 } from "@/lib/services/email-settings";
+import { getInstanceLocale } from "@/lib/services/instance-settings";
 
 const settingsSchema = z.object({
   provider: z.enum(["brevo", "mailjet", "custom"]),
@@ -21,7 +22,6 @@ const settingsSchema = z.object({
 
 const testSchema = z.object({
   to: z.email().max(320),
-  locale: z.enum(["lv", "en", "lt", "et"]).default("lv"),
 });
 
 export async function GET(request: NextRequest) {
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions." }, { status: 403 });
     }
     const input = testSchema.parse(await request.json());
-    await sendEmailSettingsTest(actor, input.to, input.locale, requestMeta(request));
+    await sendEmailSettingsTest(actor, input.to, await getInstanceLocale(), requestMeta(request));
     return NextResponse.json({ sent: true });
   } catch (error) {
     return jsonError(error, "Test email could not be sent.");

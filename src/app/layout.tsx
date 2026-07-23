@@ -1,10 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
 import { Figtree, Outfit } from "next/font/google";
 import { CookieNotice } from "@/components/cookie-notice";
 import { LanguageProvider } from "@/components/language-provider";
 import { SiteFooter } from "@/components/site-footer";
-import { parseLocale } from "@/lib/i18n";
+import { getInstanceLocale } from "@/lib/services/instance-settings";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -27,7 +26,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#12372a", colorScheme: "light" };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const locale = parseLocale((await cookies()).get("community_locale")?.value);
+  const locale = await getInstanceLocale();
   return (
     <html lang={locale} className={`${outfit.variable} ${figtree.variable}`}>
       <body><LanguageProvider initialLocale={locale}><div className="site-frame">{children}</div><SiteFooter /><CookieNotice /></LanguageProvider></body>

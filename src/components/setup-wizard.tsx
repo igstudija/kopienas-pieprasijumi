@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { fetchJson, jsonRequest } from "@/lib/client-api";
+import { PhoneInput } from "@/components/phone-input";
+import { phoneCountryFromLocale } from "@/lib/phone-number";
 
 type SetupStatus = {
   databaseConnected: boolean;
@@ -44,7 +46,7 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
     lastName: "",
     company: "",
     email: "",
-    phone: "+371",
+    phone: "",
   });
 
   const canContinue = useMemo(() => {
@@ -168,7 +170,7 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
           <div className="setup-fields">
             <div className="form-grid"><label>First name<input className="field" value={form.firstName} onChange={(event) => update("firstName", event.target.value)} /></label><label>Last name<input className="field" value={form.lastName} onChange={(event) => update("lastName", event.target.value)} /></label></div>
             <label>Company<input className="field" value={form.company} onChange={(event) => update("company", event.target.value)} /></label>
-            <div className="form-grid"><label>Contact phone<input className="field" value={form.phone} onChange={(event) => update("phone", event.target.value)} inputMode="tel" /></label><label>Sign-in email<input className="field" value={form.email} onChange={(event) => update("email", event.target.value)} type="email" /></label></div>
+            <div className="form-grid"><label>Contact phone<PhoneInput id="setup-owner-phone" name="phone" locale="en" countryLabel="Country and calling code" defaultCountry={phoneCountryFromLocale(form.locale as "lv" | "en" | "lt" | "et")} defaultValue={form.phone} onChange={(phone) => update("phone", phone)} required /></label><label>Sign-in email<input className="field" value={form.email} onChange={(event) => update("email", event.target.value)} type="email" /></label></div>
             <label>Installation secret<input className="field" value={form.setupPassword} onChange={(event) => update("setupPassword", event.target.value)} type="password" autoComplete="current-password" /><small>Enter the same 12+ character value selected for SETUP_SECRET during deployment.</small></label>
           </div>
         </>}

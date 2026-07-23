@@ -28,8 +28,9 @@ Database credentials remain in Vercel Environment Variables. SMTP credentials ar
 - A link is valid for 10 minutes, can be used once and is stored only as an HMAC digest.
 - Successful authentication reloads `/`; it does not send users to a separate application route.
 - The user role changes only which links appear in the shared navigation.
-- Administrators manage members, federation, SMTP and legal settings through the additional menu links.
-- Phone numbers are contact data, not authentication credentials.
+- Administrators manage members, federation, SMTP, legal details and the installation-wide interface language through the additional menu links.
+- The interface language is set once per installation in `/admin/settings`; individual visitors do not have a language switcher.
+- Phone numbers are stored in international E.164 format for reliable phone and WhatsApp contact actions; they are not authentication credentials.
 - Up to 500 members can be imported from `.xlsx`, `.xls` or `.csv`; email is required.
 
 ## Connecting independent installations

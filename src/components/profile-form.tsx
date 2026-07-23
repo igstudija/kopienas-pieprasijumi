@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import { fetchJson, isAbortError, jsonRequest } from "@/lib/client-api";
 import { useLanguage } from "./language-provider";
+import { PhoneInput } from "./phone-input";
+import { phoneCountryFromLocale } from "@/lib/phone-number";
 
 type Profile = {
   firstName: string;
@@ -16,7 +18,7 @@ type Profile = {
 };
 
 export function ProfileForm() {
-  const { messages } = useLanguage();
+  const { locale, messages } = useLanguage();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -64,7 +66,7 @@ export function ProfileForm() {
         <div className="form-group"><label htmlFor="profile-company">{messages.company}</label><input className="field" id="profile-company" name="company" defaultValue={profile.company} required /></div>
         <div className="form-group"><label htmlFor="profile-category">{messages.category}</label><input className="field" id="profile-category" name="category" defaultValue={profile.category ?? ""} /></div>
         <div className="form-group"><label htmlFor="profile-email">{messages.email}</label><input className="field" id="profile-email" name="email" type="email" defaultValue={profile.email} required /></div>
-        <div className="form-group"><label htmlFor="profile-phone">{messages.phone}</label><input className="field" id="profile-phone" name="phone" type="tel" inputMode="tel" defaultValue={profile.phone} required /><small>{messages.phoneHelp}</small></div>
+        <div className="form-group"><label htmlFor="profile-phone">{messages.phone}</label><PhoneInput id="profile-phone" name="phone" locale={locale} countryLabel={messages.phoneCountry} defaultCountry={phoneCountryFromLocale(locale)} defaultValue={profile.phone} required /><small>{messages.phoneHelp}</small></div>
       </div>
       {error && <div className="form-error">{error}</div>}
       {notice && <div className="form-success">{notice}</div>}

@@ -40,7 +40,7 @@ export type UpdateUserProfileInput = {
 };
 
 export async function listUsers() {
-  return getDb()
+  const rows = await getDb()
     .select({
       id: users.id,
       firstName: users.firstName,
@@ -49,7 +49,7 @@ export async function listUsers() {
       company: users.company,
       category: users.category,
       email: users.email,
-      phoneLast4: users.phoneLast4,
+      phoneEncrypted: users.phoneEncrypted,
       role: users.role,
       status: users.status,
       lastLoginAt: users.lastLoginAt,
@@ -58,6 +58,10 @@ export async function listUsers() {
     .from(users)
     .where(ne(users.status, "archived"))
     .orderBy(asc(users.displayName));
+  return rows.map(({ phoneEncrypted, ...user }) => ({
+    ...user,
+    phone: decryptPhone(phoneEncrypted),
+  }));
 }
 
 export async function getOwnProfile(userId: string) {
