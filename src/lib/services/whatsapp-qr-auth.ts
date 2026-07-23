@@ -56,7 +56,7 @@ export async function startWhatsappQrLogin(context: Context) {
     challengeId: id,
     browserToken,
     deepLink,
-    qrDataUrl: await QRCode.toDataURL(deepLink, { width: 320, margin: 2, errorCorrectionLevel: "M", color: { dark: "#12372a", light: "#fbf9f3" } }),
+    qrDataUrl: await QRCode.toDataURL(deepLink, { width: 320, margin: 2, errorCorrectionLevel: "H", color: { dark: "#12372a", light: "#fbf9f3" } }),
     expiresAt,
   };
 }

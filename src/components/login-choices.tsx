@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, fetchJson, isAbortError, jsonRequest } from "@/lib/client-api";
+import { WhatsAppIcon } from "./icons";
 import { useLanguage } from "./language-provider";
 
 type QrLogin = { challengeId: string; browserToken: string; deepLink: string; qrDataUrl: string; expiresAt: string };
@@ -77,5 +78,5 @@ export function LoginChoices() {
     setRestartKey((value) => value + 1);
   }
 
-  return <div className="qr-login">{qr ? <><div className="qr-frame"><Image src={qr.qrDataUrl} width={240} height={240} unoptimized alt={messages.qrAlt} /></div><ol><li>{messages.qrStep1}</li><li>{messages.qrStep2}</li><li>{messages.qrStep3}</li></ol><a className="button button-accent button-wide mobile-whatsapp" href={qr.deepLink}>{messages.loginWhatsapp}</a></> : <div className="qr-loading"><span /><p>{messages.qrLoading}</p></div>}{error && <div className="form-error">{error}</div>}{canRetry && <button className="button button-dark button-wide" type="button" onClick={restart}>{messages.qrRetry}</button>}</div>;
+  return <div className="qr-login">{qr ? <><div className="qr-frame"><Image src={qr.qrDataUrl} width={240} height={240} unoptimized alt={messages.qrAlt} /><span className="qr-whatsapp-mark" aria-hidden="true"><WhatsAppIcon /></span></div><ol><li>{messages.qrStep1}</li><li>{messages.qrStep2}</li><li>{messages.qrStep3}</li></ol><a className="button button-accent button-wide mobile-whatsapp" href={qr.deepLink}>{messages.loginWhatsapp}</a></> : <div className="qr-loading"><span /><p>{messages.qrLoading}</p></div>}{error && <div className="form-error">{error}</div>}{canRetry && <button className="button button-dark button-wide" type="button" onClick={restart}>{messages.qrRetry}</button>}</div>;
 }
