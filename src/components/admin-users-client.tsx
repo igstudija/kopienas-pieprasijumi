@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ExcelUserImport } from "@/components/excel-user-import";
+import { EditIcon, PauseIcon, PlayIcon, TrashIcon } from "@/components/icons";
 import { useLanguage } from "@/components/language-provider";
 import { PhoneInput } from "@/components/phone-input";
 import { adminCopy } from "@/lib/admin-i18n";
@@ -182,9 +183,9 @@ export function AdminUsersClient() {
               <div><small>{user.category ?? copy.usersNoCategory}</small></div>
               <span className={`status-pill ${user.status}`}>{roleLabel(user.role, copy)} · {statusLabel(user.status, copy)}</span>
               <div className="user-actions">
-                <button className="row-action" type="button" onClick={() => openEdit(user)} disabled={busy}>{copy.usersEdit}</button>
-                <button className="row-action" type="button" onClick={() => toggleStatus(user)} disabled={busy || protectedUser}>{user.status === "suspended" ? copy.activate : copy.deactivate}</button>
-                <button className="row-action row-action-danger" type="button" onClick={() => remove(user)} disabled={busy || protectedUser}>{copy.delete}</button>
+                <button className="row-action icon-action" type="button" onClick={() => openEdit(user)} disabled={busy} aria-label={copy.usersEdit} title={copy.usersEdit}><EditIcon /></button>
+                <button className="row-action icon-action" type="button" onClick={() => toggleStatus(user)} disabled={busy || protectedUser} aria-label={user.status === "suspended" ? copy.activate : copy.deactivate} title={user.status === "suspended" ? copy.activate : copy.deactivate}>{user.status === "suspended" ? <PlayIcon /> : <PauseIcon />}</button>
+                <button className="row-action row-action-danger icon-action" type="button" onClick={() => remove(user)} disabled={busy || protectedUser} aria-label={copy.delete} title={copy.delete}><TrashIcon /></button>
               </div>
             </div>
           );
