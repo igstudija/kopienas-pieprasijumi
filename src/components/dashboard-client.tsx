@@ -203,7 +203,7 @@ function MemberGroup({ group, currentUserId, deletingId, onDelete, onEdit, local
       <div className="member-summary-row">
         <div className="member-identity">
           <span className="avatar">{initials}</span>
-          <div className="member-meta"><div className="member-name-row"><strong>{group.authorName}</strong><span className="member-source-badge">{latest.sourceName}</span></div><span>{group.authorCompany}</span>{group.authorCategory && <small>{group.authorCategory}</small>}</div>
+          <div className="member-meta"><div className="member-name-row"><strong>{group.authorName}</strong>{latest.origin === "remote" && <span className="member-source-badge">{latest.sourceName}</span>}</div><span>{group.authorCompany}</span>{group.authorCategory && <small>{group.authorCategory}</small>}</div>
           {(contacts.email || contacts.whatsapp || contacts.phone) && <nav className="member-contact-actions" aria-label={messages.contactActions}>
             {contacts.email && <a href={contacts.email} aria-label={messages.contactEmail} title={messages.contactEmail}><Mail /></a>}
             {contacts.whatsapp && <a className="whatsapp-contact" href={contacts.whatsapp} target="_blank" rel="noreferrer" aria-label={messages.contactWhatsApp} title={messages.contactWhatsApp}><WhatsAppIcon /></a>}
