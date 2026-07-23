@@ -162,6 +162,7 @@ svg { width: 1.15em; height: 1.15em; }
 .email-login-form { margin-top: 30px; display: grid; gap: 12px; }
 .email-login-form > label { font-size: 13px; font-weight: 800; }
 .email-login-form .form-error { margin: 0; }
+.email-login-development-note { color: var(--muted); font-size: 12px; line-height: 1.45; text-align: center; }
 .email-login-success { margin-top: 30px; padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: white; display: grid; gap: 10px; }
 .email-login-success > span { width: 38px; height: 38px; border-radius: 50%; background: var(--lime); display: grid; place-items: center; font-weight: 900; }
 .email-login-success h2 { margin: 0; font-size: 22px; }
