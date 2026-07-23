@@ -6,6 +6,7 @@
 - local and shared request content;
 - encrypted SMTP credentials;
 - session and one-time email-link secrets;
+- installation and deployment secrets;
 - the federation private key;
 - audit evidence.
 
@@ -20,6 +21,8 @@
 | Database disclosure | Challenge and session HMAC digests; AES-GCM encrypted SMTP credentials and phone numbers |
 | SMTP credential disclosure | Credentials are accepted only server-side, encrypted before database storage and never returned to the browser |
 | Session theft | HttpOnly, Secure and SameSite cookies with server-side revocation |
+| Preview deployment changes production data | Production and Preview database credentials are separated; operators are instructed not to expose the production database to unrestricted previews |
+| Code deploys before its schema migration | The Vercel production build applies committed migrations before the Next.js build when database credentials are present |
 | Reuse of a pairing code | 256-bit secrets, digest-only storage, expiry and single use |
 | Accidental two-way sharing | Every pairing code authorises one direction; the opposite direction needs the other installation's code |
 | Forged federation event | Ed25519 signature verification, explicit trusted peers and origin equality |
@@ -38,4 +41,5 @@ Before storing real member data:
 3. send a real SMTP test from the administration page;
 4. review retention, processor and privacy settings;
 5. verify backups and run a restore drill;
-6. keep owner email accounts protected with multi-factor authentication.
+6. keep owner email accounts protected with multi-factor authentication;
+7. keep Preview deployments isolated from the Production database.
