@@ -18,6 +18,7 @@ type AdminUser = {
   displayName: string;
   company: string;
   category?: string | null;
+  website?: string | null;
   email?: string | null;
   phone: string;
   role: "owner" | "admin" | "member";
@@ -81,7 +82,7 @@ export function AdminUsersClient() {
   const filteredUsers = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(locale);
     if (!needle) return users;
-    return users.filter((user) => [user.displayName, user.company, user.category, user.email, user.phone, roleLabel(user.role, copy), statusLabel(user.status, copy)].filter(Boolean).join(" ").toLocaleLowerCase(locale).includes(needle));
+    return users.filter((user) => [user.displayName, user.company, user.category, user.website, user.email, user.phone, roleLabel(user.role, copy), statusLabel(user.status, copy)].filter(Boolean).join(" ").toLocaleLowerCase(locale).includes(needle));
   }, [copy, locale, query, users]);
 
   function openCreate() {
@@ -203,6 +204,7 @@ export function AdminUsersClient() {
                 <div className="form-group"><label htmlFor="new-last-name">{copy.lastName}</label><input className="field" id="new-last-name" name="lastName" required /></div>
                 <div className="form-group"><label htmlFor="new-company">{copy.company}</label><input className="field" id="new-company" name="company" required /></div>
                 <div className="form-group"><label htmlFor="new-category">{copy.category}</label><input className="field" id="new-category" name="category" /></div>
+                <div className="form-group full"><label htmlFor="new-website">{copy.website}</label><input className="field" id="new-website" name="website" inputMode="url" autoComplete="url" placeholder="https://example.com" /></div>
                 <div className="form-group"><label htmlFor="new-phone">{copy.phone}</label><PhoneInput id="new-phone" name="phone" locale={locale} countryLabel={copy.phoneCountry} defaultCountry={phoneCountryFromLocale(locale)} required /></div>
                 <div className="form-group"><label htmlFor="new-email">{copy.emailRequired}</label><input className="field" id="new-email" name="email" type="email" required /></div>
                 <div className="form-group full"><label htmlFor="new-role">{copy.accessType}</label><select className="field" id="new-role" name="role" value={newRole} onChange={(event) => setNewRole(event.target.value)}><option value="member">{copy.roleMemberEmail}</option><option value="admin">{copy.roleAdminEmail}</option></select></div>
@@ -225,6 +227,7 @@ export function AdminUsersClient() {
                 <div className="form-group"><label htmlFor="edit-last-name">{copy.lastName}</label><input className="field" id="edit-last-name" name="lastName" defaultValue={editingUser.lastName} required /></div>
                 <div className="form-group"><label htmlFor="edit-company">{copy.company}</label><input className="field" id="edit-company" name="company" defaultValue={editingUser.company} required /></div>
                 <div className="form-group"><label htmlFor="edit-category">{copy.category}</label><input className="field" id="edit-category" name="category" defaultValue={editingUser.category ?? ""} /></div>
+                <div className="form-group full"><label htmlFor="edit-website">{copy.website}</label><input className="field" id="edit-website" name="website" inputMode="url" autoComplete="url" placeholder="https://example.com" defaultValue={editingUser.website ?? ""} /></div>
                 <div className="form-group"><label htmlFor="edit-email">{copy.email}</label><input className="field" id="edit-email" name="email" type="email" defaultValue={editingUser.email ?? ""} required /></div>
                 <div className="form-group"><label htmlFor="edit-phone">{copy.phone}</label><PhoneInput id="edit-phone" name="phone" locale={locale} countryLabel={copy.phoneCountry} defaultCountry={phoneCountryFromLocale(locale)} defaultValue={editingUser.phone} required /></div>
                 {actorRole === "owner" && editingUser.role !== "owner" && editingUser.id !== actorUserId && <div className="form-group full"><label htmlFor="edit-role">{copy.role}</label><select className="field" id="edit-role" name="role" value={editRole} onChange={(event) => setEditRole(event.target.value as "admin" | "member")}><option value="member">{copy.roleMember}</option><option value="admin">{copy.roleAdmin}</option></select></div>}

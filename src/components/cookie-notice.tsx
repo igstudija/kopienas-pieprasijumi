@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Cookie } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLanguage } from "./language-provider";
 
@@ -8,6 +9,7 @@ const STORAGE_KEY = "community_cookie_consent_v1";
 
 export function CookieNotice() {
   const { messages } = useLanguage();
+  const [ready, setReady] = useState(false);
   const [visible, setVisible] = useState(false);
   const [details, setDetails] = useState(false);
 
@@ -16,6 +18,7 @@ export function CookieNotice() {
       const saved = window.localStorage.getItem(STORAGE_KEY);
       if (!saved) setVisible(true);
       else try { JSON.parse(saved); } catch { setVisible(true); }
+      setReady(true);
     }, 0);
     function openSettings() { setDetails(true); setVisible(true); }
     window.addEventListener("community:open-cookie-settings", openSettings);
@@ -28,7 +31,8 @@ export function CookieNotice() {
     setDetails(false);
   }
 
-  if (!visible) return null;
+  if (!ready) return null;
+  if (!visible) return <button className="cookie-settings-trigger" type="button" aria-label={messages.cookieOpenSettings} title={messages.cookieOpenSettings} onClick={() => { setDetails(true); setVisible(true); }}><Cookie /></button>;
   return (
     <aside className={`cookie-notice ${details ? "cookie-details" : ""}`} role="region" aria-labelledby="cookie-title">
       <div className="cookie-copy"><strong id="cookie-title">{messages.cookieTitle}</strong><p>{messages.cookieText}</p><Link href="/privacy">{messages.cookieMore}</Link></div>

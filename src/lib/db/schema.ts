@@ -60,6 +60,7 @@ export const users = pgTable(
     displayName: varchar("display_name", { length: 160 }).notNull(),
     company: varchar("company", { length: 180 }).notNull(),
     category: varchar("category", { length: 180 }),
+    website: varchar("website", { length: 500 }),
     email: varchar("email", { length: 320 }).notNull(),
     phoneEncrypted: text("phone_encrypted").notNull(),
     phoneLookup: varchar("phone_lookup", { length: 64 }).notNull(),

@@ -35,6 +35,10 @@ svg { width: 1.15em; height: 1.15em; }
 .site-footer small { font-size: 12px; line-height: 1.5; letter-spacing: .01em; }
 .site-footer a { color: var(--ink); font-weight: 700; text-decoration: none; }
 .site-footer a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cookie-settings-trigger { position: fixed; z-index: 110; left: max(18px, env(safe-area-inset-left)); bottom: max(18px, env(safe-area-inset-bottom)); width: 48px; height: 48px; padding: 0; border: 1px solid rgba(255,255,255,.22); border-radius: 50%; background: var(--ink); color: white; box-shadow: 0 12px 32px rgba(0,48,73,.28); display: grid; place-items: center; cursor: pointer; }
+.cookie-settings-trigger:hover { background: var(--blue-deep); }
+.cookie-settings-trigger:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.cookie-settings-trigger svg { width: 22px; height: 22px; }
 .cookie-notice { position: fixed; z-index: 120; right: 24px; bottom: 24px; width: min(640px, calc(100% - 48px)); padding: 20px; border: 1px solid rgba(255,255,255,.22); border-radius: 18px; background: var(--ink); color: white; box-shadow: 0 24px 70px rgba(0,48,73,.32); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 18px 24px; }
 .cookie-notice.cookie-details { grid-template-columns: 1fr; }
 .cookie-notice strong { display: block; font-size: 16px; }
@@ -76,7 +80,7 @@ svg { width: 1.15em; height: 1.15em; }
 .brand { display: inline-flex; align-items: center; gap: 12px; font-size: 13px; line-height: 1.05; letter-spacing: -.02em; }
 .brand strong { font-size: 15px; }
 .brand-mark { width: 42px; height: 42px; border-radius: 14px; background: var(--ink); display: inline-flex; align-items: center; justify-content: center; gap: 3px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
-.brand-mark-icon { color: var(--lime); }
+.brand-mark-icon { color: white; }
 .brand-mark-icon svg { width: 24px; height: 24px; }
 .brand-mark i { display: block; width: 4px; height: 4px; border-radius: 50%; background: var(--lime); }
 
@@ -549,6 +553,7 @@ textarea.field { min-height: 150px; resize: vertical; }
 @media (max-width: 760px) {
   .wrap { width: min(100% - 28px, 1160px); }
   .site-footer { min-height: 64px; padding: 18px; }
+  .cookie-settings-trigger { left: max(12px, env(safe-area-inset-left)); bottom: max(12px, env(safe-area-inset-bottom)); }
   .cookie-notice { right: 12px; bottom: 12px; width: calc(100% - 24px); grid-template-columns: 1fr; gap: 14px; max-height: calc(100vh - 24px); overflow-y: auto; }
   .cookie-actions { align-items: stretch; flex-direction: column; }
   .cookie-actions .button { width: 100%; }

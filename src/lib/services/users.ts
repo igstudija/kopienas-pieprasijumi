@@ -1,6 +1,7 @@
 import "server-only";
 
 import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
+import { normalizeWebsiteUrl } from "@/lib/contact-links";
 import { getDb } from "@/lib/db";
 import { emailLoginChallenges, sessions, type User, users } from "@/lib/db/schema";
 import { decryptPhone, encryptPhone, normalizeEmail, normalizePhone, phoneLookup } from "@/lib/security";
@@ -12,6 +13,7 @@ export type NewUserInput = {
   lastName: string;
   company: string;
   category?: string | null;
+  website?: string | null;
   phone: string;
   email: string;
   role?: "owner" | "admin" | "member";
@@ -34,6 +36,7 @@ export type UpdateUserProfileInput = {
   lastName: string;
   company: string;
   category?: string | null;
+  website?: string | null;
   email: string;
   phone?: string | null;
   role?: "admin" | "member";
@@ -48,6 +51,7 @@ export async function listUsers() {
       displayName: users.displayName,
       company: users.company,
       category: users.category,
+      website: users.website,
       email: users.email,
       phoneEncrypted: users.phoneEncrypted,
       role: users.role,
@@ -73,6 +77,7 @@ export async function getOwnProfile(userId: string) {
     displayName: user.displayName,
     company: user.company,
     category: user.category,
+    website: user.website,
     email: user.email,
     phone: decryptPhone(user.phoneEncrypted),
     role: user.role,
@@ -87,6 +92,7 @@ export async function createUser(actor: User, input: NewUserInput, audit: AuditM
   const phone = normalizePhone(input.phone);
   const lookup = phoneLookup(phone);
   const email = normalizeEmail(input.email);
+  const website = websiteForStorage(input.website);
   const db = getDb();
   await assertContactAvailable(email, lookup);
 
@@ -99,6 +105,7 @@ export async function createUser(actor: User, input: NewUserInput, audit: AuditM
       displayName: `${input.firstName} ${input.lastName}`.trim(),
       company: input.company.trim(),
       category: input.category?.trim() || null,
+      website,
       email,
       phoneEncrypted: encryptPhone(phone),
       phoneLookup: lookup,
@@ -276,6 +283,7 @@ export async function updateUserProfile(actor: User, userId: string, input: Upda
   }
 
   const email = normalizeEmail(input.email);
+  const website = websiteForStorage(input.website);
   const phone = input.phone?.trim() ? normalizePhone(input.phone) : null;
   const lookup = phone ? phoneLookup(phone) : target.phoneLookup;
   if (email !== target.email.toLowerCase()) await assertEmailAvailable(email, userId);
@@ -291,6 +299,7 @@ export async function updateUserProfile(actor: User, userId: string, input: Upda
       displayName: `${input.firstName} ${input.lastName}`.trim(),
       company: input.company.trim(),
       category: input.category?.trim() || null,
+      website,
       email,
       ...(phone ? { phoneEncrypted: encryptPhone(phone), phoneLookup: lookup, phoneLast4: phone.slice(-4) } : {}),
       role: nextRole,
@@ -355,6 +364,7 @@ export async function deleteUser(actor: User, userId: string, audit: AuditMeta) 
       displayName: "Dzēsts lietotājs",
       company: "—",
       category: null,
+      website: null,
       email: `${userId}@deleted.invalid`,
       phoneEncrypted: encryptPhone(tombstone),
       phoneLookup: phoneLookup(tombstone),
@@ -378,6 +388,14 @@ export async function deleteUser(actor: User, userId: string, audit: AuditMeta) 
 
 async function assertContactAvailable(email: string, phone: string, exceptUserId?: string) {
   await Promise.all([assertEmailAvailable(email, exceptUserId), assertPhoneAvailable(phone, exceptUserId)]);
+}
+
+function websiteForStorage(value?: string | null) {
+  const raw = value?.trim();
+  if (!raw) return null;
+  const website = normalizeWebsiteUrl(raw);
+  if (!website) throw new HttpError(400, "Mājaslapas adrese nav derīga.");
+  return website;
 }
 
 async function assertEmailAvailable(email: string, exceptUserId?: string) {
