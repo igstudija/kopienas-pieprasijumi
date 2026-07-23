@@ -21,6 +21,8 @@ Follow the complete [installation guide](./docs/INSTALLATION.md). It includes Su
 ## Product behavior
 
 - `/` is both the public email sign-in page and the authenticated request list.
+- `/help` is an authenticated operator center available only to administrators and owners.
+- `/help/install` is the public English first-run installation guide and remains available before the database is connected.
 - Every member, administrator and owner uses the same one-time email magic-link flow.
 - A sign-in link expires after 10 minutes, works once and is stored only as an HMAC digest.
 - The role controls which administration links are visible; there is no separate administrator password login.

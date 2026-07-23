@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Brand } from "@/components/brand";
+import { AppNavigation } from "@/components/app-navigation";
 import { SetupWizard } from "@/components/setup-wizard";
 import { installationStatus } from "@/lib/services/installation";
 
@@ -11,7 +11,7 @@ export default async function SetupPage() {
 
   return (
     <main className="setup-shell">
-      <header className="setup-header"><Brand /><span>Independent instance installation</span></header>
+      <AppNavigation title="Installation setup" installationMode />
       <SetupWizard initialStatus={status} />
     </main>
   );

@@ -121,6 +121,7 @@ Installation help, GitHub content, developer documentation, identifiers and code
 
 Verify:
 
+- every route-level header/navigation is composed through `AppHeader`, normally via `AppNavigation`; route files must not introduce their own shell `<nav>` or header CSS;
 - mobile-first layout without horizontal page scrolling;
 - keyboard access and visible focus;
 - accessible names for icon-only controls;

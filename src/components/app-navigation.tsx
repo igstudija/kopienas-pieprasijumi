@@ -11,10 +11,12 @@ import { LogoutButton } from "./logout-button";
 
 type NavigationUser = { displayName: string; company: string; initials: string };
 
-export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/" }: {
+export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/", title, installationMode = false }: {
   user?: NavigationUser;
   showAdmin?: boolean;
   logoutRedirect?: string;
+  title?: string;
+  installationMode?: boolean;
 }) {
   const { locale, messages } = useLanguage();
   const pathname = usePathname();
@@ -25,14 +27,20 @@ export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/" }:
     { href: "/admin/email", label: adminMessages.usersEmail, active: pathname.startsWith("/admin/email") },
     { href: "/admin/legal", label: adminMessages.legalTitle, active: pathname.startsWith("/admin/legal") },
     { href: "/admin/settings", label: adminMessages.usersSettings, active: pathname.startsWith("/admin/settings") },
+    { href: "/help", label: adminMessages.usersHelp, active: pathname === "/help" },
   ];
-  const informationLinks = [
-    { href: "/par-risinajumu", label: messages.impressum, active: pathname.startsWith("/par-risinajumu") },
-    { href: "/privacy", label: messages.privacy, active: pathname.startsWith("/privacy") },
-  ];
+  const informationLinks = installationMode
+    ? [
+        { href: "/setup", label: "Installation setup", active: pathname === "/setup" },
+        { href: "/help/install", label: "Installation help", active: pathname.startsWith("/help/install") },
+      ]
+    : [
+        { href: "/par-risinajumu", label: messages.impressum, active: pathname.startsWith("/par-risinajumu") },
+        { href: "/privacy", label: messages.privacy, active: pathname.startsWith("/privacy") },
+      ];
   const dashboardTitle = `${messages.dashboardTitleFirst} ${messages.dashboardTitleSecond}`.replace(/\.$/, "");
   const profileTitle = `${messages.profileTitleFirst} ${messages.profileTitleSecond}`.replace(/\.$/, "");
-  const sectionTitle = !user && (pathname === "/" || pathname.startsWith("/admin")) ? `${messages.brandFirst} ${messages.brandSecond}`
+  const sectionTitle = title ?? (!user && (pathname === "/" || pathname.startsWith("/admin")) ? `${messages.brandFirst} ${messages.brandSecond}`
     : pathname.startsWith("/privacy") ? legalCopy[locale].privacy.eyebrow
     : pathname.startsWith("/par-risinajumu") ? legalCopy[locale].impressum.title.replace(/\.$/, "")
       : pathname === "/" ? dashboardTitle
@@ -42,7 +50,8 @@ export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/" }:
               : pathname.startsWith("/admin/email") ? adminMessages.usersEmail
                 : pathname.startsWith("/admin/legal") ? adminMessages.legalTitle
                   : pathname.startsWith("/admin/settings") ? adminMessages.usersSettings
-                  : messages.navRequests;
+                    : pathname === "/help" ? adminMessages.usersHelp
+                  : messages.navRequests);
 
   return <AppHeader title={sectionTitle} homeHref="/">{(closeMenu) => <>
         <div className="mobile-nav-links">

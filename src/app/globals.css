@@ -468,6 +468,14 @@ textarea.field { min-height: 150px; resize: vertical; }
 .data-card-heading { padding: 22px 22px 0; display: grid; gap: 7px; }
 .data-card-heading h2 { margin: 0; font-size: 22px; }
 .data-card-heading p, .email-help-card > p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.admin-help-page { display: grid; gap: 24px; }
+.admin-help-intro { max-width: 760px; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.65; }
+.admin-help-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.admin-help-card > div { min-height: 180px; padding: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+.admin-help-card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+.admin-help-card a { margin-top: auto; color: var(--accent-dark); font-size: 14px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.admin-help-links { margin-top: auto; display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.admin-help-links a { margin-top: 0; }
 .email-help-card { padding-bottom: 22px; }
 .email-help-card > p, .email-help-card > a { margin: 16px 22px 0; display: block; }
 .email-help-card > a { color: var(--accent-dark); font-size: 13px; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
@@ -487,8 +495,6 @@ textarea.field { min-height: 150px; resize: vertical; }
 .copy-field button { min-width: 44px; min-height: 40px; padding: 0 10px; border: 1px solid rgba(255,255,255,.24); border-radius: 8px; background: rgba(255,255,255,.1); color: white; font-size: 12px; font-weight: 750; cursor: pointer; }
 
 .setup-shell { flex: 1 0 auto; background: var(--paper); }
-.setup-header { width: min(1180px, calc(100% - 48px)); height: 82px; margin: 0 auto; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
-.setup-header > span { color: var(--muted); font-size: 14px; font-weight: 750; }
 .setup-layout { width: min(1120px, calc(100% - 48px)); margin: 0 auto; padding: 70px 0 100px; display: grid; grid-template-columns: .72fr 1.28fr; gap: 76px; align-items: start; }
 .setup-progress { position: sticky; top: 40px; }
 .setup-progress h1 { font-family: var(--font-serif), system-ui, sans-serif; font-size: clamp(48px, 5vw, 68px); font-weight: 520; line-height: .92; letter-spacing: -.05em; margin: 22px 0; }
@@ -526,8 +532,6 @@ textarea.field { min-height: 150px; resize: vertical; }
 .result-values button { min-width: 44px; min-height: 40px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: white; border-radius: 8px; padding: 7px 10px; cursor: pointer; font-size: 12px; }
 
 .help-page { flex: 1 0 auto; }
-.help-nav { width: min(1160px, calc(100% - 48px)); height: 82px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
-.help-nav > a { font-size: 14px; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
 .help-hero { width: min(960px, calc(100% - 48px)); margin: 0 auto; padding: 88px 0 78px; text-align: center; }
 .help-hero h1 { font-family: var(--font-serif), system-ui, sans-serif; font-size: clamp(52px, 7vw, 85px); line-height: .9; letter-spacing: -.06em; font-weight: 510; margin: 25px 0; }
 .help-hero > p { color: var(--muted); font-size: 16px; line-height: 1.7; max-width: 680px; margin: 0 auto 30px; }
@@ -692,9 +696,8 @@ textarea.field { min-height: 150px; resize: vertical; }
   .portal-code-section > header .code-marker { margin-left: 43px; }
   .portal-code-section > .button { width: 100%; }
   .email-admin-grid { grid-template-columns: 1fr; }
+  .admin-help-grid { grid-template-columns: 1fr; }
   .email-settings-card { position: static; }
-  .setup-header { width: calc(100% - 28px); }
-  .setup-header > span { display: none; }
   .setup-layout { width: min(100% - 24px, 680px); padding: 32px 0 60px; grid-template-columns: 1fr; gap: 28px; }
   .setup-progress { position: static; }
   .setup-progress h1 { font-size: 49px; }
@@ -703,7 +706,7 @@ textarea.field { min-height: 150px; resize: vertical; }
   .setup-card { min-height: 0; padding: 26px 20px; border-radius: 20px; }
   .setup-card h2 { font-size: 42px; }
   .setup-actions .button { min-height: 46px; padding-inline: 16px; font-size: 14px; }
-  .help-nav, .help-hero, .help-options { width: calc(100% - 28px); }
+  .help-hero, .help-options { width: calc(100% - 28px); }
   .help-hero { padding: 62px 0 55px; }
   .help-options { grid-template-columns: 1fr; margin-bottom: 60px; }
   .help-detail { grid-template-columns: 1fr; gap: 35px; padding: 65px 20px; }
