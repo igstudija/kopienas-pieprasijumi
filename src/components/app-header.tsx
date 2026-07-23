@@ -7,7 +7,7 @@ import { Brand } from "./brand";
 import { useLanguage } from "./language-provider";
 import { useModalDialog } from "@/lib/use-modal-dialog";
 
-export function AppHeader({ title, homeHref = "/app", drawerId = "mobile-navigation", children }: {
+export function AppHeader({ title, homeHref = "/", drawerId = "mobile-navigation", children }: {
   title: string;
   homeHref?: string;
   drawerId?: string;

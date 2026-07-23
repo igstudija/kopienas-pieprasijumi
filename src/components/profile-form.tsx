@@ -10,7 +10,7 @@ type Profile = {
   displayName: string;
   company: string;
   category: string | null;
-  email: string | null;
+  email: string;
   phone: string;
   role: "owner" | "admin" | "member";
 };
@@ -63,8 +63,8 @@ export function ProfileForm() {
         <div className="form-group"><label htmlFor="profile-last-name">{messages.lastName}</label><input className="field" id="profile-last-name" name="lastName" defaultValue={profile.lastName} required /></div>
         <div className="form-group"><label htmlFor="profile-company">{messages.company}</label><input className="field" id="profile-company" name="company" defaultValue={profile.company} required /></div>
         <div className="form-group"><label htmlFor="profile-category">{messages.category}</label><input className="field" id="profile-category" name="category" defaultValue={profile.category ?? ""} /></div>
-        <div className="form-group"><label htmlFor="profile-email">{messages.email}</label><input className="field" id="profile-email" name="email" type="email" defaultValue={profile.email ?? ""} /></div>
-        <div className="form-group"><label htmlFor="profile-phone">{messages.whatsappPhone}</label><input className="field" id="profile-phone" name="phone" type="tel" inputMode="tel" defaultValue={profile.phone} required /><small>{messages.phoneHelp}</small></div>
+        <div className="form-group"><label htmlFor="profile-email">{messages.email}</label><input className="field" id="profile-email" name="email" type="email" defaultValue={profile.email} required /></div>
+        <div className="form-group"><label htmlFor="profile-phone">{messages.phone}</label><input className="field" id="profile-phone" name="phone" type="tel" inputMode="tel" defaultValue={profile.phone} required /><small>{messages.phoneHelp}</small></div>
       </div>
       {error && <div className="form-error">{error}</div>}
       {notice && <div className="form-success">{notice}</div>}

@@ -1,11 +1,10 @@
 import "server-only";
 
-import { and, asc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { sessions, type User, users, whatsappLoginChallenges } from "@/lib/db/schema";
-import { decryptPhone, encryptPhone, normalizePhone, phoneLookup } from "@/lib/security";
+import { emailLoginChallenges, sessions, type User, users } from "@/lib/db/schema";
+import { decryptPhone, encryptPhone, normalizeEmail, normalizePhone, phoneLookup } from "@/lib/security";
 import { HttpError } from "@/lib/http";
-import { hashPassword } from "@/lib/password";
 import { writeAudit } from "./audit";
 
 export type NewUserInput = {
@@ -14,9 +13,8 @@ export type NewUserInput = {
   company: string;
   category?: string | null;
   phone: string;
-  email?: string | null;
+  email: string;
   role?: "owner" | "admin" | "member";
-  password?: string | null;
 };
 
 type AuditMeta = { ipAddress?: string | null; requestId?: string | null };
@@ -28,7 +26,7 @@ export type ImportUserInput = {
   company: string;
   category?: string | null;
   phone: string;
-  email?: string | null;
+  email: string;
 };
 
 export type UpdateUserProfileInput = {
@@ -36,10 +34,9 @@ export type UpdateUserProfileInput = {
   lastName: string;
   company: string;
   category?: string | null;
-  email?: string | null;
+  email: string;
   phone?: string | null;
   role?: "admin" | "member";
-  password?: string | null;
 };
 
 export async function listUsers() {
@@ -79,29 +76,29 @@ export async function getOwnProfile(userId: string) {
 }
 
 export async function createUser(actor: User, input: NewUserInput, audit: AuditMeta) {
-  if (actor.role === "member") throw new HttpError(403, "Nepietiekamas tiesības.");
+  assertAdministrator(actor);
   if (input.role === "owner" && actor.role !== "owner") throw new HttpError(403, "Tikai Owner var piešķirt Owner lomu.");
+
   const role = input.role ?? "member";
-  if (role !== "member" && (!input.password || input.password.length < 12)) {
-    throw new HttpError(400, "Administratoram jānorāda vismaz 12 rakstzīmju parole.");
-  }
   const phone = normalizePhone(input.phone);
-  const passwordHash = role === "member" ? null : await hashPassword(input.password!);
+  const lookup = phoneLookup(phone);
+  const email = normalizeEmail(input.email);
   const db = getDb();
+  await assertContactAvailable(email, lookup);
+
   const id = crypto.randomUUID();
   await db.transaction(async (tx) => {
     await tx.insert(users).values({
       id,
-      firstName: input.firstName,
-      lastName: input.lastName,
+      firstName: input.firstName.trim(),
+      lastName: input.lastName.trim(),
       displayName: `${input.firstName} ${input.lastName}`.trim(),
-      company: input.company,
-      category: input.category ?? null,
-      email: input.email ?? null,
+      company: input.company.trim(),
+      category: input.category?.trim() || null,
+      email,
       phoneEncrypted: encryptPhone(phone),
-      phoneLookup: phoneLookup(phone),
+      phoneLookup: lookup,
       phoneLast4: phone.slice(-4),
-      passwordHash,
       role,
       status: "active",
     });
@@ -124,13 +121,14 @@ export async function importUsers(actor: User, rows: ImportUserInput[], audit: A
 
   const errors: Array<{ row: number; message: string }> = [];
   const seenLookups = new Set<string>();
+  const seenEmails = new Set<string>();
   const candidates: Array<{
     rowNumber: number;
     firstName: string;
     lastName: string;
     company: string;
     category: string | null;
-    email: string | null;
+    email: string;
     phone: string;
     lookup: string;
   }> = [];
@@ -140,7 +138,6 @@ export async function importUsers(actor: User, rows: ImportUserInput[], audit: A
     const lastName = row.lastName.trim();
     const company = row.company.trim();
     const category = row.category?.trim() || null;
-    const email = row.email?.trim().toLowerCase() || null;
     if (firstName.length < 2) { errors.push({ row: row.rowNumber, message: "Nav norādīts korekts vārds." }); continue; }
     if (lastName.length < 2) { errors.push({ row: row.rowNumber, message: "Nav norādīts korekts uzvārds." }); continue; }
     if (company.length < 2) { errors.push({ row: row.rowNumber, message: "Nav norādīts uzņēmums." }); continue; }
@@ -148,11 +145,15 @@ export async function importUsers(actor: User, rows: ImportUserInput[], audit: A
       errors.push({ row: row.rowNumber, message: "Kāds teksta lauks ir pārāk garš." });
       continue;
     }
-    if (email && (email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+
+    let email: string;
+    let phone: string;
+    try {
+      email = normalizeEmail(row.email);
+    } catch {
       errors.push({ row: row.rowNumber, message: "E-pasta adrese nav korekta." });
       continue;
     }
-    let phone: string;
     try {
       phone = normalizePhone(row.phone);
     } catch {
@@ -164,22 +165,37 @@ export async function importUsers(actor: User, rows: ImportUserInput[], audit: A
       errors.push({ row: row.rowNumber, message: "Šis tālruņa numurs failā atkārtojas." });
       continue;
     }
+    if (seenEmails.has(email)) {
+      errors.push({ row: row.rowNumber, message: "Šī e-pasta adrese failā atkārtojas." });
+      continue;
+    }
     seenLookups.add(lookup);
+    seenEmails.add(email);
     candidates.push({ rowNumber: row.rowNumber, firstName, lastName, company, category, email, phone, lookup });
   }
 
-  const existingRows = candidates.length
-    ? await getDb().select({ phoneLookup: users.phoneLookup }).from(users).where(inArray(users.phoneLookup, candidates.map((row) => row.lookup)))
+  const db = getDb();
+  const existingPhones = candidates.length
+    ? await db.select({ phoneLookup: users.phoneLookup }).from(users).where(inArray(users.phoneLookup, candidates.map((row) => row.lookup)))
     : [];
-  const existingLookups = new Set(existingRows.map((row) => row.phoneLookup));
+  const existingEmails = candidates.length
+    ? await db.select({ email: users.email }).from(users).where(ne(users.status, "archived"))
+    : [];
+  const phoneSet = new Set(existingPhones.map((row) => row.phoneLookup));
+  const emailSet = new Set(existingEmails.map((row) => row.email.toLowerCase()));
   const importable = candidates.filter((row) => {
-    if (!existingLookups.has(row.lookup)) return true;
-    errors.push({ row: row.rowNumber, message: "Biedrs ar šo tālruņa numuru jau eksistē." });
-    return false;
+    if (phoneSet.has(row.lookup)) {
+      errors.push({ row: row.rowNumber, message: "Biedrs ar šo tālruņa numuru jau eksistē." });
+      return false;
+    }
+    if (emailSet.has(row.email)) {
+      errors.push({ row: row.rowNumber, message: "Biedrs ar šo e-pasta adresi jau eksistē." });
+      return false;
+    }
+    return true;
   });
 
   if (importable.length) {
-    const db = getDb();
     await db.transaction(async (tx) => {
       await tx.insert(users).values(importable.map((row) => ({
         id: crypto.randomUUID(),
@@ -192,7 +208,6 @@ export async function importUsers(actor: User, rows: ImportUserInput[], audit: A
         phoneEncrypted: encryptPhone(row.phone),
         phoneLookup: row.lookup,
         phoneLast4: row.phone.slice(-4),
-        passwordHash: null,
         role: "member" as const,
         status: "active" as const,
       })));
@@ -217,12 +232,7 @@ export async function updateUserPhone(actor: User, userId: string, inputPhone: s
   assertManageableTarget(actor, target);
   const phone = normalizePhone(inputPhone);
   const lookup = phoneLookup(phone);
-  const [conflict] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(and(eq(users.phoneLookup, lookup), ne(users.id, userId)))
-    .limit(1);
-  if (conflict) throw new HttpError(409, "Šis tālruņa numurs jau ir reģistrēts citam lietotājam.");
+  await assertPhoneAvailable(lookup, userId);
 
   await db.transaction(async (tx) => {
     await tx.update(users).set({
@@ -231,9 +241,6 @@ export async function updateUserPhone(actor: User, userId: string, inputPhone: s
       phoneLast4: phone.slice(-4),
       updatedAt: new Date(),
     }).where(eq(users.id, userId));
-    if (actor.id !== userId) {
-      await tx.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.userId, userId));
-    }
     await writeAudit(tx, {
       actorUserId: actor.id,
       action: "user.phone_updated",
@@ -263,24 +270,15 @@ export async function updateUserProfile(actor: User, userId: string, input: Upda
     if (actor.role !== "owner") throw new HttpError(403, "Tikai Owner var mainīt administratoru lomas.");
     if (target.role === "owner") throw new HttpError(400, "Owner lomu mainīt nevar.");
   }
-  if (input.password && input.password.length < 12) throw new HttpError(400, "Parolei jābūt vismaz 12 rakstzīmes garai.");
-  if (nextRole === "admin" && !target.passwordHash && !input.password) {
-    throw new HttpError(400, "Jaunam administratoram jānorāda vismaz 12 rakstzīmju parole.");
-  }
 
+  const email = normalizeEmail(input.email);
   const phone = input.phone?.trim() ? normalizePhone(input.phone) : null;
-  const lookup = phone ? phoneLookup(phone) : null;
-  if (lookup && lookup !== target.phoneLookup) {
-    const [conflict] = await db.select({ id: users.id }).from(users).where(and(eq(users.phoneLookup, lookup), ne(users.id, userId))).limit(1);
-    if (conflict) throw new HttpError(409, "Šis tālruņa numurs jau ir reģistrēts citam lietotājam.");
-  }
+  const lookup = phone ? phoneLookup(phone) : target.phoneLookup;
+  if (email !== target.email.toLowerCase()) await assertEmailAvailable(email, userId);
+  if (lookup !== target.phoneLookup) await assertPhoneAvailable(lookup, userId);
 
-  const passwordHash = nextRole === "member"
-    ? null
-    : input.password
-      ? await hashPassword(input.password)
-      : target.passwordHash;
-  const phoneChanged = Boolean(phone && lookup !== target.phoneLookup);
+  const emailChanged = email !== target.email.toLowerCase();
+  const phoneChanged = lookup !== target.phoneLookup;
   const roleChanged = nextRole !== target.role;
   await db.transaction(async (tx) => {
     await tx.update(users).set({
@@ -289,33 +287,28 @@ export async function updateUserProfile(actor: User, userId: string, input: Upda
       displayName: `${input.firstName} ${input.lastName}`.trim(),
       company: input.company.trim(),
       category: input.category?.trim() || null,
-      email: input.email?.trim().toLowerCase() || null,
-      ...(phone ? { phoneEncrypted: encryptPhone(phone), phoneLookup: lookup!, phoneLast4: phone.slice(-4) } : {}),
+      email,
+      ...(phone ? { phoneEncrypted: encryptPhone(phone), phoneLookup: lookup, phoneLast4: phone.slice(-4) } : {}),
       role: nextRole,
-      passwordHash,
       updatedAt: new Date(),
     }).where(eq(users.id, userId));
-    if (!isSelf && (phoneChanged || roleChanged)) {
+    if (emailChanged || (!isSelf && roleChanged)) {
       await tx.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.userId, userId));
+      await tx.delete(emailLoginChallenges).where(eq(emailLoginChallenges.userId, userId));
     }
     await writeAudit(tx, {
       actorUserId: actor.id,
       action: isSelf ? "user.profile_updated" : "user.updated",
       objectType: "user",
       objectId: userId,
-      details: { phoneChanged, roleChanged, nextRole },
+      details: { emailChanged, phoneChanged, roleChanged, nextRole },
       ipAddress: audit.ipAddress,
       requestId: audit.requestId,
     });
   });
 }
 
-export async function setUserStatus(
-  actor: User,
-  userId: string,
-  status: "active" | "suspended",
-  audit: AuditMeta,
-) {
+export async function setUserStatus(actor: User, userId: string, status: "active" | "suspended", audit: AuditMeta) {
   assertAdministrator(actor);
   const db = getDb();
   const [target] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
@@ -327,6 +320,7 @@ export async function setUserStatus(
     await tx.update(users).set({ status, updatedAt: new Date() }).where(eq(users.id, userId));
     if (status === "suspended") {
       await tx.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.userId, userId));
+      await tx.delete(emailLoginChallenges).where(eq(emailLoginChallenges.userId, userId));
     }
     await writeAudit(tx, {
       actorUserId: actor.id,
@@ -350,18 +344,17 @@ export async function deleteUser(actor: User, userId: string, audit: AuditMeta) 
   const tombstone = `deleted:${userId}:${crypto.randomUUID()}`;
   await db.transaction(async (tx) => {
     await tx.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.userId, userId));
-    await tx.delete(whatsappLoginChallenges).where(eq(whatsappLoginChallenges.userId, userId));
+    await tx.delete(emailLoginChallenges).where(eq(emailLoginChallenges.userId, userId));
     await tx.update(users).set({
       firstName: "Dzēsts",
       lastName: "lietotājs",
       displayName: "Dzēsts lietotājs",
       company: "—",
       category: null,
-      email: null,
+      email: `${userId}@deleted.invalid`,
       phoneEncrypted: encryptPhone(tombstone),
       phoneLookup: phoneLookup(tombstone),
       phoneLast4: "----",
-      passwordHash: null,
       role: "member",
       status: "archived",
       lastLoginAt: null,
@@ -377,6 +370,24 @@ export async function deleteUser(actor: User, userId: string, audit: AuditMeta) 
       requestId: audit.requestId,
     });
   });
+}
+
+async function assertContactAvailable(email: string, phone: string, exceptUserId?: string) {
+  await Promise.all([assertEmailAvailable(email, exceptUserId), assertPhoneAvailable(phone, exceptUserId)]);
+}
+
+async function assertEmailAvailable(email: string, exceptUserId?: string) {
+  const conditions = [sql`lower(${users.email}) = ${email}`, ne(users.status, "archived")];
+  if (exceptUserId) conditions.push(ne(users.id, exceptUserId));
+  const [conflict] = await getDb().select({ id: users.id }).from(users).where(and(...conditions)).limit(1);
+  if (conflict) throw new HttpError(409, "Šī e-pasta adrese jau ir reģistrēta citam lietotājam.");
+}
+
+async function assertPhoneAvailable(lookup: string, exceptUserId?: string) {
+  const conditions = [eq(users.phoneLookup, lookup)];
+  if (exceptUserId) conditions.push(ne(users.id, exceptUserId));
+  const [conflict] = await getDb().select({ id: users.id }).from(users).where(and(...conditions)).limit(1);
+  if (conflict) throw new HttpError(409, "Šis tālruņa numurs jau ir reģistrēts citam lietotājam.");
 }
 
 function assertAdministrator(actor: User) {

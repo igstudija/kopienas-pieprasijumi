@@ -13,12 +13,14 @@ type SetupStatus = {
   error?: string;
 };
 
-type SetupResult = {
-  webhookUrl: string;
-  webhookVerifyToken: string;
-};
+type SetupResult = { instanceId: string; ownerId: string };
+type Provider = "brevo" | "mailjet" | "custom";
 
-const steps = ["System check", "Community", "WhatsApp", "Administrator", "Complete"];
+const steps = ["System check", "Community", "Email delivery", "Administrator", "Complete"];
+const presets: Record<Exclude<Provider, "custom">, { host: string; port: number }> = {
+  brevo: { host: "smtp-relay.brevo.com", port: 587 },
+  mailjet: { host: "in-v3.mailjet.com", port: 587 },
+};
 
 export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
   const [step, setStep] = useState(0);
@@ -30,30 +32,51 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
     instanceName: "",
     timezone: "Europe/Riga",
     locale: "lv",
-    whatsappBusinessNumber: "+371",
-    whatsappAppSecret: "",
+    provider: "brevo" as Provider,
+    smtpHost: presets.brevo.host,
+    smtpPort: String(presets.brevo.port),
+    smtpSecure: false,
+    smtpUsername: "",
+    smtpPassword: "",
+    fromAddress: "",
+    fromName: "",
     firstName: "",
     lastName: "",
     company: "",
     email: "",
     phone: "+371",
-    adminPassword: "",
-    adminPasswordConfirm: "",
   });
 
   const canContinue = useMemo(() => {
     if (step === 0) return initialStatus.databaseConnected && initialStatus.setupPasswordConfigured;
     if (step === 1) return form.instanceName.trim().length >= 2;
-    if (step === 2) return form.whatsappBusinessNumber.trim().length >= 8 && form.whatsappAppSecret.trim().length >= 8;
-    if (step === 3) return form.setupPassword.length >= 12
-      && form.adminPassword.length >= 12
-      && form.adminPassword === form.adminPasswordConfirm
-      && Boolean(form.firstName.trim() && form.lastName.trim() && form.company.trim() && form.phone.trim().length >= 8);
+    if (step === 2) {
+      const customReady = form.provider !== "custom" || (form.smtpHost.trim().length > 2 && Number(form.smtpPort) > 0);
+      return customReady && Boolean(form.smtpUsername.trim() && form.smtpPassword && form.fromAddress.trim() && form.fromName.trim());
+    }
+    if (step === 3) {
+      return form.setupPassword.length >= 12
+        && Boolean(form.firstName.trim() && form.lastName.trim() && form.company.trim() && form.email.trim() && form.phone.trim().length >= 8);
+    }
     return true;
   }, [form, initialStatus, step]);
 
-  function update(name: keyof typeof form, value: string) {
+  function update<Key extends keyof typeof form>(name: Key, value: (typeof form)[Key]) {
     setForm((current) => ({ ...current, [name]: value }));
+  }
+
+  function selectProvider(provider: Provider) {
+    if (provider === "custom") {
+      setForm((current) => ({ ...current, provider }));
+      return;
+    }
+    setForm((current) => ({
+      ...current,
+      provider,
+      smtpHost: presets[provider].host,
+      smtpPort: String(presets[provider].port),
+      smtpSecure: false,
+    }));
   }
 
   async function finish() {
@@ -61,20 +84,27 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
     setError("");
     try {
       const data = await fetchJson<SetupResult>("/api/v1/setup/complete", jsonRequest("POST", {
-          setupPassword: form.setupPassword,
-          instanceName: form.instanceName,
-          timezone: form.timezone,
-          locale: form.locale,
-          whatsappBusinessNumber: form.whatsappBusinessNumber,
-          whatsappAppSecret: form.whatsappAppSecret,
-          owner: {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            company: form.company,
-            email: form.email,
-            phone: form.phone,
-            password: form.adminPassword,
-          },
+        setupPassword: form.setupPassword,
+        instanceName: form.instanceName,
+        timezone: form.timezone,
+        locale: form.locale,
+        email: {
+          provider: form.provider,
+          host: form.smtpHost,
+          port: Number(form.smtpPort),
+          secure: form.smtpSecure,
+          username: form.smtpUsername,
+          password: form.smtpPassword,
+          fromAddress: form.fromAddress,
+          fromName: form.fromName,
+        },
+        owner: {
+          firstName: form.firstName,
+          lastName: form.lastName,
+          company: form.company,
+          email: form.email,
+          phone: form.phone,
+        },
       }));
       setResult(data);
       setStep(4);
@@ -83,10 +113,6 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
     } finally {
       setBusy(false);
     }
-  }
-
-  async function copy(value: string) {
-    await navigator.clipboard.writeText(value);
   }
 
   return (
@@ -105,7 +131,7 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
           <p>The wizard checks only the required infrastructure. Database credentials are never entered here.</p>
           <div className="check-list">
             <div className={initialStatus.databaseConnected ? "ok" : "bad"}><b>{initialStatus.databaseConnected ? "✓" : "!"}</b><span><strong>{initialStatus.databaseProvider} database</strong><small>{initialStatus.databaseConnected ? "Connection works" : initialStatus.error}</small></span></div>
-            <div className={initialStatus.setupPasswordConfigured ? "ok" : "bad"}><b>{initialStatus.setupPasswordConfigured ? "✓" : "!"}</b><span><strong>Installation secret</strong><small>{initialStatus.setupPasswordConfigured ? "SETUP_SECRET is stored in Vercel" : "Add SETUP_SECRET in Vercel and redeploy"}</small></span></div>
+            <div className={initialStatus.setupPasswordConfigured ? "ok" : "bad"}><b>{initialStatus.setupPasswordConfigured ? "✓" : "!"}</b><span><strong>Installation secret</strong><small>{initialStatus.setupPasswordConfigured ? "SETUP_SECRET is configured" : "Add SETUP_SECRET and redeploy"}</small></span></div>
             <div className="ok"><b>✓</b><span><strong>Public URL</strong><small>{initialStatus.detectedUrl}</small></span></div>
           </div>
           {!canContinue && <p className="setup-warning">Fix the issue shown above and reload this page. <Link href="/help/install">Open installation help</Link></p>}
@@ -114,7 +140,7 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
         {step === 1 && <>
           <span className="auth-step">2. Community information</span>
           <h2>Name your instance.</h2>
-          <p>This name will be visible to members and connected communities.</p>
+          <p>This name is visible to members and connected communities.</p>
           <div className="setup-fields">
             <label>Community name<input className="field" value={form.instanceName} onChange={(event) => update("instanceName", event.target.value)} placeholder="Riga Business Community" autoFocus /></label>
             <div className="form-grid"><label>Time zone<select className="field" value={form.timezone} onChange={(event) => update("timezone", event.target.value)}><option value="Europe/Riga">Europe/Riga</option><option value="Europe/Tallinn">Europe/Tallinn</option><option value="Europe/Vilnius">Europe/Vilnius</option></select></label><label>Default language<select className="field" value={form.locale} onChange={(event) => update("locale", event.target.value)}><option value="lv">Latviešu</option><option value="en">English</option><option value="lt">Lietuvių</option><option value="et">Eesti</option></select></label></div>
@@ -122,39 +148,36 @@ export function SetupWizard({ initialStatus }: { initialStatus: SetupStatus }) {
         </>}
 
         {step === 2 && <>
-          <span className="auth-step">3. WhatsApp connection</span>
-          <h2>Connect the community number.</h2>
-          <p>The number is used in the sign-in link. The Meta App Secret is encrypted before it is stored in this instance’s database.</p>
+          <span className="auth-step">3. Email delivery</span>
+          <h2>Connect an SMTP provider.</h2>
+          <p>Magic sign-in links are sent through your own Brevo, Mailjet or SMTP account. Credentials are encrypted before storage.</p>
           <div className="setup-fields">
-            <label>WhatsApp Business number<input className="field" value={form.whatsappBusinessNumber} onChange={(event) => update("whatsappBusinessNumber", event.target.value)} placeholder="+37120000000" inputMode="tel" /></label>
-            <label>Meta App Secret<input className="field" value={form.whatsappAppSecret} onChange={(event) => update("whatsappAppSecret", event.target.value)} type="password" autoComplete="off" /><small>Meta for Developers → App settings → Basic → App Secret</small></label>
+            <label>Provider<select className="field" value={form.provider} onChange={(event) => selectProvider(event.target.value as Provider)}><option value="brevo">Brevo</option><option value="mailjet">Mailjet</option><option value="custom">Custom SMTP</option></select></label>
+            {form.provider === "custom" && <div className="form-grid"><label>SMTP host<input className="field" value={form.smtpHost} onChange={(event) => update("smtpHost", event.target.value)} /></label><label>SMTP port<input className="field" type="number" min="1" max="65535" value={form.smtpPort} onChange={(event) => update("smtpPort", event.target.value)} /></label></div>}
+            {form.provider === "custom" && <label className="checkbox-row"><input type="checkbox" checked={form.smtpSecure} onChange={(event) => update("smtpSecure", event.target.checked)} /> Use implicit TLS (usually port 465)</label>}
+            <div className="form-grid"><label>SMTP username<input className="field" value={form.smtpUsername} onChange={(event) => update("smtpUsername", event.target.value)} autoComplete="off" /></label><label>SMTP password / API key<input className="field" value={form.smtpPassword} onChange={(event) => update("smtpPassword", event.target.value)} type="password" autoComplete="new-password" /></label></div>
+            <div className="form-grid"><label>Sender email<input className="field" value={form.fromAddress} onChange={(event) => update("fromAddress", event.target.value)} type="email" /></label><label>Sender name<input className="field" value={form.fromName} onChange={(event) => update("fromName", event.target.value)} /></label></div>
           </div>
-          <p className="setup-note">The wizard creates the webhook URL and verification token automatically in the final step.</p>
+          <p className="setup-note">The wizard sends a test email to the first administrator before saving the installation.</p>
         </>}
 
         {step === 3 && <>
           <span className="auth-step">4. First administrator</span>
           <h2>Create the owner account.</h2>
-          <p>This user has full permission to manage the instance and add other administrators.</p>
+          <p>The owner signs in with the same email magic link as every other member.</p>
           <div className="setup-fields">
             <div className="form-grid"><label>First name<input className="field" value={form.firstName} onChange={(event) => update("firstName", event.target.value)} /></label><label>Last name<input className="field" value={form.lastName} onChange={(event) => update("lastName", event.target.value)} /></label></div>
             <label>Company<input className="field" value={form.company} onChange={(event) => update("company", event.target.value)} /></label>
-            <div className="form-grid"><label>WhatsApp number<input className="field" value={form.phone} onChange={(event) => update("phone", event.target.value)} inputMode="tel" /></label><label>Email (optional)<input className="field" value={form.email} onChange={(event) => update("email", event.target.value)} type="email" /></label></div>
-            <div className="form-grid"><label>Admin password<input className="field" value={form.adminPassword} onChange={(event) => update("adminPassword", event.target.value)} type="password" minLength={12} maxLength={200} autoComplete="new-password" /><small>At least 12 characters. Only a password hash is stored.</small></label><label>Repeat admin password<input className="field" value={form.adminPasswordConfirm} onChange={(event) => update("adminPasswordConfirm", event.target.value)} type="password" minLength={12} maxLength={200} autoComplete="new-password" /><small>{form.adminPasswordConfirm && form.adminPassword !== form.adminPasswordConfirm ? "Passwords do not match." : "This password is only used for /admin sign-in."}</small></label></div>
-            <label>Installation secret<input className="field" value={form.setupPassword} onChange={(event) => update("setupPassword", event.target.value)} type="password" autoComplete="current-password" /><small>Enter the same 12+ character value selected for SETUP_SECRET during the Vercel deployment.</small></label>
+            <div className="form-grid"><label>Contact phone<input className="field" value={form.phone} onChange={(event) => update("phone", event.target.value)} inputMode="tel" /></label><label>Sign-in email<input className="field" value={form.email} onChange={(event) => update("email", event.target.value)} type="email" /></label></div>
+            <label>Installation secret<input className="field" value={form.setupPassword} onChange={(event) => update("setupPassword", event.target.value)} type="password" autoComplete="current-password" /><small>Enter the same 12+ character value selected for SETUP_SECRET during deployment.</small></label>
           </div>
         </>}
 
         {step === 4 && result && <>
           <span className="auth-step">Installation complete</span>
           <h2>Your instance is ready.</h2>
-          <p>Paste these two values into the Meta webhook settings and subscribe to the <b>messages</b> field.</p>
-          <div className="result-values">
-            <label>Callback URL<div><code>{result.webhookUrl}</code><button type="button" onClick={() => copy(result.webhookUrl)}>Copy</button></div></label>
-            <label>Verify token<div><code>{result.webhookVerifyToken}</code><button type="button" onClick={() => copy(result.webhookVerifyToken)}>Copy</button></div></label>
-          </div>
-          <div className="setup-warning">Keep the verify token in a safe place. It can be rotated later in the administration settings.</div>
-          <Link className="button button-accent button-wide" href="/admin">Open administration</Link>
+          <p>The SMTP connection was verified and the owner test email was sent. Open the system and request your first sign-in link.</p>
+          <Link className="button button-accent button-wide" href="/">Open the system</Link>
         </>}
 
         {error && <div className="form-error">{error}</div>}

@@ -1,168 +1,168 @@
-# Vercel + Supabase installation
+# Installation guide
 
-This procedure creates a fully independent installation. Existing installations continue operating in their owners' Vercel and Supabase accounts even if the original project maintainer stops providing any infrastructure.
+This application is not a central SaaS service. Every community runs an independent GitHub copy, Vercel project, Supabase database and SMTP account.
 
-## What the installation owner controls
+## Prepare before deployment
 
-- the GitHub repository copy;
-- the Vercel project and domain;
-- the Supabase organisation, project and PostgreSQL database;
-- all member and request data;
-- the Meta app and WhatsApp Business number;
-- the installation's federation private key.
+You need:
 
-## Option A — recommended Deploy button
+- a GitHub account;
+- a Vercel account;
+- a Supabase account;
+- a Brevo, Mailjet or other SMTP account;
+- a verified sender email or domain;
+- a unique installation secret of at least 12 characters.
 
-The distributor configures the public template URL in `NEXT_PUBLIC_TEMPLATE_REPOSITORY_URL`. The application's `/help/install` page then builds a Vercel Deploy URL that requests:
+For the simplest setup, use Brevo or Mailjet. Create a dedicated SMTP key instead of using the password for your normal provider account.
 
-- a GitHub repository copy;
-- the required `SETUP_SECRET` environment variable;
-- a Supabase Marketplace product;
-- default project and repository names.
+## Recommended: Vercel button and Supabase integration
 
-Installation steps:
+1. Open the **Deploy with Vercel** button in the repository README.
+2. Choose the GitHub account that will own the copied repository.
+3. Enter a unique `SETUP_SECRET`.
+4. Approve the Supabase Marketplace product.
+5. Select the Supabase plan and region.
+6. Wait for the build and database migrations to finish.
+7. Open the deployed URL. An empty installation opens `/setup`.
+8. Complete the wizard:
+   - community name, time zone and language;
+   - email provider and SMTP credentials;
+   - verified sender address and sender name;
+   - owner name, company, sign-in email and contact phone;
+   - the same `SETUP_SECRET` entered during deployment.
+9. The wizard sends a real SMTP test to the owner email before it saves the installation.
+10. Open `/`, enter the owner email and use the one-time link.
 
-1. Click **Start the recommended installation**.
-2. Sign in to Vercel and allow it to create the GitHub repository copy.
-3. Enter a unique value with at least 12 characters in `SETUP_SECRET`. This is not the Supabase password.
-4. Approve the Supabase product, plan and the nearest suitable European region.
-5. Click **Deploy**.
-6. When the deployment completes, open the new application URL.
-7. The empty installation redirects to `/setup` automatically.
-8. Enter the community, WhatsApp Business number, Meta App Secret, first administrator and a 12+ character administrator password.
-9. In the final step, copy the Meta webhook Callback URL and Verify token.
+Vercel stores the database credentials in Environment Variables. They are not entered into the web wizard.
 
-The Vercel build runs `pnpm db:migrate` before the Next.js build, so database tables are created automatically.
+## If the Supabase step is missing
 
-## Option B — add Supabase after deployment
+1. Deploy the GitHub copy to Vercel.
+2. Open the Vercel project and choose **Storage → Create Database → Supabase**.
+3. Create or connect a Supabase project.
+4. Add `SETUP_SECRET` under **Project Settings → Environment Variables**.
+5. Redeploy and open `/setup`.
 
-If the Supabase product is not shown in the Deploy screen:
+For an existing Supabase project, add its pooled connection string as `DATABASE_URL` or `POSTGRES_URL`.
 
-1. Finish creating the Vercel project from the GitHub copy.
-2. Open **Storage** in the Vercel project.
-3. Select **Create Database → Supabase → Install**.
-4. Choose the plan and region, create the resource and connect it to this Vercel project.
-5. Open **Project Settings → Environment Variables** and add `SETUP_SECRET`.
-6. Open **Deployments** and redeploy the latest deployment.
-7. Open the application and complete `/setup`.
+## SMTP provider values
 
-Connecting the Marketplace resource synchronises variables such as `POSTGRES_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` into the Vercel project. A resource added after a deployment requires a redeploy.
+### Brevo
 
-## Option C — existing Supabase project
+- Provider: `Brevo`
+- Host: `smtp-relay.brevo.com`
+- Port: `587`
+- Username: the SMTP login shown in Brevo
+- Password: a generated SMTP key
 
-1. Import your GitHub copy into Vercel.
-2. Under **Project Settings → Environment Variables**, add:
-   - `DATABASE_URL` or `POSTGRES_URL` — the pooled Supabase PostgreSQL connection string;
-   - `SUPABASE_SECRET_KEY` — a server-side secret that must never be exposed to the browser;
-   - `SETUP_SECRET` — your unique first-run installation secret.
-3. Make the values available to the Production environment.
-4. Redeploy.
-5. Open `/setup`.
+Verify the sender under Brevo sender and domain settings first.
 
-Never prefix `SUPABASE_SECRET_KEY`, `DATABASE_URL` or `POSTGRES_URL` with `NEXT_PUBLIC_`.
+### Mailjet
 
-## First-run wizard
+- Provider: `Mailjet`
+- Host: `in-v3.mailjet.com`
+- Port: `587`
+- Username: API Key
+- Password: Secret Key
 
-The wizard:
+Verify the sender or domain in Mailjet first.
 
-1. checks the database connection and `SETUP_SECRET`;
-2. stores the community name, language, time zone and public installation URL;
-3. encrypts the WhatsApp App Secret and creates an encrypted webhook Verify token;
-4. creates the first active user with the `owner` role;
-5. stores only the first administrator's scrypt password hash;
-6. generates an Ed25519 federation key pair and encrypts the private key.
+### Custom SMTP
 
-After an `instance_settings` record exists, public reinstallation is blocked. You may remove `SETUP_SECRET` from Vercel Environment Variables after setup, then redeploy.
-
-## Meta and WhatsApp preparation
-
-Before running the wizard, prepare:
-
-1. a Meta Business account;
-2. a Business-type Meta for Developers app with the WhatsApp product;
-3. a connected WhatsApp Business number;
-4. the app's **App Secret**.
-
-After the wizard:
-
-1. open the webhook settings in the Meta WhatsApp configuration;
-2. paste the Callback URL shown by the wizard;
-3. paste the Verify token;
-4. subscribe to the `messages` webhook field;
-5. open `/` and test the QR/deep-link authentication flow.
-
-The same instructions and current configuration status are available to administrators at `/admin/whatsapp`.
+Use the values supplied by the provider. Port `587` normally uses STARTTLS and leaves **Direct TLS/SSL** disabled. Port `465` normally uses direct TLS and enables that option.
 
 ## Where secrets are stored
 
-| Value | Storage location |
+| Value | Storage |
 | --- | --- |
-| PostgreSQL credentials | Vercel Environment Variables |
-| Supabase server secret | Vercel Environment Variables |
-| `SETUP_SECRET` | Vercel Environment Variables, only for first-run protection |
-| Administrator passwords | scrypt hashes only, in the instance database |
-| WhatsApp App Secret | encrypted in the instance database |
-| WhatsApp Verify token | encrypted in the instance database |
-| Federation private key | encrypted in the instance database |
-| Community data and users | the instance's Supabase database |
+| Database credentials | Vercel Environment Variables |
+| `SETUP_SECRET` | Vercel Environment Variables |
+| SMTP username and password | AES-GCM encrypted in the installation database |
+| Federation private key | AES-GCM encrypted in the installation database |
+| Member phone | AES-GCM encrypted in the installation database |
+| Magic-link token | only an HMAC digest in the database |
+| Session token | only an HMAC digest in the database and an HttpOnly cookie in the browser |
 
-The encryption key is derived from `INSTANCE_MASTER_KEY` when configured. Otherwise, the application derives it from a server-side Supabase/Vercel database credential. If credential rotation is planned, configure a stable `INSTANCE_MASTER_KEY` before storing encrypted data. Do not change it later without a key migration.
+The administration API returns only whether SMTP credentials are configured; it never returns the credentials themselves.
+
+## Optional SMTP environment fallback
+
+Existing installations can configure SMTP before the first email login by adding:
+
+```text
+SMTP_PROVIDER=brevo
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USERNAME=...
+SMTP_PASSWORD=...
+SMTP_FROM_EMAIL=...
+SMTP_FROM_NAME=Specific requests
+```
+
+The administrator email page can later save the credentials encrypted in the database. Database values take precedence over environment fallback values.
+
+## Upgrade from the former phone-based authentication
+
+The upgrade removes the old application route, QR/webhook endpoints and administrator-password endpoint.
+
+Before deploying:
+
+1. make sure every active user has a unique email address;
+2. configure the `SMTP_*` fallback values above, or keep an existing administrator session active and configure SMTP immediately after deployment;
+3. apply the new database migration;
+4. send a test email from **Administration → Email and authentication**;
+5. verify that `/` sends and accepts a one-time link.
+
+The authenticated request list is always at `/`. There is no `/app` compatibility redirect.
 
 ## Local development
 
-Requirements: Node.js 22+, pnpm 10+ and Docker or a compatible runtime such as OrbStack.
+Requirements:
+
+- Node.js `24.16.0`;
+- pnpm `10.20.0`;
+- OrbStack, Docker Desktop or another Docker-compatible runtime.
 
 ```bash
 cp .env.example .env
 docker compose up -d db
-pnpm install
-pnpm db:migrate
-pnpm db:seed
-pnpm dev
+corepack pnpm install
+corepack pnpm db:migrate
+corepack pnpm db:seed
+corepack pnpm dev
 ```
 
-Open `http://localhost:3020`. See the local credential notes in the root [README](../README.md).
+The seed creates or updates the owner identified by `SEED_OWNER_EMAIL`. For real magic-link delivery, configure SMTP in the setup wizard or the `SMTP_*` variables.
 
 ## Troubleshooting
 
-### The wizard says that the database is not connected
+### The email is not received
 
-- Confirm that the Supabase resource is connected to this exact Vercel project.
-- Confirm that `POSTGRES_URL`, `POSTGRES_PRISMA_URL` or `DATABASE_URL` exists.
-- Redeploy after connecting the integration.
+- Check the Spam/Junk folder.
+- Verify the sender or domain at the provider.
+- Confirm that the SMTP username and dedicated key are correct.
+- Send a test from the administrator email page.
+- Check SPF, DKIM and DMARC.
+- Keep the public start response generic; use server logs and audit records for delivery diagnosis.
 
-### The wizard says that the installation secret is missing
+### The link is invalid
 
-- Add `SETUP_SECRET` under **Project Settings → Environment Variables** for the Production environment.
-- Redeploy.
+- Links expire after 10 minutes and can be used once.
+- Request a new link from `/`.
+- Make sure the application base URL matches the deployed HTTPS domain.
 
-### The build fails during migrations
+### Database migration fails on email
 
-- Verify the database connection string.
-- Use the pooled Supabase connection string in a serverless environment.
-- Confirm that the database user may create tables and enum types.
-
-### WhatsApp webhook verification fails
-
-- Use the exact Callback URL shown by the wizard or `/admin/whatsapp`.
-- The Verify token is case-sensitive.
-- The App Secret configured in the installation must belong to the same Meta app.
-- Subscribe the WhatsApp Business Account to the `messages` field.
-
-### An administrator cannot sign in at `/admin`
-
-- Use the full phone number registered in the administrator profile, including the country code.
-- Password login works only for active `owner` and `admin` roles; members use WhatsApp.
-- Five failed attempts block the same phone/IP combination for 15 minutes.
-- For a seeded local installation, check `SEED_OWNER_PHONE` and `SEED_OWNER_PASSWORD` in `.env`.
+The migration backfills missing legacy emails with unique `@migration.invalid` placeholders before making the column required. Replace every placeholder in the administrator member editor before inviting those users.
 
 ## Production checklist
 
-- use HTTPS and a verified public domain;
-- use unique production secrets and a stable `INSTANCE_MASTER_KEY`;
-- verify Meta webhook signatures and a real WhatsApp login;
-- set the legal entity and privacy contact in `/admin`;
-- review the default privacy notice for the operator's actual processing;
-- define backup, restore, incident-response and retention procedures;
-- run `pnpm check` and `pnpm audit --audit-level high`;
-- consider WebAuthn or another second factor for Owner/Admin accounts.
+- HTTPS is active.
+- Every secret differs between installations.
+- Every active user has a unique reachable email.
+- Sender SPF and DKIM pass.
+- SMTP test succeeds.
+- Supabase backups and restore process are verified.
+- Legal entity and privacy settings are completed.
+- `corepack pnpm check` and `corepack pnpm audit --audit-level high` pass.

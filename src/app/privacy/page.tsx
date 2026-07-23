@@ -24,7 +24,7 @@ export default async function PrivacyPage() {
         <LegalSection title={copy.privacy.dataText ? copy.privacy.data : ""} text={copy.privacy.dataText} />
         <LegalSection title={copy.privacy.purposes} text={copy.privacy.purposesText} />
         <LegalSection title={copy.privacy.access} text={copy.privacy.accessText} />
-        <LegalSection title={copy.privacy.whatsapp} text={copy.privacy.whatsappText} />
+        <LegalSection title={copy.privacy.authentication} text={copy.privacy.authenticationText} />
         <section><h2>{copy.privacy.cookies}</h2><p>{copy.privacy.cookiesText}</p><ul><li>{copy.privacy.cookieSession}</li><li>{copy.privacy.cookieLocale}</li><li>{copy.privacy.localStorage}</li></ul><p className="legal-note">{copy.privacy.noAnalytics}</p></section>
         <LegalSection title={copy.privacy.retention} text={copy.privacy.retentionText(settings.dataRetentionMonths)} />
         <LegalSection title={copy.privacy.providers} text={copy.privacy.providersText} />

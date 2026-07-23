@@ -3,7 +3,7 @@
 ## Product invariants
 
 - This is a self-hosted, independent installation. Do not introduce a central SaaS database, shared authentication service, or dependency on the template owner.
-- Members authenticate through the WhatsApp QR/deep-link flow. Active Owner/Admin users may additionally authenticate with phone and password at `/admin`.
+- Every active user authenticates through the same email magic-link flow on `/`. After authentication the request list replaces the login view at the same `/` route. Administrator-only pages are exposed only through the authenticated navigation; there is no separate administrator login method or legacy application route.
 - Federation is direct and one-way per accepted code. Never relay data received from one peer to another peer.
 - A request leaves its home installation only when its author explicitly selects a sharing scope.
 - Product UI supports `lv`, `en`, `lt`, and `et`. Installation help, developer documentation, identifiers, and code comments are English.
@@ -31,7 +31,7 @@
 - Make the smallest complete change that preserves existing behavior. Inspect adjacent code, schema, migrations, tests, and documentation first.
 - Keep route handlers thin: validate input with Zod, authenticate/authorize, call a service, and normalize errors.
 - State-changing browser routes must call `assertSameOrigin`. Webhooks and federation routes must use their protocol signatures instead.
-- Never expose database credentials, encryption keys, WhatsApp secrets, pairing secrets, password material, full phone numbers, or session tokens to the client or logs.
+- Never expose database credentials, encryption keys, SMTP credentials, magic-link tokens, pairing secrets, full phone numbers, or session tokens to the client or logs.
 - Do not trust an endpoint embedded in a federation code until HTTPS, canonical path, DNS, and resolved IP checks pass. Do not follow redirects.
 - Bind every signed federation event to the authenticated peer identity and preserve replay/idempotency checks.
 - Use `fetchJson` for browser API calls. Abort load requests on unmount and show a user-visible failure state.

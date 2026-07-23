@@ -12,7 +12,7 @@ const importSchema = z.object({
     company: z.string().max(500),
     category: z.string().max(500).optional().nullable(),
     phone: z.string().max(100),
-    email: z.string().max(500).optional().nullable(),
+    email: z.string().max(500),
   })).min(1).max(500),
 });
 

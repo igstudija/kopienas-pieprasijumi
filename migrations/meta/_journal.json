@@ -50,6 +50,13 @@
       "when": 1784754250079,
       "tag": "0006_nervous_dagger",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784777756074,
+      "tag": "0007_email-magic-link-auth",
+      "breakpoints": true
     }
   ]
 }

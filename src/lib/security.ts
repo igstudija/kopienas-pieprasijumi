@@ -4,8 +4,16 @@ import { appSecret, encryptionKey, phoneLookupSecret } from "./env";
 
 export function normalizePhone(input: string) {
   const phone = parsePhoneNumberFromString(input.trim(), "LV");
-  if (!phone?.isValid()) throw new Error("Ievadi derīgu WhatsApp tālruņa numuru.");
+  if (!phone?.isValid()) throw new Error("Ievadi derīgu tālruņa numuru.");
   return phone.number;
+}
+
+export function normalizeEmail(input: string) {
+  const email = input.trim().toLowerCase();
+  if (email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("Ievadi derīgu e-pasta adresi.");
+  }
+  return email;
 }
 
 export function phoneLookup(phoneE164: string) {
@@ -56,12 +64,12 @@ export function inviteDigest(secret: string) {
   return hmac(appSecret(), `invite:${secret}`);
 }
 
-export function whatsappMessageTokenDigest(token: string) {
-  return hmac(appSecret(), `whatsapp-message:${token}`);
+export function emailLoginTokenDigest(token: string) {
+  return hmac(appSecret(), `email-login:${token}`);
 }
 
-export function whatsappBrowserTokenDigest(token: string) {
-  return hmac(appSecret(), `whatsapp-browser:${token}`);
+export function emailLoginAddressDigest(email: string) {
+  return hmac(appSecret(), `email-login-address:${normalizeEmail(email)}`);
 }
 
 export function safeEqualHex(left: string, right: string) {

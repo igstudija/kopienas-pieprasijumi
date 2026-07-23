@@ -49,7 +49,7 @@ export function RequestForm({ request, onSaved, onCancel }: {
       await fetchJson(url, jsonRequest(request ? "PATCH" : "POST", body));
       if (onSaved) await onSaved();
       else {
-        router.push("/app");
+        router.push("/");
         router.refresh();
       }
     } catch (cause) {
@@ -101,7 +101,7 @@ export function RequestForm({ request, onSaved, onCancel }: {
         </button>
         {onCancel
           ? <button className="button button-ghost" type="button" onClick={onCancel} disabled={loading}>{messages.cancel}</button>
-          : <Link className="button button-ghost" href="/app">{messages.cancel}</Link>}
+          : <Link className="button button-ghost" href="/">{messages.cancel}</Link>}
       </div>
     </form>
   );

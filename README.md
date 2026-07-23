@@ -1,107 +1,79 @@
 # Specific Requests
 
-A self-hosted PWA for private business communities. Members publish precise business-introduction requests, while independent installations can exchange only the entries that their authors explicitly share.
+A self-hosted PWA for private business communities. Members publish precise introduction requests, while independent installations exchange only the entries their authors explicitly share.
 
-Each community owns its GitHub copy, Vercel project and Supabase database. There is no central SaaS database or shared authentication server.
+Each community owns its GitHub copy, Vercel project, Supabase database and email provider account. There is no central SaaS database or shared authentication server.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Figstudija%2Fkopienas-pieprasijumi&project-name=kopienas-pieprasijumi&repository-name=kopienas-pieprasijumi&env=SETUP_SECRET&envDescription=Choose+a+unique+installation+secret+with+at+least+12+characters.+It+is+used+only+by+the+first-run+wizard.&envLink=https%3A%2F%2Fgithub.com%2Figstudija%2Fkopienas-pieprasijumi%2Fblob%2Fmain%2Fdocs%2FINSTALLATION.md&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22supabase%22%2C%22productSlug%22%3A%22supabase%22%7D%5D)
 
-## Recommended installation
+## Installation
 
-The complete Vercel + Supabase flow, alternatives and troubleshooting are in [the installation guide](./docs/INSTALLATION.md).
+The complete Vercel + Supabase flow, SMTP preparation, upgrade notes and troubleshooting are in [docs/INSTALLATION.md](./docs/INSTALLATION.md).
 
 In short:
 
-1. open the **Deploy with Vercel** link;
-2. choose a unique `SETUP_SECRET` with at least 12 characters;
-3. approve the Supabase Marketplace product and plan;
-4. let Vercel run migrations and deploy the application;
-5. open the application and complete `/setup`.
+1. deploy your own GitHub copy to Vercel;
+2. choose a unique `SETUP_SECRET`;
+3. connect a new or existing Supabase project;
+4. let Vercel apply database migrations;
+5. open `/setup` and connect Brevo, Mailjet or custom SMTP;
+6. create the first owner and verify the SMTP test email.
 
-Database credentials remain in Vercel Environment Variables and are never entered into the application wizard.
+Database credentials remain in Vercel Environment Variables. SMTP credentials are encrypted before storage in the installation database.
 
-## Authentication
+## Authentication and routes
 
-- Members sign in only through WhatsApp.
-- A desktop browser displays a short-lived QR code.
-- A phone displays the same flow as a **Log in with WhatsApp** button.
-- WhatsApp opens a pre-filled one-time message; the user only needs to press **Send**.
-- The Cloud API webhook supplies the sender number. The originating browser session is authenticated only when it matches an active member.
-- The system sends no paid OTP or SMS messages.
-- `owner` and `admin` roles can also sign in at `/admin` with the registered phone number and a password.
-- Admin passwords are stored only as scrypt hashes; member accounts have no password.
-- An administrator can edit a member, change the phone number, suspend/reactivate access or erase the account's personal data.
-- Up to 500 members can be imported from `.xlsx`, `.xls` or `.csv` with an interactive column mapper.
+- `/` is the only sign-in page and the authenticated request list.
+- Every member, administrator and owner uses the same email magic-link flow.
+- A link is valid for 10 minutes, can be used once and is stored only as an HMAC digest.
+- Successful authentication reloads `/`; it does not send users to a separate application route.
+- The user role changes only which links appear in the shared navigation.
+- Administrators manage members, federation, SMTP and legal settings through the additional menu links.
+- Phone numbers are contact data, not authentication credentials.
+- Up to 500 members can be imported from `.xlsx`, `.xls` or `.csv`; email is required.
 
 ## Connecting independent installations
 
 - Each administrator creates a one-time code for a specific peer.
-- The issuer domain and identity are embedded in the code; a domain is not entered separately.
-- Entering the other installation's code grants access to the requests it shares with you.
-- The other installation cannot see your requests until it enters the code you issue to it.
-- If both sides enter the opposite code, sharing works in both directions.
+- The issuer domain and identity are embedded in the code.
+- Entering the other installation's code grants access to requests it shares with you.
+- The other installation cannot see your requests until it enters the code you issue.
+- If both sides exchange codes, sharing works in both directions.
 - A code is valid for 24 hours and can be accepted only once.
-- Peer records can be created before either code is available, then edited, paused, reactivated or deleted later.
 
 ## Local development
 
-Requirements: Node.js 22+, pnpm 10+ and a Docker-compatible runtime such as OrbStack.
+Requirements: Node.js 24.16.0, pnpm 10.20.0 and a Docker-compatible runtime such as OrbStack.
 
 ```bash
 cp .env.example .env
 docker compose up -d db
-pnpm install
-pnpm db:migrate
-pnpm db:seed
-pnpm dev
+corepack pnpm install
+corepack pnpm db:migrate
+corepack pnpm db:seed
+corepack pnpm dev
 ```
 
-Open `http://localhost:3020`.
-
-An empty database redirects to `/setup`. The default local setup secret is `development-setup`; replace it in `.env` for anything beyond local development.
-
-The local owner created by `pnpm db:seed` uses:
-
-- phone: `SEED_OWNER_PHONE` from `.env`;
-- password: `SEED_OWNER_PASSWORD`, or `development-admin` only when left empty in local development;
-- URL: `http://localhost:3020/admin`.
-
-Production has no fallback owner password, and the first-run wizard requires an admin password with at least 12 characters.
-
-## WhatsApp Cloud API
-
-The first-run wizard stores:
-
-- `WHATSAPP_BUSINESS_NUMBER` — the WhatsApp Business number in E.164 format;
-- `WHATSAPP_APP_SECRET` — encrypted before it is stored and used to verify webhook signatures;
-- `WHATSAPP_WEBHOOK_VERIFY_TOKEN` — generated by the wizard and encrypted before storage.
-
-`WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN` are reserved for possible outbound messages. The current QR/deep-link login flow does not require them.
-
-Configure this callback in Meta:
-
-`https://your-domain.example/api/v1/whatsapp/webhook`
-
-Subscribe to the `messages` webhook field. A production webhook must be publicly reachable over HTTPS.
+Open `http://localhost:3020`. The local seed owner uses `SEED_OWNER_EMAIL` and requests a magic link on `/`. Configure SMTP through `/setup`, the administrator email page, or the `SMTP_*` environment fallback.
 
 ## Federation keys
 
-The production wizard creates a unique Ed25519 key pair per installation and stores the private key encrypted. For a manual or seeded local installation, generate keys with:
+The production wizard creates a unique Ed25519 key pair per installation and stores the private key encrypted. For a manually seeded installation:
 
 ```bash
-pnpm exec tsx scripts/generate-federation-keys.ts
+corepack pnpm exec tsx scripts/generate-federation-keys.ts
 ```
 
-Place the printed values in `.env`. Never copy a private federation key to another installation.
+Never copy a private federation key to another installation.
 
 ## Quality checks
 
 ```bash
-pnpm check
-pnpm audit --audit-level high
+corepack pnpm check
+corepack pnpm audit --audit-level high
 ```
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md), [docs/INSTALLATION.md](./docs/INSTALLATION.md), [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md), [docs/CODE_REVIEW.md](./docs/CODE_REVIEW.md), and [docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md).
+See [docs/INSTALLATION.md](./docs/INSTALLATION.md), [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md), [docs/CODE_REVIEW.md](./docs/CODE_REVIEW.md), and [docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md).
 
 ## Licence
 

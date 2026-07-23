@@ -16,7 +16,7 @@ const fields: Array<{ key: ImportField; required: boolean }> = [
   { key: "company", required: true },
   { key: "phone", required: true },
   { key: "category", required: false },
-  { key: "email", required: false },
+  { key: "email", required: true },
 ];
 
 const emptyMapping: Mapping = { firstName: "", lastName: "", company: "", phone: "", category: "", email: "" };
@@ -175,7 +175,7 @@ function autoMatch(headers: string[]): Mapping {
     firstName: ["vards", "firstname", "firstnamegiven", "givenname"],
     lastName: ["uzvards", "lastname", "surname", "familyname"],
     company: ["uznemums", "company", "organization", "organisation", "firma"],
-    phone: ["talrunis", "telefons", "phone", "mobile", "mobilais", "whatsapp", "phonenumber"],
+    phone: ["talrunis", "telefons", "phone", "mobile", "mobilais", "phonenumber"],
     category: ["nozare", "kategorija", "category", "industry", "specializacija"],
     email: ["epasts", "email", "emailaddress", "mail"],
   };

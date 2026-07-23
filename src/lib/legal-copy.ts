@@ -39,8 +39,8 @@ type LegalCopy = {
     purposesText: string;
     access: string;
     accessText: string;
-    whatsapp: string;
-    whatsappText: string;
+    authentication: string;
+    authenticationText: string;
     cookies: string;
     cookiesText: string;
     cookieSession: string;
@@ -64,7 +64,7 @@ type LegalCopy = {
 
 export const legalCopy: Record<Locale, LegalCopy> = {
   lv: {
-    updated: "Pēdējoreiz atjaunināts: 2026. gada 22. jūlijā",
+    updated: "Pēdējoreiz atjaunināts: 2026. gada 23. jūlijā",
     notProvided: "Nav norādīts",
     back: "Atpakaļ uz sistēmu",
     impressum: {
@@ -97,13 +97,13 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       controllerText: "Šīs instalācijas datu pārzinis ir zemāk norādītais operators. Jautājumiem par personas datiem izmanto privātuma kontaktu.",
       privacyContact: "Privātuma kontakts",
       data: "2. Apstrādāto datu kategorijas",
-      dataText: "Sistēma var apstrādāt biedra vārdu, uzvārdu, uzņēmumu, nozari, e-pastu, šifrētu tālruņa numuru un tehnisku tālruņa meklēšanas identifikatoru; lietotāja veidotos pieprasījumus; lomu un konta statusu; autorizācijas sesiju, IP adresi, pārlūka informāciju, drošības žurnālu un WhatsApp autorizācijas tehniskos ierakstus. Sistēmā nevajadzētu ievadīt sensitīvus datus vai trešo personu datus bez piemērota tiesiskā pamata.",
+      dataText: "Sistēma var apstrādāt biedra vārdu, uzvārdu, uzņēmumu, nozari, e-pastu, šifrētu kontakttālruņa numuru un tehnisku tālruņa meklēšanas identifikatoru; lietotāja veidotos pieprasījumus; lomu un konta statusu; autorizācijas sesiju, IP adresi, pārlūka informāciju, drošības žurnālu un vienreizējo e-pasta saišu tehniskos ierakstus. Sistēmā nevajadzētu ievadīt sensitīvus datus vai trešo personu datus bez piemērota tiesiskā pamata.",
       purposes: "3. Nolūki un tiesiskais pamats",
       purposesText: "Dati tiek apstrādāti, lai pārvaldītu kopienas dalībniekus, autentificētu lietotājus, publicētu un atrastu profesionālus pieprasījumus, uzturētu sistēmas drošību un pierādītu administratīvās darbības. Atkarībā no operatora attiecībām ar biedru pamats var būt līguma izpilde, juridisks pienākums un/vai operatora leģitīmās intereses uzturēt drošu profesionālo kopienu. Operators pirms sistēmas lietošanas dokumentē piemērojamo pamatu un interešu līdzsvarošanas izvērtējumu.",
       access: "4. Kas redz datus",
       accessText: "Profila vārds, uzņēmums, nozare un publicētā pieprasījuma saturs ir redzams autorizētiem šīs instalācijas biedriem. Pieprasījums nonāk savienotā instalācijā tikai tad, ja autors izvēlas atbilstošu kopīgošanas redzamību. Administratoriem ir piekļuve konta pārvaldības datiem. Dati var būt pieejami operatora izvēlētiem hostinga, datubāzes un ziņojumapmaiņas pakalpojumu sniedzējiem to pakalpojuma nodrošināšanai.",
-      whatsapp: "5. WhatsApp autorizācija",
-      whatsappText: "WhatsApp tiek izmantots, lai apstiprinātu, ka lietotājs kontrolē administratora reģistrēto tālruņa numuru. WhatsApp un Meta apstrādā ziņojumu un tehniskos datus saskaņā ar saviem noteikumiem. Sistēma datubāzē glabā tālruņa numuru šifrētā veidā, neatgriezenisku meklēšanas identifikatoru un pēdējos četrus ciparus administrēšanai.",
+      authentication: "5. Autorizācija ar e-pastu",
+      authenticationText: "Lietotājs ievada administratora reģistrēto e-pasta adresi un saņem vienreizēju autorizācijas saiti. Saites noslēpums datubāzē tiek glabāts tikai neatgriezeniska kopsavilkuma veidā, ir derīgs 10 minūtes un pēc izmantošanas vairs nav lietojams. Operators izvēlas SMTP pakalpojumu; šis pakalpojums apstrādā adresi, ziņojumu un piegādes tehniskos datus saskaņā ar saviem noteikumiem.",
       cookies: "6. Sīkdatnes un lokālā krātuve",
       cookiesText: "Instalācija pati neizmanto reklāmas vai analītikas sīkdatnes. Tā izmanto tikai funkcionalitātei nepieciešamu autentifikācijas sīkdatni un lietotāja tieši izvēlētu valodas iestatījumu.",
       cookieSession: "community_session — HttpOnly autentifikācijas sīkdatne; uztur drošu pieslēguma sesiju līdz 30 dienām vai līdz iziešanai/anulēšanai.",
@@ -112,7 +112,7 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       retention: "7. Glabāšanas termiņi",
       retentionText: (months) => `Aktīva konta dati tiek glabāti dalības un sistēmas lietošanas laikā. Dzēsts konts tiek anonimizēts. Lietotājs var dzēst savus pieprasījumus; to saturs tiek noņemts, bet minimāls tehnisks dzēšanas marķieris un audita pierādījums var saglabāties federācijas sinhronizācijai un drošībai. Operators ir konfigurējis ${months} mēnešu drošības un audita ierakstu glabāšanas termiņu un ir atbildīgs par tā tehnisku ievērošanu, ja vien nav dokumentētas vajadzības vai juridiska pienākuma glabāt datus citādi. Sesija ir derīga ne ilgāk kā 30 dienas.`,
       providers: "8. Apstrādātāji un starptautiska nodošana",
-      providersText: "Operators izvēlas un konfigurē hostinga, datubāzes, rezerves kopiju un WhatsApp/Meta pakalpojumus. Operators uztur faktisko apstrādātāju sarakstu, noslēdz vajadzīgos datu apstrādes līgumus un, ja dati tiek nodoti ārpus EEZ, nodrošina piemērotu nodošanas mehānismu un informāciju datu subjektiem.",
+      providersText: "Operators izvēlas un konfigurē hostinga, datubāzes, rezerves kopiju un e-pasta/SMTP pakalpojumus. Operators uztur faktisko apstrādātāju sarakstu, noslēdz vajadzīgos datu apstrādes līgumus un, ja dati tiek nodoti ārpus EEZ, nodrošina piemērotu nodošanas mehānismu un informāciju datu subjektiem.",
       rights: "9. Tavas tiesības",
       rightsText: "Atbilstoši piemērojamajiem noteikumiem vari lūgt piekļuvi, labošanu, dzēšanu, apstrādes ierobežošanu un datu pārnesamību, kā arī iebilst pret apstrādi, kas balstīta leģitīmajās interesēs. Ja apstrāde balstīta piekrišanā, to var atsaukt, neietekmējot iepriekšējās apstrādes likumību. Pieprasījumu nosūti privātuma kontaktam; pirms atbildes operators var pārbaudīt identitāti.",
       complaints: "10. Sūdzības",
@@ -125,7 +125,7 @@ export const legalCopy: Record<Locale, LegalCopy> = {
     },
   },
   en: {
-    updated: "Last updated: 22 July 2026",
+    updated: "Last updated: 23 July 2026",
     notProvided: "Not provided",
     back: "Back to the system",
     impressum: {
@@ -158,13 +158,13 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       controllerText: "The operator identified below is the controller for this installation. Use the privacy contact for questions about personal data.",
       privacyContact: "Privacy contact",
       data: "2. Categories of data",
-      dataText: "The system may process a member's first and last name, company, industry, email, encrypted phone number and a technical phone lookup identifier; user-created requests; role and account status; authentication sessions, IP address, browser information, security logs and technical WhatsApp authentication records. Sensitive data or third-party personal data should not be entered without an appropriate legal basis.",
+      dataText: "The system may process a member's first and last name, company, industry, email, encrypted contact phone number and a technical phone lookup identifier; user-created requests; role and account status; authentication sessions, IP address, browser information, security logs and technical records for one-time email links. Sensitive data or third-party personal data should not be entered without an appropriate legal basis.",
       purposes: "3. Purposes and legal bases",
       purposesText: "Data is processed to manage community membership, authenticate users, publish and find professional requests, maintain security and evidence administrative actions. Depending on the operator's relationship with a member, the basis may be performance of a contract, a legal obligation and/or the operator's legitimate interests in running a secure professional community. The operator must document the applicable basis and any legitimate-interest balancing assessment before use.",
       access: "4. Who can access data",
       accessText: "A profile name, company, industry and published request content are visible to authorised members of this installation. A request reaches a connected installation only when the author selects the corresponding sharing visibility. Administrators can access account-management data. Data may be available to hosting, database and messaging providers selected by the operator where necessary to provide their services.",
-      whatsapp: "5. WhatsApp authentication",
-      whatsappText: "WhatsApp is used to confirm control of the phone number registered by an administrator. WhatsApp and Meta process message and technical data under their own terms. The system stores the phone number encrypted, a one-way lookup identifier and the last four digits for administration.",
+      authentication: "5. Email authentication",
+      authenticationText: "The user enters the email address registered by an administrator and receives a one-time sign-in link. The link secret is stored only as a one-way digest, expires after 10 minutes and cannot be reused. The operator selects the SMTP provider; that provider processes the address, message and delivery metadata under its own terms.",
       cookies: "6. Cookies and local storage",
       cookiesText: "The installation itself uses no advertising or analytics cookies. It uses only a functional authentication cookie and a language setting directly requested by the user.",
       cookieSession: "community_session — an HttpOnly authentication cookie that maintains a secure login for up to 30 days or until logout/revocation.",
@@ -173,7 +173,7 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       retention: "7. Retention",
       retentionText: (months) => `Active account data is retained while membership and system use continue. A deleted account is anonymised. Users can delete their own requests; the content is erased, while a minimal technical deletion marker and audit evidence may remain for federation synchronisation and security. The operator has configured a ${months}-month retention period for security and audit records and is responsible for enforcing it technically unless a documented need or legal duty requires different retention. A session remains valid for no more than 30 days.`,
       providers: "8. Processors and international transfers",
-      providersText: "The operator selects and configures hosting, database, backup and WhatsApp/Meta services. The operator maintains the actual processor list, enters into required data-processing agreements and, where data is transferred outside the EEA, ensures an appropriate transfer mechanism and information for data subjects.",
+      providersText: "The operator selects and configures hosting, database, backup and email/SMTP services. The operator maintains the actual processor list, enters into required data-processing agreements and, where data is transferred outside the EEA, ensures an appropriate transfer mechanism and information for data subjects.",
       rights: "9. Your rights",
       rightsText: "Subject to applicable law, you may request access, rectification, erasure, restriction and portability, and object to processing based on legitimate interests. Where processing relies on consent, it may be withdrawn without affecting prior lawful processing. Send requests to the privacy contact; the operator may verify identity before responding.",
       complaints: "10. Complaints",
@@ -186,7 +186,7 @@ export const legalCopy: Record<Locale, LegalCopy> = {
     },
   },
   lt: {
-    updated: "Paskutinį kartą atnaujinta: 2026 m. liepos 22 d.",
+    updated: "Paskutinį kartą atnaujinta: 2026 m. liepos 23 d.",
     notProvided: "Nenurodyta",
     back: "Grįžti į sistemą",
     impressum: {
@@ -219,13 +219,13 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       controllerText: "Toliau nurodytas operatorius yra šio diegimo duomenų valdytojas. Klausimams apie asmens duomenis naudokite privatumo kontaktą.",
       privacyContact: "Privatumo kontaktas",
       data: "2. Duomenų kategorijos",
-      dataText: "Sistema gali tvarkyti nario vardą, pavardę, įmonę, veiklos sritį, el. paštą, šifruotą telefono numerį ir techninį telefono paieškos identifikatorių; naudotojo sukurtus prašymus; vaidmenį ir paskyros būseną; autentifikavimo sesijas, IP adresą, naršyklės informaciją, saugumo žurnalus ir techninius „WhatsApp“ autentifikavimo įrašus. Jautrūs ar trečiųjų asmenų duomenys neturėtų būti įvedami be tinkamo teisinio pagrindo.",
+      dataText: "Sistema gali tvarkyti nario vardą, pavardę, įmonę, veiklos sritį, el. paštą, šifruotą kontaktinį telefono numerį ir techninį telefono paieškos identifikatorių; naudotojo sukurtus prašymus; vaidmenį ir paskyros būseną; autentifikavimo sesijas, IP adresą, naršyklės informaciją, saugumo žurnalus ir vienkartinių el. pašto nuorodų techninius įrašus. Jautrūs ar trečiųjų asmenų duomenys neturėtų būti įvedami be tinkamo teisinio pagrindo.",
       purposes: "3. Tikslai ir teisiniai pagrindai",
       purposesText: "Duomenys tvarkomi bendruomenės narystei valdyti, naudotojams autentifikuoti, profesiniams prašymams skelbti ir rasti, saugumui užtikrinti bei administraciniams veiksmams pagrįsti. Priklausomai nuo operatoriaus santykio su nariu, pagrindas gali būti sutarties vykdymas, teisinė prievolė ir (arba) teisėti operatoriaus interesai valdyti saugią profesinę bendruomenę. Operatorius prieš naudojimą dokumentuoja taikomą pagrindą ir teisėtų interesų pusiausvyros vertinimą.",
       access: "4. Kas gali matyti duomenis",
       accessText: "Profilio vardas, įmonė, veiklos sritis ir paskelbto prašymo turinys matomi autorizuotiems šio diegimo nariams. Prašymas pasiekia susietą diegimą tik autoriui pasirinkus atitinkamą bendrinimo matomumą. Administratoriai turi prieigą prie paskyros valdymo duomenų. Duomenys gali būti prieinami operatoriaus pasirinktiems talpinimo, duomenų bazės ir pranešimų paslaugų teikėjams, kai tai būtina jų paslaugoms.",
-      whatsapp: "5. „WhatsApp“ autentifikavimas",
-      whatsappText: "„WhatsApp“ naudojama patvirtinti, kad naudotojas valdo administratoriaus užregistruotą telefono numerį. „WhatsApp“ ir „Meta“ tvarko žinučių bei techninius duomenis pagal savo taisykles. Sistema saugo šifruotą telefono numerį, vienkryptį paieškos identifikatorių ir paskutinius keturis skaitmenis administravimui.",
+      authentication: "5. Autentifikavimas el. paštu",
+      authenticationText: "Naudotojas įveda administratoriaus užregistruotą el. pašto adresą ir gauna vienkartinę prisijungimo nuorodą. Nuorodos paslaptis saugoma tik kaip vienkryptė santrauka, galioja 10 minučių ir negali būti naudojama pakartotinai. Operatorius pasirenka SMTP paslaugą, kuri pagal savo taisykles tvarko adresą, laišką ir pristatymo techninius duomenis.",
       cookies: "6. Slapukai ir vietinė saugykla",
       cookiesText: "Pats diegimas nenaudoja reklamos ar analitikos slapukų. Naudojamas tik funkcinis autentifikavimo slapukas ir paties naudotojo pasirinktas kalbos nustatymas.",
       cookieSession: "community_session — HttpOnly autentifikavimo slapukas, palaikantis saugų prisijungimą iki 30 dienų arba iki atsijungimo / panaikinimo.",
@@ -234,7 +234,7 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       retention: "7. Saugojimo laikotarpiai",
       retentionText: (months) => `Aktyvios paskyros duomenys saugomi narystės ir sistemos naudojimo laikotarpiu. Ištrinta paskyra anonimizuojama. Naudotojai gali ištrinti savo prašymus; turinys pašalinamas, tačiau minimalus techninis ištrynimo žymuo ir audito įrodymas gali likti federacijos sinchronizavimui bei saugumui. Operatorius nustatė ${months} mėn. saugumo ir audito įrašų saugojimo terminą ir atsako už jo techninį įgyvendinimą, nebent dokumentuotas poreikis ar teisinė prievolė reikalauja kitokio termino. Sesija galioja ne ilgiau kaip 30 dienų.`,
       providers: "8. Duomenų tvarkytojai ir tarptautinis perdavimas",
-      providersText: "Operatorius pasirenka ir konfigūruoja talpinimo, duomenų bazės, atsarginių kopijų ir „WhatsApp“ / „Meta“ paslaugas. Operatorius tvarko faktinį duomenų tvarkytojų sąrašą, sudaro reikiamas duomenų tvarkymo sutartis ir, perduodant duomenis už EEE ribų, užtikrina tinkamą perdavimo mechanizmą bei informaciją duomenų subjektams.",
+      providersText: "Operatorius pasirenka ir konfigūruoja talpinimo, duomenų bazės, atsarginių kopijų ir el. pašto / SMTP paslaugas. Operatorius tvarko faktinį duomenų tvarkytojų sąrašą, sudaro reikiamas duomenų tvarkymo sutartis ir, perduodant duomenis už EEE ribų, užtikrina tinkamą perdavimo mechanizmą bei informaciją duomenų subjektams.",
       rights: "9. Jūsų teisės",
       rightsText: "Pagal taikomą teisę galite prašyti prieigos, ištaisymo, ištrynimo, tvarkymo apribojimo ir duomenų perkeliamumo bei prieštarauti tvarkymui, grindžiamam teisėtais interesais. Kai tvarkymas grindžiamas sutikimu, jį galima atšaukti nepaveikiant ankstesnio teisėto tvarkymo. Prašymus siųskite privatumo kontaktui; prieš atsakydamas operatorius gali patikrinti tapatybę.",
       complaints: "10. Skundai",
@@ -247,7 +247,7 @@ export const legalCopy: Record<Locale, LegalCopy> = {
     },
   },
   et: {
-    updated: "Viimati uuendatud: 22. juulil 2026",
+    updated: "Viimati uuendatud: 23. juulil 2026",
     notProvided: "Pole esitatud",
     back: "Tagasi süsteemi",
     impressum: {
@@ -280,13 +280,13 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       controllerText: "Allpool nimetatud käitaja on selle installatsiooni vastutav töötleja. Isikuandmetega seotud küsimuste korral kasutage privaatsuskontakti.",
       privacyContact: "Privaatsuskontakt",
       data: "2. Andmekategooriad",
-      dataText: "Süsteem võib töödelda liikme ees- ja perekonnanime, ettevõtet, tegevusala, e-posti, krüpteeritud telefoninumbrit ja tehnilist telefoniotsingu identifikaatorit; kasutaja loodud taotlusi; rolli ja konto olekut; autentimisseansse, IP-aadressi, brauseriteavet, turvalogisid ning WhatsAppi autentimise tehnilisi kirjeid. Tundlikke või kolmandate isikute andmeid ei tohiks sisestada ilma sobiva õigusliku aluseta.",
+      dataText: "Süsteem võib töödelda liikme ees- ja perekonnanime, ettevõtet, tegevusala, e-posti, krüpteeritud kontakttelefoninumbrit ja tehnilist telefoniotsingu identifikaatorit; kasutaja loodud taotlusi; rolli ja konto olekut; autentimisseansse, IP-aadressi, brauseriteavet, turvalogisid ning ühekordsete e-posti linkide tehnilisi kirjeid. Tundlikke või kolmandate isikute andmeid ei tohiks sisestada ilma sobiva õigusliku aluseta.",
       purposes: "3. Eesmärgid ja õiguslikud alused",
       purposesText: "Andmeid töödeldakse kogukonna liikmesuse haldamiseks, kasutajate autentimiseks, professionaalsete taotluste avaldamiseks ja leidmiseks, turvalisuse tagamiseks ning haldustoimingute tõendamiseks. Sõltuvalt käitaja ja liikme suhtest võib aluseks olla lepingu täitmine, juriidiline kohustus ja/või käitaja õigustatud huvi turvalise professionaalse kogukonna haldamiseks. Käitaja dokumenteerib enne kasutamist kohaldatava aluse ja õigustatud huvi kaalumise.",
       access: "4. Kes andmeid näeb",
       accessText: "Profiilinimi, ettevõte, tegevusala ja avaldatud taotluse sisu on nähtavad selle installatsiooni volitatud liikmetele. Taotlus jõuab ühendatud installatsiooni ainult siis, kui autor valib vastava jagamisnähtavuse. Administraatoritel on juurdepääs konto haldamise andmetele. Andmed võivad olla kättesaadavad käitaja valitud majutus-, andmebaasi- ja sõnumiteenuse pakkujatele nende teenuse osutamiseks vajalikus ulatuses.",
-      whatsapp: "5. WhatsAppi autentimine",
-      whatsappText: "WhatsAppi kasutatakse kinnitamaks, et kasutaja kontrollib administraatori registreeritud telefoninumbrit. WhatsApp ja Meta töötlevad sõnumi- ja tehnilisi andmeid oma tingimuste alusel. Süsteem säilitab telefoninumbri krüpteeritult, ühesuunalise otsinguidentifikaatori ja haldamiseks neli viimast numbrit.",
+      authentication: "5. E-postiga autentimine",
+      authenticationText: "Kasutaja sisestab administraatori registreeritud e-posti aadressi ja saab ühekordse sisselogimislingi. Lingi saladust hoitakse ainult ühesuunalise räsina, see aegub 10 minutiga ja seda ei saa uuesti kasutada. Käitaja valib SMTP-teenuse; teenus töötleb aadressi, sõnumit ja tarne tehnilisi andmeid oma tingimuste alusel.",
       cookies: "6. Küpsised ja kohalik salvestus",
       cookiesText: "Installatsioon ise ei kasuta reklaami- ega analüütikaküpsiseid. Kasutatakse ainult funktsionaalset autentimisküpsist ja kasutaja enda valitud keeleseadet.",
       cookieSession: "community_session — HttpOnly autentimisküpsis, mis hoiab turvalist sisselogimist kuni 30 päeva või väljalogimise/tühistamiseni.",
@@ -295,7 +295,7 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       retention: "7. Säilitamine",
       retentionText: (months) => `Aktiivse konto andmeid säilitatakse liikmesuse ja süsteemi kasutamise ajal. Kustutatud konto anonüümitakse. Kasutajad saavad oma taotlused kustutada; sisu eemaldatakse, kuid minimaalne tehniline kustutamismärge ja auditi tõend võivad jääda föderatsiooni sünkroonimiseks ning turvalisuse tagamiseks. Käitaja on määranud turva- ja auditikirjete säilitamisajaks ${months} kuud ning vastutab selle tehnilise jõustamise eest, välja arvatud juhul, kui dokumenteeritud vajadus või juriidiline kohustus nõuab teistsugust tähtaega. Seanss kehtib kuni 30 päeva.`,
       providers: "8. Volitatud töötlejad ja rahvusvaheline edastamine",
-      providersText: "Käitaja valib ja seadistab majutus-, andmebaasi-, varundus- ning WhatsAppi/Meta teenused. Käitaja peab tegelikku volitatud töötlejate nimekirja, sõlmib vajalikud andmetöötluslepingud ja tagab väljapoole EMP-d edastamisel sobiva edastusmehhanismi ning teabe andmesubjektidele.",
+      providersText: "Käitaja valib ja seadistab majutus-, andmebaasi-, varundus- ning e-posti/SMTP-teenused. Käitaja peab tegelikku volitatud töötlejate nimekirja, sõlmib vajalikud andmetöötluslepingud ja tagab väljapoole EMP-d edastamisel sobiva edastusmehhanismi ning teabe andmesubjektidele.",
       rights: "9. Teie õigused",
       rightsText: "Kohaldatava õiguse alusel võite taotleda juurdepääsu, parandamist, kustutamist, töötlemise piiramist ja andmete ülekandmist ning esitada vastuväite õigustatud huvil põhinevale töötlemisele. Kui töötlemine põhineb nõusolekul, saab selle tagasi võtta, ilma et see mõjutaks varasema töötlemise seaduslikkust. Saatke taotlus privaatsuskontaktile; käitaja võib enne vastamist isikusamasust kontrollida.",
       complaints: "10. Kaebused",

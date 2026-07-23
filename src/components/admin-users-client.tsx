@@ -5,6 +5,7 @@ import { ExcelUserImport } from "@/components/excel-user-import";
 import { useLanguage } from "@/components/language-provider";
 import { adminCopy } from "@/lib/admin-i18n";
 import { fetchJson, isAbortError, jsonRequest } from "@/lib/client-api";
+import type { Locale } from "@/lib/i18n";
 import { useModalDialog } from "@/lib/use-modal-dialog";
 
 type AdminUser = {
@@ -169,7 +170,7 @@ export function AdminUsersClient() {
           const busy = busyUserId === user.id;
           return (
             <div className="user-row admin-user-row" key={user.id}>
-              <div><strong>{user.displayName}</strong><small>{user.company} · •••• {user.phoneLast4}{user.email ? ` · ${user.email}` : ""}</small></div>
+              <div><strong>{user.displayName}</strong><small>{user.company} · •••• {user.phoneLast4} · {formatAdminEmail(user.email, locale)}</small></div>
               <div><small>{user.category ?? copy.usersNoCategory}</small></div>
               <span className={`status-pill ${user.status}`}>{roleLabel(user.role, copy)} · {statusLabel(user.status, copy)}</span>
               <div className="user-actions">
@@ -194,9 +195,8 @@ export function AdminUsersClient() {
                 <div className="form-group"><label htmlFor="new-company">{copy.company}</label><input className="field" id="new-company" name="company" required /></div>
                 <div className="form-group"><label htmlFor="new-category">{copy.category}</label><input className="field" id="new-category" name="category" /></div>
                 <div className="form-group"><label htmlFor="new-phone">{copy.phone}</label><input className="field" id="new-phone" name="phone" type="tel" inputMode="tel" placeholder="+371 2…" required /></div>
-                <div className="form-group"><label htmlFor="new-email">{copy.emailOptional}</label><input className="field" id="new-email" name="email" type="email" /></div>
-                <div className="form-group full"><label htmlFor="new-role">{copy.accessType}</label><select className="field" id="new-role" name="role" value={newRole} onChange={(event) => setNewRole(event.target.value)}><option value="member">{copy.roleMemberWhatsapp}</option><option value="admin">{copy.roleAdminPassword}</option></select></div>
-                {newRole === "admin" && <div className="form-group full"><label htmlFor="new-password">{copy.initialPassword}</label><input className="field" id="new-password" name="password" type="password" minLength={12} maxLength={200} autoComplete="new-password" placeholder={copy.passwordMin} required /></div>}
+                <div className="form-group"><label htmlFor="new-email">{copy.emailRequired}</label><input className="field" id="new-email" name="email" type="email" required /></div>
+                <div className="form-group full"><label htmlFor="new-role">{copy.accessType}</label><select className="field" id="new-role" name="role" value={newRole} onChange={(event) => setNewRole(event.target.value)}><option value="member">{copy.roleMemberEmail}</option><option value="admin">{copy.roleAdminEmail}</option></select></div>
               </div>
               {error && <div className="form-error">{error}</div>}
               <div className="modal-actions"><button className="button button-ghost" type="button" onClick={closeCreate} disabled={loading}>{copy.cancel}</button><button className="button button-accent" disabled={loading}>{loading ? copy.usersAdding : copy.usersAdd}</button></div>
@@ -216,10 +216,9 @@ export function AdminUsersClient() {
                 <div className="form-group"><label htmlFor="edit-last-name">{copy.lastName}</label><input className="field" id="edit-last-name" name="lastName" defaultValue={editingUser.lastName} required /></div>
                 <div className="form-group"><label htmlFor="edit-company">{copy.company}</label><input className="field" id="edit-company" name="company" defaultValue={editingUser.company} required /></div>
                 <div className="form-group"><label htmlFor="edit-category">{copy.category}</label><input className="field" id="edit-category" name="category" defaultValue={editingUser.category ?? ""} /></div>
-                <div className="form-group"><label htmlFor="edit-email">{copy.email}</label><input className="field" id="edit-email" name="email" type="email" defaultValue={editingUser.email ?? ""} /></div>
-                <div className="form-group"><label htmlFor="edit-phone">{copy.newWhatsappPhone}</label><input className="field" id="edit-phone" name="phone" type="tel" inputMode="tel" placeholder={`${copy.currentPhone} •••• ${editingUser.phoneLast4}`} /></div>
+                <div className="form-group"><label htmlFor="edit-email">{copy.email}</label><input className="field" id="edit-email" name="email" type="email" defaultValue={editingUser.email ?? ""} required /></div>
+                <div className="form-group"><label htmlFor="edit-phone">{copy.newPhone}</label><input className="field" id="edit-phone" name="phone" type="tel" inputMode="tel" placeholder={`${copy.currentPhone} •••• ${editingUser.phoneLast4}`} /></div>
                 {actorRole === "owner" && editingUser.role !== "owner" && editingUser.id !== actorUserId && <div className="form-group full"><label htmlFor="edit-role">{copy.role}</label><select className="field" id="edit-role" name="role" value={editRole} onChange={(event) => setEditRole(event.target.value as "admin" | "member")}><option value="member">{copy.roleMember}</option><option value="admin">{copy.roleAdmin}</option></select></div>}
-                {actorRole === "owner" && editingUser.role !== "owner" && editRole === "admin" && <div className="form-group full"><label htmlFor="edit-password">{copy.newAdminPassword}</label><input className="field" id="edit-password" name="password" type="password" minLength={12} maxLength={200} autoComplete="new-password" placeholder={copy.leaveBlank} /></div>}
               </div>
               {error && <div className="form-error">{error}</div>}
               <div className="modal-actions"><button className="button button-ghost" type="button" onClick={() => setEditingUser(null)} disabled={Boolean(busyUserId)}>{copy.cancel}</button><button className="button button-accent" disabled={Boolean(busyUserId)}>{busyUserId ? copy.saving : copy.usersSave}</button></div>
@@ -241,4 +240,14 @@ function statusLabel(status: AdminUser["status"], copy: (typeof adminCopy)["lv"]
   if (status === "suspended") return copy.statusSuspended;
   if (status === "invited") return copy.statusInvited;
   return copy.statusActive;
+}
+
+function formatAdminEmail(email: string | null | undefined, locale: Locale) {
+  if (email && !email.endsWith("@migration.invalid")) return email;
+  return {
+    lv: "E-pasts jānorāda",
+    en: "Email required",
+    lt: "Reikia el. pašto",
+    et: "E-post on nõutud",
+  }[locale];
 }
