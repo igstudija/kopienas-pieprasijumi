@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { fetchJson, jsonRequest } from "@/lib/client-api";
 import { useLanguage } from "./language-provider";
 
-export function EmailLoginForm() {
+export function EmailLoginForm({ developmentLogin = false }: { developmentLogin?: boolean }) {
   const { locale, messages } = useLanguage();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
@@ -41,6 +41,18 @@ export function EmailLoginForm() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : messages.confirmInvalid);
     } finally {
+      setBusy(false);
+    }
+  }
+
+  async function signInLocally() {
+    setBusy(true);
+    setError("");
+    try {
+      await fetchJson("/api/v1/auth/development", jsonRequest("POST", {}));
+      window.location.assign("/");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : messages.confirmInvalid);
       setBusy(false);
     }
   }
@@ -88,6 +100,12 @@ export function EmailLoginForm() {
       <button className="button button-accent button-wide" disabled={busy}>
         {busy ? messages.loginSending : messages.loginSend}
       </button>
+      {developmentLogin && <>
+        <button className="button button-ghost button-wide" type="button" disabled={busy} onClick={signInLocally}>
+          {messages.loginDevelopment}
+        </button>
+        <small className="email-login-development-note">{messages.loginDevelopmentNote}</small>
+      </>}
     </form>
   );
 }

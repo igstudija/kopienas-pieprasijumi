@@ -27,5 +27,5 @@ export default async function HomePage() {
   }
   const messages = globalMessages[parseLocale((await cookies()).get("community_locale")?.value)];
 
-  return <><AppNavigation /><main className="auth-shell auth-shell-home"><section className="auth-card"><h1>{messages.loginTitleFirst}<br />{messages.loginTitleSecond}</h1><p>{messages.loginIntro}</p><EmailLoginForm /></section><aside className="auth-aside"><blockquote>{messages.loginQuote}</blockquote></aside></main></>;
+  return <><AppNavigation /><main className="auth-shell auth-shell-home"><section className="auth-card"><h1>{messages.loginTitleFirst}<br />{messages.loginTitleSecond}</h1><p>{messages.loginIntro}</p><EmailLoginForm developmentLogin={process.env.NODE_ENV === "development"} /></section><aside className="auth-aside"><blockquote>{messages.loginQuote}</blockquote></aside></main></>;
 }

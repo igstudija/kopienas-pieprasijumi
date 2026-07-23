@@ -2,6 +2,12 @@
 
 This application is not a central SaaS service. Every community runs an independent GitHub copy, Vercel project, Supabase database and SMTP account.
 
+## Local development without SMTP
+
+When the application runs with `pnpm dev` on `localhost`, the sign-in form includes a **Sign in as local administrator** button. It signs in the active owner or administrator selected by `DEV_ADMIN_EMAIL`. When that value is empty, it falls back to `SEED_OWNER_EMAIL`, and then to the first active owner or administrator.
+
+If the local user does not exist, set `SEED_OWNER_EMAIL` and run `pnpm db:seed`. The development endpoint requires both `NODE_ENV=development` and a loopback hostname. It returns `404` in production and cannot replace SMTP sign-in in a deployed installation.
+
 ## Prepare before deployment
 
 You need:
