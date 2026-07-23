@@ -1,6 +1,7 @@
 :root {
   --navy: #003049;
   --blue: #669bbc;
+  --blue-deep: #2f6888;
   --cream-base: #fdf0d5;
   --red: #c1121f;
   --red-deep: #780000;
@@ -324,10 +325,10 @@ textarea.field { min-height: 150px; resize: vertical; }
 .user-row + .user-row, .peer-row + .peer-row { border-top: 1px solid var(--line); }
 .user-row strong, .peer-row strong { font-size: 15px; }
 .user-row small, .peer-row small { display: block; font-size: 13px; color: var(--muted); line-height: 1.45; margin-top: 3px; }
-.status-pill { display: inline-flex; border-radius: 99px; padding: 7px 10px; background: var(--paper-2); font-size: 12px; font-weight: 800; text-transform: uppercase; }
-.status-pill.active { background: var(--lime); }
-.status-pill.pending { background: rgba(102,155,188,.24); color: var(--navy); }
-.status-pill.suspended { background: rgba(193,18,31,.12); color: var(--red-deep); }
+.status-pill { display: inline-flex; border-radius: 99px; padding: 7px 10px; background: var(--navy); color: white; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.status-pill.active { background: var(--blue-deep); }
+.status-pill.pending { background: var(--accent); color: white; }
+.status-pill.suspended { background: var(--red-deep); color: white; }
 .user-actions { display: flex; justify-content: flex-end; flex-wrap: nowrap; gap: 7px; }
 .row-action { border: 1px solid var(--line); background: rgba(255,255,255,.72); border-radius: 99px; min-height: 42px; padding: 0 14px; font-size: 13px; font-weight: 750; cursor: pointer; }
 .row-action:hover { background: white; }
