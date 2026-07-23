@@ -129,7 +129,7 @@ export function DashboardClient() {
       <div className="dashboard-filter-bar">
         <div className="dashboard-filters">
           <input className="search-input" type="search" placeholder={messages.searchRequests} value={query} onChange={(event) => { setQuery(event.target.value); setVisibleGroups(8); }} aria-label={messages.searchRequests} />
-          <button type="button" className="dashboard-add-button" aria-label={messages.newRequest} title={messages.newRequest} onClick={() => setShowCreate(true)}><PlusIcon /><span>{messages.addRequest}</span></button>
+          <button type="button" className="dashboard-add-button dashboard-add-button-desktop" aria-label={messages.newRequest} title={messages.newRequest} onClick={() => setShowCreate(true)}><PlusIcon /><span>{messages.addRequest}</span></button>
           <div className="dashboard-filter-controls">
             <FilterRow className="group-filter-row" label={messages.filterGroup}><FilterButton active={!selectedSources.length} onClick={() => { setSelectedSources([]); setVisibleGroups(8); }}>{messages.filterAll}</FilterButton>{sources.map((item) => <FilterButton key={item.id} active={selectedSources.includes(item.id)} onClick={() => { setSelectedSources((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id]); setVisibleGroups(8); }}>{item.name}</FilterButton>)}</FilterRow>
             <div className="mobile-select-filter mobile-group-filter">
@@ -157,6 +157,7 @@ export function DashboardClient() {
           </div>
         </div>
       </div>
+      <button type="button" className="dashboard-add-button dashboard-add-button-mobile" aria-label={messages.newRequest} title={messages.newRequest} onClick={() => setShowCreate(true)}><PlusIcon /></button>
       <div className="app-main request-dashboard-content">
         {error && <div className="form-error">{error}</div>}
         {loading ? <div className="loading-state"><div className="skeleton"/><div className="skeleton"/></div> : filtered.length ? (
@@ -201,7 +202,7 @@ function MemberGroup({ group, currentUserId, deletingId, onDelete, onEdit, local
   const initials = group.authorName.split(" ").map((part) => part[0]).slice(0, 2).join("");
   const contacts = contactLinks(group.authorEmail, group.authorPhone);
   return (
-    <section className={`member-group request-member-card ${expanded ? "expanded" : ""}`}>
+    <section className={`member-group request-member-card ${canExpand ? "" : "single-request"} ${expanded ? "expanded" : ""}`}>
       <div className="member-summary-row">
         <div className="member-identity">
           <span className="avatar">{initials}</span>
@@ -216,7 +217,7 @@ function MemberGroup({ group, currentUserId, deletingId, onDelete, onEdit, local
           <RequestTop item={latest} canManage={latest.origin === "local" && latest.authorId === currentUserId} deleting={deletingId === latest.id} onDelete={onDelete} onEdit={onEdit} />
           <h2>{latest.title}</h2><p>{latest.details}</p><small>{messages.added} {formatDateTime(latest.createdAt, locale)}{latest.updatedAt !== latest.createdAt ? ` · ${messages.updated} ${formatDateTime(latest.updatedAt, locale)}` : ""}</small>
         </article>
-        {canExpand ? <button className="request-count-panel" type="button" aria-expanded={expanded} onClick={() => setExpanded((current) => !current)}><b>{group.requests.length}</b><span>{messages.requestMany}</span><i aria-hidden="true">{expanded ? "⌃" : "⌄"}</i></button> : <div className="request-count-panel single"><b>1</b><span>{messages.requestOne}</span></div>}
+        {canExpand && <button className="request-count-panel" type="button" aria-expanded={expanded} onClick={() => setExpanded((current) => !current)}><b>{group.requests.length}</b><span className="visually-hidden">{messages.requestMany}</span><i aria-hidden="true"><ChevronDownIcon /></i></button>}
       </div>
       {expanded && canExpand && <div className="member-expanded-requests"><div className="expanded-request-list">{group.requests.map((item) => <ExpandedRequest item={item} key={item.id} canManage={item.origin === "local" && item.authorId === currentUserId} deleting={deletingId === item.id} onDelete={onDelete} onEdit={onEdit} locale={locale} />)}</div></div>}
     </section>
