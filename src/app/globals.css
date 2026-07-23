@@ -136,7 +136,7 @@ svg { width: 1.15em; height: 1.15em; }
 .how li span { font-size: 13px; line-height: 1.6; color: var(--muted); }
 
 .auth-shell { flex: 1 0 auto; display: grid; grid-template-columns: 1.15fr .85fr; background: var(--cream); position: relative; }
-.auth-shell-home { grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr); align-items: center; gap: clamp(24px, 4vw, 64px); padding: clamp(24px, 3vw, 48px); }
+.auth-shell-home { width: min(1160px, calc(100% - 48px)); margin-inline: auto; grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr); align-items: center; gap: clamp(24px, 4vw, 64px); padding: clamp(24px, 3vw, 48px) 0; background: transparent; }
 .auth-shell-home .auth-card { margin: 48px auto; }
 .auth-shell-home .auth-aside { width: min(100%, 620px); min-height: 0; aspect-ratio: 1; align-self: center; justify-self: end; border-radius: clamp(24px, 3vw, 42px); padding: clamp(36px, 5vw, 72px); }
 .auth-shell-admin { grid-template-columns: 1fr; place-items: center; padding: clamp(32px, 6vw, 80px) 20px; }
@@ -571,7 +571,7 @@ textarea.field { min-height: 150px; resize: vertical; }
   .otp-row { gap: 5px; }
   .otp-row input { height: 55px; border-radius: 9px; }
   .app-nav { height: 66px; padding-inline: 15px; }
-  .auth-shell-home { padding: 0; }
+  .auth-shell-home { width: 100%; padding: 0; }
   .auth-shell-home .auth-card { margin: 54px auto 70px; }
   .auth-shell-admin { padding: 42px 18px 64px; }
   .app-nav .brand > span:last-child { display: none; }
