@@ -259,8 +259,8 @@ svg { width: 1.15em; height: 1.15em; }
 .request-side { display: flex; align-items: flex-start; }
 .request-summary { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
 .request-member-card { border-left: 4px solid var(--accent-dark); }
-.member-summary-row { min-height: 112px; display: grid; grid-template-columns: minmax(210px, .74fr) minmax(330px, 1.9fr) 82px; }
-.single-request .member-summary-row { grid-template-columns: minmax(210px, .74fr) minmax(330px, 1.9fr); }
+.member-summary-row { min-height: 112px; display: grid; grid-template-columns: minmax(210px, 28%) minmax(330px, 1fr) 82px; }
+.single-request .member-summary-row { grid-template-columns: minmax(210px, 28%) minmax(330px, 1fr); }
 .member-identity { padding: 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-content: start; align-items: flex-start; gap: 10px 12px; }
 .member-identity .avatar { flex: 0 0 auto; background: var(--sage); }
 .member-meta { display: grid; gap: 4px; min-width: 0; }
