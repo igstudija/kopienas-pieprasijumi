@@ -37,7 +37,8 @@
 - Bind every signed federation event to the authenticated peer identity and preserve replay/idempotency checks.
 - Use `fetchJson` for browser API calls. Abort load requests on unmount and show a user-visible failure state.
 - Interactive controls need accessible names, keyboard operation, visible focus, sufficient contrast, and mobile-first layouts without horizontal page scrolling.
-- Reuse shared headers, drawers, API helpers, dialog behavior, icons, and translation dictionaries instead of copying them.
+- Every route-level header and navigation must render through `AppHeader`, normally via `AppNavigation`. Never add page-specific shell header/navigation markup or parallel header CSS.
+- Reuse shared drawers, API helpers, dialog behavior, icons, and translation dictionaries instead of copying them.
 - Do not add explanatory comments for obvious code. Comments that are necessary must explain the invariant or reason in English.
 
 ## Database and compatibility

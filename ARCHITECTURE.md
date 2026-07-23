@@ -22,6 +22,7 @@ Supabase is used as managed PostgreSQL infrastructure. Member authentication is 
 ## Application modules
 
 - `setup`: database readiness, installation secret verification, SMTP delivery test, owner creation and per-installation Ed25519 key generation.
+- `help`: administrator-only operator guidance at `/help` and public first-run guidance at `/help/install`.
 - `auth`: email magic-link challenges, enumeration-resistant responses, rate limits, digest-only tokens, revocable server sessions and the development-only local administrator flow.
 - `users`: local roles, status, profile data, optional website, encrypted phone data and HMAC lookup identifiers.
 - `requests`: ownership, author-selected sharing visibility, stable grouping, filtering, editing, deletion and newest-first ordering.
