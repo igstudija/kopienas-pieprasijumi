@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Slēgtas uzņēmēju kopienas aktuālie pieprasījumi.",
     start_url: "/",
     display: "standalone",
-    background_color: "#f4f1e8",
-    theme_color: "#12372a",
+    background_color: "#fdf0d5",
+    theme_color: "#003049",
     icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }],
   };
 }
