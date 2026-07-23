@@ -4,7 +4,7 @@ import { groupRequests } from "@/lib/request-grouping";
 const base = { authorCompany: "Uzņēmums", authorCategory: "Pakalpojumi" };
 
 describe("groupRequests", () => {
-  it("grupas un ierakstus kārto pēc pēdējās atjaunošanas", () => {
+  it("sorts groups and records by their latest update", () => {
     const groups = groupRequests([
       { ...base, id: "a-old", authorId: "a", authorName: "Anna", updatedAt: "2026-07-20T08:00:00Z", createdAt: "2026-07-20T08:00:00Z" },
       { ...base, id: "b", authorId: "b", authorName: "Jānis", updatedAt: "2026-07-21T08:00:00Z", createdAt: "2026-07-21T08:00:00Z" },
@@ -14,7 +14,7 @@ describe("groupRequests", () => {
     expect(groups[0].requests.map((request) => request.id)).toEqual(["a-new", "a-old"]);
   });
 
-  it("vienāda laika gadījumā saglabā determinētu ID secību", () => {
+  it("uses a deterministic ID order when timestamps match", () => {
     const same = "2026-07-22T08:00:00Z";
     const groups = groupRequests([
       { ...base, id: "b", authorId: "a", authorName: "Anna", updatedAt: same, createdAt: same },

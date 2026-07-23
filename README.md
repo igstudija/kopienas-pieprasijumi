@@ -1,50 +1,53 @@
 # Specific Requests
 
-A self-hosted PWA for private business communities. Members publish precise introduction requests, while independent installations exchange only the entries their authors explicitly share.
+Specific Requests is a self-hosted web application for private business communities. Members publish precise introduction requests, manage their own contact details, and can contact one another by email, phone, WhatsApp or website. Independent installations can exchange only the requests their authors explicitly share.
 
-Each community owns its GitHub copy, Vercel project, Supabase database and email provider account. There is no central SaaS database or shared authentication server.
+Each community owns its GitHub repository, Vercel project, Supabase database and SMTP provider account. There is no central SaaS database, shared authentication service or dependency on the template owner.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Figstudija%2Fkopienas-pieprasijumi&project-name=kopienas-pieprasijumi&repository-name=kopienas-pieprasijumi&env=SETUP_SECRET&envDescription=Choose+a+unique+installation+secret+with+at+least+12+characters.+It+is+used+only+by+the+first-run+wizard.&envLink=https%3A%2F%2Fgithub.com%2Figstudija%2Fkopienas-pieprasijumi%2Fblob%2Fmain%2Fdocs%2FINSTALLATION.md&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22supabase%22%2C%22productSlug%22%3A%22supabase%22%7D%5D)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Figstudija%2Fkopienas-pieprasijumi&project-name=kopienas-pieprasijumi&repository-name=kopienas-pieprasijumi&env=SETUP_SECRET&envDescription=Choose+a+unique+installation+secret+with+at+least+12+characters.+You+will+enter+it+once+in+the+first-run+wizard.&envLink=https%3A%2F%2Fgithub.com%2Figstudija%2Fkopienas-pieprasijumi%2Fblob%2Fmain%2Fdocs%2FINSTALLATION.md)
 
-## Installation
+## Recommended installation
 
-The complete Vercel + Supabase flow, SMTP preparation, upgrade notes and troubleshooting are in [docs/INSTALLATION.md](./docs/INSTALLATION.md).
+The deployment is intentionally split into three simple stages:
 
-In short:
+1. use the button above to create your own GitHub copy and Vercel project;
+2. connect a Supabase database to that Vercel project and redeploy;
+3. open `/setup`, connect SMTP and create the first owner.
 
-1. deploy your own GitHub copy to Vercel;
-2. choose a unique `SETUP_SECRET`;
-3. connect a new or existing Supabase project;
-4. let Vercel apply database migrations;
-5. open `/setup` and connect Brevo, Mailjet or custom SMTP;
-6. create the first owner and verify the SMTP test email.
+The initial Vercel build succeeds even before a database is connected. Once `POSTGRES_URL`, `DATABASE_URL` or `POSTGRES_PRISMA_URL` is available, the Vercel build applies all committed Drizzle migrations before building the application.
 
-Database credentials remain in Vercel Environment Variables. SMTP credentials are encrypted before storage in the installation database.
+Follow the complete [installation guide](./docs/INSTALLATION.md). It includes Supabase connection options, Brevo and Mailjet values, local development, upgrades and troubleshooting.
 
-## Authentication and routes
+## Product behavior
 
-- `/` is the only sign-in page and the authenticated request list.
-- Every member, administrator and owner uses the same email magic-link flow.
-- A link is valid for 10 minutes, can be used once and is stored only as an HMAC digest.
-- Successful authentication reloads `/`; it does not send users to a separate application route.
-- The user role changes only which links appear in the shared navigation.
-- Administrators manage members, federation, SMTP, legal details and the installation-wide interface language through the additional menu links.
-- The interface language is set once per installation in `/admin/settings`; individual visitors do not have a language switcher.
-- Phone numbers are stored in international E.164 format for reliable phone and WhatsApp contact actions; they are not authentication credentials.
-- Up to 500 members can be imported from `.xlsx`, `.xls` or `.csv`; email is required.
+- `/` is both the public email sign-in page and the authenticated request list.
+- Every member, administrator and owner uses the same one-time email magic-link flow.
+- A sign-in link expires after 10 minutes, works once and is stored only as an HMAC digest.
+- The role controls which administration links are visible; there is no separate administrator password login.
+- The installation language is selected centrally in `/admin/settings` and supports Latvian, English, Lithuanian and Estonian.
+- Phone numbers are contact data stored in international E.164 format. They power phone and WhatsApp contact actions but are not authentication credentials.
+- Members may add an optional website. Contact icons are shown only when the corresponding value exists and is valid.
+- Administrators can create, edit, deactivate, reactivate, delete, search and import members.
+- Spreadsheet import accepts `.xlsx`, `.xls` and `.csv`, up to 500 members at once.
 
 ## Connecting independent installations
 
-- Each administrator creates a one-time code for a specific peer.
-- The issuer domain and identity are embedded in the code.
-- Entering the other installation's code grants access to requests it shares with you.
-- The other installation cannot see your requests until it enters the code you issue.
-- If both sides exchange codes, sharing works in both directions.
-- A code is valid for 24 hours and can be accepted only once.
+Federation is direct and one-way for each accepted code:
+
+1. an administrator creates a code for one specific peer;
+2. the code contains the issuing installation identity and canonical domain;
+3. the receiving installation enters the code and can receive requests shared with it;
+4. the issuer cannot receive requests in the opposite direction until it accepts a code created by the other installation.
+
+Pairing codes expire after 24 hours and can be accepted once. Long-term event delivery uses Ed25519 signatures, replay protection and explicit peer identity checks. An installation never forwards records received from another peer.
 
 ## Local development
 
-Requirements: Node.js 24.16.0, pnpm 10.20.0 and a Docker-compatible runtime such as OrbStack.
+Requirements:
+
+- Node.js `24.16.0`;
+- pnpm `10.20.0` through Corepack;
+- OrbStack, Docker Desktop or another Docker-compatible runtime.
 
 ```bash
 cp .env.example .env
@@ -55,26 +58,45 @@ corepack pnpm db:seed
 corepack pnpm dev
 ```
 
-Open `http://localhost:3020`. The local seed owner uses `SEED_OWNER_EMAIL` and requests a magic link on `/`. Configure SMTP through `/setup`, the administrator email page, or the `SMTP_*` environment fallback.
+Open `http://localhost:3020`. In local development, the sign-in page provides a development-only administrator button, so SMTP is not required. The endpoint is unavailable in production.
 
-## Federation keys
+## Deployment and upgrades
 
-The production wizard creates a unique Ed25519 key pair per installation and stores the private key encrypted. For a manually seeded installation:
+Vercel uses:
 
-```bash
-corepack pnpm exec tsx scripts/generate-federation-keys.ts
+```text
+pnpm vercel-build
 ```
 
-Never copy a private federation key to another installation.
+The command:
 
-## Quality checks
+1. applies forward-only migrations when database credentials are present;
+2. skips migration with a clear warning when the database has not been connected yet;
+3. always runs the production Next.js build.
+
+Operational steps, backup guidance, rollback boundaries and the production checklist are in [docs/OPERATIONS.md](./docs/OPERATIONS.md).
+
+## Quality gates
 
 ```bash
 corepack pnpm check
 corepack pnpm audit --audit-level high
 ```
 
-See [docs/INSTALLATION.md](./docs/INSTALLATION.md), [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md), [docs/CODE_REVIEW.md](./docs/CODE_REVIEW.md), and [docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md).
+`pnpm check` runs ESLint, TypeScript, Vitest and the production build. GitHub Actions runs the same frozen-install quality gate for pull requests, pushes to `main`, manual runs and the scheduled weekly dependency check.
+
+## Documentation
+
+- [Installation guide](./docs/INSTALLATION.md)
+- [Operations and upgrades](./docs/OPERATIONS.md)
+- [Architecture](./ARCHITECTURE.md)
+- [Development workflow](./docs/DEVELOPMENT.md)
+- [Code review checklist](./docs/CODE_REVIEW.md)
+- [Threat model](./docs/THREAT_MODEL.md)
+- [Contributing](./CONTRIBUTING.md)
+- [Security policy](./SECURITY.md)
+
+All installation help, repository documentation, workflow descriptions, identifiers and code comments are maintained in English. Product UI copy remains available in all four supported installation languages.
 
 ## Licence
 

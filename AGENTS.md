@@ -25,6 +25,7 @@
 - Install with `pnpm install --frozen-lockfile` in CI and `pnpm install` locally.
 - The required completion gate is `pnpm check` (lint, TypeScript, tests, production build).
 - Run `pnpm audit --audit-level high` when dependencies change.
+- Vercel runs `pnpm vercel-build`; it migrates when a supported database URL is available and otherwise builds only the setup/help surface.
 
 ## Change rules
 
@@ -43,6 +44,7 @@
 
 - Change `src/lib/db/schema.ts`, then run `pnpm db:generate`. Inspect the SQL and commit the schema, migration, snapshot, and journal together.
 - Never edit or delete an already released migration. Add a forward migration.
+- Do not expose the Production database to unrestricted Preview deployments; use a separate Preview database or omit Preview database credentials.
 - Federation payload changes must remain backward compatible within protocol v1 unless a versioned protocol migration is designed.
 - Preserve encrypted-at-rest phone data and HMAC lookup identifiers; never add a plaintext phone column.
 
