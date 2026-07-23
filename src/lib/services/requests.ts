@@ -13,6 +13,7 @@ import {
 } from "@/lib/db/schema";
 import { groupRequests } from "@/lib/request-grouping";
 import { HttpError } from "@/lib/http";
+import { decryptPhone } from "@/lib/security";
 import { writeAudit } from "./audit";
 import { getInstanceRuntime } from "./installation";
 
@@ -52,6 +53,8 @@ export async function listGroupedRequests() {
       authorName: author.displayName,
       authorCompany: author.company,
       authorCategory: author.category,
+      authorEmail: author.status === "active" ? author.email : null,
+      authorPhone: author.status === "active" ? decryptPhone(author.phoneEncrypted) : null,
       title: request.title,
       details: request.details,
       target: request.target,
@@ -72,6 +75,8 @@ export async function listGroupedRequests() {
       authorName: request.authorDisplayName,
       authorCompany: request.authorCompany,
       authorCategory: request.authorCategory,
+      authorEmail: null,
+      authorPhone: null,
       title: request.title,
       details: request.details,
       target: request.target,

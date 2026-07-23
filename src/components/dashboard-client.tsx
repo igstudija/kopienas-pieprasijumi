@@ -1,19 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Mail, Phone } from "lucide-react";
 import { fetchJson, isAbortError } from "@/lib/client-api";
+import { contactLinks } from "@/lib/contact-links";
 import { useModalDialog } from "@/lib/use-modal-dialog";
-import { ChevronDownIcon, EditIcon, GlobeIcon, PlusIcon, TrashIcon } from "./icons";
+import { ChevronDownIcon, EditIcon, GlobeIcon, PlusIcon, TrashIcon, WhatsAppIcon } from "./icons";
 import { useLanguage } from "./language-provider";
 import { RequestForm } from "./request-form";
 
 type RequestItem = {
-  id: string; authorId: string; authorName: string; authorCompany: string; authorCategory?: string | null;
+  id: string; authorId: string; authorName: string; authorCompany: string; authorCategory?: string | null; authorEmail?: string | null; authorPhone?: string | null;
   title: string; details: string; target?: string | null; industry?: string | null; region?: string | null;
   tags: string[]; updatedAt: string; createdAt: string; origin: "local" | "remote"; peerName: string | null;
   sourceId: string; sourceName: string; visibility: "local" | "selected_peers" | "all_peers";
 };
-type RequestGroup = { authorId: string; authorName: string; authorCompany: string; authorCategory?: string | null; lastActivityAt: string; requests: RequestItem[] };
+type RequestGroup = { authorId: string; authorName: string; authorCompany: string; authorCategory?: string | null; authorEmail?: string | null; authorPhone?: string | null; lastActivityAt: string; requests: RequestItem[] };
 type Period = "all" | "week" | "month";
 type RequestsResponse = { groups: RequestGroup[]; currentUserId: string };
 
@@ -195,10 +197,19 @@ function MemberGroup({ group, currentUserId, deletingId, onDelete, onEdit, local
   const latest = group.requests[0];
   const canExpand = group.requests.length > 1;
   const initials = group.authorName.split(" ").map((part) => part[0]).slice(0, 2).join("");
+  const contacts = contactLinks(group.authorEmail, group.authorPhone);
   return (
     <section className={`member-group request-member-card ${expanded ? "expanded" : ""}`}>
       <div className="member-summary-row">
-        <div className="member-identity"><span className="avatar">{initials}</span><div className="member-meta"><strong>{group.authorName}</strong><span>{group.authorCompany}</span>{group.authorCategory && <small>{group.authorCategory}</small>}</div></div>
+        <div className="member-identity">
+          <span className="avatar">{initials}</span>
+          <div className="member-meta"><div className="member-name-row"><strong>{group.authorName}</strong><span className="member-source-badge">{latest.sourceName}</span></div><span>{group.authorCompany}</span>{group.authorCategory && <small>{group.authorCategory}</small>}</div>
+          {(contacts.email || contacts.whatsapp || contacts.phone) && <nav className="member-contact-actions" aria-label={messages.contactActions}>
+            {contacts.email && <a href={contacts.email} aria-label={messages.contactEmail} title={messages.contactEmail}><Mail /></a>}
+            {contacts.whatsapp && <a className="whatsapp-contact" href={contacts.whatsapp} target="_blank" rel="noreferrer" aria-label={messages.contactWhatsApp} title={messages.contactWhatsApp}><WhatsAppIcon /></a>}
+            {contacts.phone && <a href={contacts.phone} aria-label={messages.contactPhone} title={messages.contactPhone}><Phone /></a>}
+          </nav>}
+        </div>
         <article className="latest-request-preview">
           <RequestTop item={latest} canManage={latest.origin === "local" && latest.authorId === currentUserId} deleting={deletingId === latest.id} onDelete={onDelete} onEdit={onEdit} />
           <h2>{latest.title}</h2><p>{latest.details}</p><small>{messages.added} {formatDateTime(latest.createdAt, locale)}{latest.updatedAt !== latest.createdAt ? ` · ${messages.updated} ${formatDateTime(latest.updatedAt, locale)}` : ""}</small>
