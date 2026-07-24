@@ -6,7 +6,7 @@ Thank you for improving Specific Requests.
 
 Read:
 
-- `AGENTS.md` for product invariants and completion rules;
+- `docs/CONVENTIONS.md` for product invariants and completion rules;
 - `ARCHITECTURE.md` for trust boundaries;
 - `docs/DEVELOPMENT.md` for the implementation workflow;
 - `docs/CODE_REVIEW.md` for the review checklist;

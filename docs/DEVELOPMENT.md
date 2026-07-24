@@ -32,10 +32,10 @@ SMTP is optional during local UI development. The root sign-in page exposes a de
 
 ## Before starting a change
 
-1. Read `AGENTS.md` and the product invariants.
+1. Read `docs/CONVENTIONS.md` and the product invariants.
 2. Inspect the current route, service, schema, tests and related documentation.
 3. Check `git status` and preserve unrelated user-owned changes.
-4. For a multi-module or risky change, copy the structure in `PLANS.md` into the task plan.
+4. For a multi-module or risky change, copy the structure in `docs/EXECUTION-PLAN.md` into the task plan.
 5. Prefer the smallest complete change that preserves independent installations and federation compatibility.
 
 ## Dependency direction
