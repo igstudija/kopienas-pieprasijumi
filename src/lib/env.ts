@@ -22,7 +22,7 @@ function installationRootSecret() {
 function derivedSecret(label: string) {
   const root = installationRootSecret();
   if (!root) throw new Error("Nav pieejama instances pamata atslēga.");
-  return createHmac("sha256", root).update(`kopienas-pieprasijumi:${label}:v1`).digest();
+  return createHmac("sha256", root).update(`specific-requests:${label}:v1`).digest();
 }
 
 export function appSecret() {

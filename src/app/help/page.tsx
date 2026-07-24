@@ -3,7 +3,7 @@ import { AuthenticatedAppShell } from "@/components/authenticated-app-shell";
 export const dynamic = "force-dynamic";
 
 const repositoryUrl = process.env.NEXT_PUBLIC_TEMPLATE_REPOSITORY_URL
-  ?? "https://github.com/igstudija/kopienas-pieprasijumi";
+  ?? "https://github.com/igstudija/specific-requests";
 
 export default function AdminHelpPage() {
   return (

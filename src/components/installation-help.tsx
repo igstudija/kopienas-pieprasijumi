@@ -88,8 +88,8 @@ export function InstallationHelp() {
       <section className="help-detail">
         <div><span className="section-number">More</span><h2>Detailed operator documentation</h2></div>
         <div className="help-facts">
-          <p><b>Installation and troubleshooting</b><span><a href={`${repositoryUrl ?? "https://github.com/igstudija/kopienas-pieprasijumi"}/blob/main/docs/INSTALLATION.md`} target="_blank" rel="noreferrer">Open the complete installation guide ↗</a></span></p>
-          <p><b>Upgrades, backups and recovery</b><span><a href={`${repositoryUrl ?? "https://github.com/igstudija/kopienas-pieprasijumi"}/blob/main/docs/OPERATIONS.md`} target="_blank" rel="noreferrer">Open the operations guide ↗</a></span></p>
+          <p><b>Installation and troubleshooting</b><span><a href={`${repositoryUrl ?? "https://github.com/igstudija/specific-requests"}/blob/main/docs/INSTALLATION.md`} target="_blank" rel="noreferrer">Open the complete installation guide ↗</a></span></p>
+          <p><b>Upgrades, backups and recovery</b><span><a href={`${repositoryUrl ?? "https://github.com/igstudija/specific-requests"}/blob/main/docs/OPERATIONS.md`} target="_blank" rel="noreferrer">Open the operations guide ↗</a></span></p>
           <p><b>Official platform documentation</b><span><a href="https://vercel.com/marketplace/supabase/supabase" target="_blank" rel="noreferrer">Vercel Supabase integration ↗</a> · <a href="https://supabase.com/docs/guides/integrations/vercel-marketplace" target="_blank" rel="noreferrer">Supabase Marketplace guide ↗</a></span></p>
         </div>
       </section>

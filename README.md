@@ -4,7 +4,7 @@ Specific Requests is a self-hosted web application for private business communit
 
 Each community owns its GitHub repository, Vercel project, Supabase database and SMTP provider account. There is no central SaaS database, shared authentication service or dependency on the template owner.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Figstudija%2Fkopienas-pieprasijumi&project-name=kopienas-pieprasijumi&repository-name=kopienas-pieprasijumi&env=SETUP_SECRET&envDescription=Choose+a+unique+installation+secret+with+at+least+12+characters.+You+will+enter+it+once+in+the+first-run+wizard.&envLink=https%3A%2F%2Fgithub.com%2Figstudija%2Fkopienas-pieprasijumi%2Fblob%2Fmain%2Fdocs%2FINSTALLATION.md)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Figstudija%2Fspecific-requests&project-name=specific-requests&repository-name=specific-requests&env=SETUP_SECRET&envDescription=Choose+a+unique+installation+secret+with+at+least+12+characters.+You+will+enter+it+once+in+the+first-run+wizard.&envLink=https%3A%2F%2Fgithub.com%2Figstudija%2Fspecific-requests%2Fblob%2Fmain%2Fdocs%2FINSTALLATION.md)
 
 ## Recommended installation
 

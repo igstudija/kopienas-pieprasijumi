@@ -35,14 +35,14 @@ export function AppNavigation({ user, showAdmin = false, logoutRedirect = "/", t
         { href: "/help/install", label: "Installation help", active: pathname.startsWith("/help/install") },
       ]
     : [
-        { href: "/par-risinajumu", label: messages.impressum, active: pathname.startsWith("/par-risinajumu") },
+        { href: "/about", label: messages.impressum, active: pathname.startsWith("/about") },
         { href: "/privacy", label: messages.privacy, active: pathname.startsWith("/privacy") },
       ];
   const dashboardTitle = `${messages.dashboardTitleFirst} ${messages.dashboardTitleSecond}`.replace(/\.$/, "");
   const profileTitle = `${messages.profileTitleFirst} ${messages.profileTitleSecond}`.replace(/\.$/, "");
   const sectionTitle = title ?? (!user && (pathname === "/" || pathname.startsWith("/admin")) ? `${messages.brandFirst} ${messages.brandSecond}`
     : pathname.startsWith("/privacy") ? legalCopy[locale].privacy.eyebrow
-    : pathname.startsWith("/par-risinajumu") ? legalCopy[locale].impressum.title.replace(/\.$/, "")
+    : pathname.startsWith("/about") ? legalCopy[locale].impressum.title.replace(/\.$/, "")
       : pathname === "/" ? dashboardTitle
     : pathname === "/profile" ? profileTitle
       : pathname === "/admin" ? adminMessages.usersRegistered

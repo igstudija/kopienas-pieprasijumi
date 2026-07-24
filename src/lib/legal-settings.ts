@@ -1,4 +1,4 @@
-export const SOURCE_CODE_URL = "https://github.com/igstudija/kopienas-pieprasijumi";
+export const SOURCE_CODE_URL = "https://github.com/igstudija/specific-requests";
 export const LICENSE_NAME = "PolyForm Noncommercial License 1.0.0";
 
 export type LegalSettings = {
