@@ -43,3 +43,14 @@ Before storing real member data:
 5. verify backups and run a restore drill;
 6. keep owner email accounts protected with multi-factor authentication;
 7. keep Preview deployments isolated from the Production database.
+
+## Planned hardening
+
+Known gaps, kept visible rather than assumed solved:
+
+1. WebAuthn as a second factor for owner and administrator accounts.
+2. End-to-end browser tests for magic-link login, role-based administration, request
+   management, and one- and two-way federation.
+3. Request nonces in place of the current inline script and style allowance in the CSP.
+4. A documented federation key-rotation ceremony with a restore drill.
+5. An incident-response exercise before storing sensitive member data.
